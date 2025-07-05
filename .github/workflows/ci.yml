@@ -48,7 +48,7 @@ jobs:
       run: make ci
 
     - name: Upload Coverage
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
       with:
         file: coverage.out
         flags: unittests
