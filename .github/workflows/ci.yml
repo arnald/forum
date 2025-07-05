@@ -12,37 +12,47 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  ci:
-    name: Run CI
+  lint-and-test:
+    name: Lints and Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-
+    strategy:
+      matrix:
+        go-version: ['1.24']
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+
+    # https://github.com/actions/checkout
+    - uses: actions/checkout@v4
 
     # https://github.com/actions/setup-go
-    - name: Set up Go
+    - name: set up go
       uses: actions/setup-go@v5
       with:
-        go-version: "1.24.x"
+        go-version: "${{ matrix.go-version }}.x"
         check-latest: true
-        cache: true
+        cache: false
 
-    - name: Cache Tools
+    # https://github.com/actions/cache
+    - name: cache tools
+      id: cache-tools
       uses: actions/cache@v4
-      id: tools-cache
       with:
-        path: ~/go/bin
-        key: ${{ runner.os }}-go-tools-${{ hashFiles('Makefile') }}-v1
+        path: |
+          .tools/
+          ~/.cache/go-build
+          ~/go/pkg
+        key: ci-tools-${{ runner.os }}-${{ runner.arch }}-${{ matrix.go-version }}-${{ hashFiles('**/go.mod', '**/go.sum', '**/Makefile', 'scripts/tools.mk', '.github/workflows/ci.yml', 'tools/tools.go') }}
         restore-keys: |
-          ${{ runner.os }}-go-tools-
+          ci-tools-${{ runner.os }}-${{ runner.arch }}-${{ matrix.go-version }}
 
     - name: Install Tools
       if: steps.tools-cache.outputs.cache-hit != 'true'
       run: make tools
+
+    - name: env
+      run: |
+        make --version
+        echo ""
+        make env
 
     - name: Run CI Pipeline
       run: make ci
