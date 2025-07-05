@@ -1,0 +1,89 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: Benchmarks
+
+on:
+  pull_request:
+    branches: [ main ]
+
+concurrency:
+  group: bench-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  benchmark-comparison:
+    name: Benchmark Comparison
+    runs-on: ubuntu-latest
+    env:
+      BENCH_DIR: ${{ runner.temp }}/bench
+      BENCH_ITERATIONS: 5
+      BENCH_TIMEOUT: 30m 
+
+    # https://github.com/actions/setup-go
+    steps:
+    - name: Set up go
+      uses: actions/setup-go@v5
+      with:
+        go-version: "1.24.x"
+        check-latest: true
+        cache: true
+
+    - name: Install benchstat
+      run: go install golang.org/x/perf/cmd/benchstat@latest
+
+    - name: Prepare environment
+      run: |
+        mkdir -p ${{ env.BENCH_DIR }}
+        echo "BENCH_DIR=${{ env.BENCH_DIR }}" >> $GITHUB_ENV
+
+    # Base (main branch) benchmarks
+    - name: Checkout base branch (${{ github.base_ref }})
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.base_ref }}
+        path: base
+
+    - name: Run base benchmarks
+      working-directory: ./base
+      timeout-minutes: ${{ env.BENCH_TIMEOUT }}
+      run: |
+        go test -run=NONE -bench=. -benchmem -count=${{ env.BENCH_ITERATIONS }} ./... \
+          | tee ${{ env.BENCH_DIR }}/bench.base.txt
+
+    # PR branch benchmarks
+    - name: Checkout PR branch (${{ github.head_ref }})
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.head_ref }}
+        path: head
+
+    - name: Run PR benchmarks
+      working-directory: ./head
+      timeout-minutes: ${{ env.BENCH_TIMEOUT }}
+      run: |
+        go test -run=NONE -bench=. -benchmem -count=${{ env.BENCH_ITERATIONS }} ./... \
+          | tee ${{ env.BENCH_DIR }}/bench.head.txt
+
+    # Comparison and reporting
+    - name: Compare benchmarks
+      run: |
+        benchstat -delta-test none ${{ env.BENCH_DIR }}/bench.base.txt ${{ env.BENCH_DIR }}/bench.head.txt \
+          | tee ${{ env.BENCH_DIR }}/summary.txt
+        
+        # Create GitHub job summary
+        echo "### ⚡ Benchmark Comparison" >> $GITHUB_STEP_SUMMARY
+        echo "Base: ${{ github.base_ref }} ($(git -C base rev-parse --short HEAD))" >> $GITHUB_STEP_SUMMARY
+        echo "HEAD: ${{ github.head_ref }} ($(git -C head rev-parse --short HEAD))" >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+        cat ${{ env.BENCH_DIR }}/summary.txt >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+        # Create artifact for download
+        echo "summary=$(cat ${{ env.BENCH_DIR }}/summary.txt)" >> $GITHUB_OUTPUT
+
+    - name: Upload benchmark artifacts
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: benchmark-results
+        path: ${{ env.BENCH_DIR }}
+        retention-days: 15

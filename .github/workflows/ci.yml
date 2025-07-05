@@ -1,0 +1,54 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+concurrency:
+  group: ci-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: Run CI
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    # https://github.com/actions/setup-go
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: "1.24.x"
+        check-latest: true
+        cache: true
+
+    - name: Cache Tools
+      uses: actions/cache@v4
+      id: tools-cache
+      with:
+        path: ~/go/bin
+        key: ${{ runner.os }}-go-tools-${{ hashFiles('Makefile') }}-v1
+        restore-keys: |
+          ${{ runner.os }}-go-tools-
+
+    - name: Install Tools
+      if: steps.tools-cache.outputs.cache-hit != 'true'
+      run: make tools
+
+    - name: Run CI Pipeline
+      run: make ci
+
+    - name: Upload Coverage
+      uses: codecov/codecov-action@v4
+      with:
+        file: coverage.out
+        flags: unittests
