@@ -1,3 +1,50 @@
+MODULE := $(shell go list -m)
+GO_PACKAGES := $(shell go list ./...)
+GO_FOLDERS := $(shell find . -type d -not -path '*/\.*' -not -path './vendor*')
+GO_FILES := $(shell find . -type f -name '*.go' -not -path '*/\.*' -not -path './vendor*')
+TOOLS_BIN := $(shell ls $(shell go env GOPATH)/bin)
+
+env:  ## Show environment information
+	@echo "=== System Environment ==="
+	@uname -a
+	@echo ""
+
+	@echo "=== Go Environment ==="
+	@go version
+	@go env
+	@echo ""
+
+	@echo "=== Module ==="
+	@echo "$(MODULE)"
+	@echo ""
+
+	@echo "=== Packages ==="
+	@echo "$(GO_PACKAGES)" | tr ' ' '\n'
+	@echo ""
+
+	@echo "=== Folders ==="
+	@echo "$(GO_FOLDERS)" | tr ' ' '\n'
+	@echo ""
+
+	@echo "=== Go Files ==="
+	@echo "$(GO_FILES)" | tr ' ' '\n' | head -20
+	@echo "... (showing first 20 files)"
+	@echo ""
+
+	@echo "=== Installed Tools ==="
+	@echo "$(TOOLS_BIN)" | tr ' ' '\n'
+	@echo ""
+
+	@echo "=== PATH ==="
+	@echo "$$PATH" | tr ':' '\n'
+	@echo ""
+
+	@echo "=== Shell Information ==="
+	@echo "SHELL=$$SHELL"
+	@echo "BASH=$$BASH"
+	@echo "BASH_VERSION=$$BASH_VERSION"
+	@echo ""
+
 GOLANGCI_LINT_VERSION = v2.2.1
 STATICCHECK_VERSION = latest
 GOIMPORTS_VERSION = latest
@@ -23,7 +70,7 @@ ci-mod:
 	@echo "==> Verifying Go modules..."
 	go mod tidy
 	git diff --exit-code go.mod || \
-		(echo "Error: go.mod or go.sum are out of date. Run 'go mod tidy' and commit changes."; exit 1)
+		(echo "Error: go.mod are out of date. Run 'go mod tidy' and commit changes."; exit 1)
 
 # Format Go code
 format:
@@ -120,5 +167,5 @@ help:
 	@echo "  \033[36mbench-clean\033[0m     Clean profiling files"
 	@echo "\n\033[3mNote: Benchmark commands require 'make bench-tools' and Graphviz for flame graphs\033[0m"
 
-.PHONY: tools bench-tools ci-mod format check-format staticcheck golangci-lint lint test test-short bench ci clean \
+.PHONY: env tools bench-tools ci-mod format check-format staticcheck golangci-lint lint test test-short bench ci clean \
         bench-compare bench-profile bench-flame bench-clean help
