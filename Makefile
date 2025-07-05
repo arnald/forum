@@ -114,8 +114,8 @@ ci: ci-mod format check-format lint test
 clean:
 	rm -f coverage.out
 
-
-bench:
+# Full CI pipeline for benchmarks
+ci-bench:
 	go test -run=NONE -bench=. -benchmem ./...
 
 # Compare current vs main branch benchmarks
@@ -167,5 +167,5 @@ help:
 	@echo "  \033[36mbench-clean\033[0m     Clean profiling files"
 	@echo "\n\033[3mNote: Benchmark commands require 'make bench-tools' and Graphviz for flame graphs\033[0m"
 
-.PHONY: env tools bench-tools ci-mod format check-format staticcheck golangci-lint lint test test-short bench ci clean \
+.PHONY: env tools bench-tools ci-mod format check-format staticcheck golangci-lint lint test test-short ci-bench ci clean \
         bench-compare bench-profile bench-flame bench-clean help
