@@ -69,8 +69,8 @@ bench-tools:
 ci-mod:
 	@echo "==> Verifying Go modules..."
 	go mod tidy
-	git diff --exit-code go.mod || \
-		(echo "Error: go.mod are out of date. Run 'go mod tidy' and commit changes."; exit 1)
+	git diff --exit-code go.mod go.sum || \
+		(echo "Error: go.mod or go.sum are out of date. Run 'go mod tidy' and commit changes."; exit 1)
 
 # Format Go code
 format:
@@ -160,7 +160,7 @@ help:
 	
 	@echo "\n\033[1mBenchmarking & Profiling (Local):\033[0m"
 	@echo "  \033[36mbench-tools\033[0m     Install benchmark tools (benchstat)"
-	@echo "  \033[36mbench\033[0m           Run benchmarks"
+	@echo "  \033[36mci-bench\033[0m           Run benchmarks"
 	@echo "  \033[36mbench-compare\033[0m   Compare benchmarks vs main branch"
 	@echo "  \033[36mbench-profile\033[0m   Run benchmarks with CPU/mem profiling"
 	@echo "  \033[36mbench-flame\033[0m     Generate CPU flame graph (requires Graphviz)"
