@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	u "github.com/arnald/forum/internal/pkg/uuid"
-
 	"github.com/google/uuid"
 )
 
