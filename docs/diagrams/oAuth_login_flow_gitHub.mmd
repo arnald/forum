@@ -1,0 +1,21 @@
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant AuthService
+    participant GitHub
+    participant Database
+    
+    User->>Frontend: Click "Login with GitHub"
+    Frontend->>AuthService: GET /oauth/github/login
+    AuthService-->>Frontend: Redirect to GitHub auth
+    Frontend->>User: Redirect to GitHub
+    User->>GitHub: Authenticate & consent
+    GitHub-->>Frontend: Redirect with code
+    Frontend->>AuthService: GET /oauth/github/callback?code=XYZ
+    AuthService->>GitHub: Exchange code for token
+    GitHub-->>AuthService: Access token
+    AuthService->>GitHub: Get user info (email, username)
+    AuthService->>Database: Find/create user
+    AuthService->>Database: Create session (UUID)
+    AuthService-->>Frontend: 302 Redirect + Set-Cookie
+    Frontend-->>User: Redirect to dashboard

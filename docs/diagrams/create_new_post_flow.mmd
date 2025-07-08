@@ -1,0 +1,35 @@
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant PostService
+    participant AuthMiddleware
+    participant Database
+    participant ImageService
+    participant ModerationService
+    
+    User->>Frontend: Compose new post
+    Frontend->>PostService: POST /posts (title, content, categories, image)
+    PostService->>AuthMiddleware: Validate session cookie
+    AuthMiddleware->>Database: Verify session
+    AuthMiddleware-->>PostService: User context
+    PostService->>ImageService: Validate/upload image
+    alt Image invalid
+        ImageService-->>PostService: 400 Bad Request
+        PostService-->>Frontend: Error details
+        Frontend-->>User: Show error
+    else Image valid
+        PostService->>Database: Create post draft
+        PostService->>ModerationService: Submit for approval
+        ModerationService->>Database: Check user role
+        alt User is moderator/admin
+            Database-->>ModerationService: Elevated role
+            ModerationService->>Database: Approve post immediately
+            ModerationService-->>PostService: Approved
+            PostService->>Database: Update post status (published)
+        else Regular user
+            ModerationService->>Database: Flag for moderation
+            ModerationService-->>PostService: Pending approval
+        end
+        PostService-->>Frontend: 201 Created
+        Frontend-->>User: Show success message
+    end

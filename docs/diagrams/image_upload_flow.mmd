@@ -1,0 +1,23 @@
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant MediaService
+    participant AuthMiddleware
+    participant Storage
+    
+    User->>Frontend: Select image (≤20MB)
+    Frontend->>MediaService: POST /media/upload (multipart)
+    MediaService->>AuthMiddleware: Validate session
+    AuthMiddleware-->>MediaService: User context
+    MediaService->>MediaService: Validate MIME type (JPEG/PNG/GIF)
+    alt Invalid type
+        MediaService-->>Frontend: 415 Unsupported Media
+        Frontend-->>User: Show error
+    else Valid type
+        MediaService->>MediaService: Generate UUID filename
+        MediaService->>Storage: Save image file
+        MediaService->>MediaService: Create thumbnail
+        MediaService->>Storage: Save thumbnail
+        MediaService-->>Frontend: 201 Created + URL
+        Frontend-->>User: Show preview
+    end

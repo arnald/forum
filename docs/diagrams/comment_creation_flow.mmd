@@ -1,0 +1,20 @@
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant CommentService
+    participant AuthMiddleware
+    participant Database
+    participant NotificationService
+    
+    User->>Frontend: Submit comment
+    Frontend->>CommentService: POST /posts/{id}/comments (content)
+    CommentService->>AuthMiddleware: Validate session
+    AuthMiddleware->>Database: Verify session
+    AuthMiddleware-->>CommentService: User context
+    CommentService->>Database: Create comment
+    CommentService->>NotificationService: Notify post author
+    NotificationService->>Database: Create notification
+    CommentService->>Database: Update post comment count
+    CommentService-->>Frontend: 201 Created
+    Frontend-->>User: Show comment
+    NotificationService-->>Frontend: Real-time update (WebSocket)
