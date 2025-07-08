@@ -1,0 +1,7 @@
+graph TD
+    A[New Post] -->|User| B(Status=Pending)
+    B --> C{Moderator Action}
+    C -->|Approve| D[Status=Published]
+    C -->|Reject| E[Status=Rejected]
+    D --> F[Visible to all]
+    E --> G[Only visible to author]

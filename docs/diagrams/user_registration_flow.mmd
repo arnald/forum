@@ -1,0 +1,22 @@
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant AuthService
+    participant Database
+    participant EmailService
+    
+    User->>Frontend: Submit registration form
+    Frontend->>AuthService: POST /users (email, username, password)
+    AuthService->>Database: Check email uniqueness
+    alt Email exists
+        Database-->>AuthService: Conflict error
+        AuthService-->>Frontend: 409 Conflict
+        Frontend-->>User: Show error message
+    else Email available
+        AuthService->>AuthService: Generate password hash (bcrypt)
+        AuthService->>Database: Create user record
+        AuthService->>Database: Create session (UUID)
+        AuthService->>EmailService: Send verification email
+        AuthService-->>Frontend: 201 Created + Set-Cookie
+        Frontend-->>User: Redirect to dashboard
+    end

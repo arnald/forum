@@ -1,0 +1,18 @@
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant ActivityService
+    participant AuthMiddleware
+    participant Database
+    
+    User->>Frontend: Visit activity page
+    Frontend->>ActivityService: GET /users/me/activity
+    ActivityService->>AuthMiddleware: Validate session
+    AuthMiddleware->>Database: Verify session
+    AuthMiddleware-->>ActivityService: User ID
+    ActivityService->>Database: Get user activity (posts, comments, votes)
+    Database-->>ActivityService: Activity data
+    ActivityService->>ActivityService: Aggregate timeline
+    ActivityService-->>Frontend: 200 OK with JSON
+    Frontend->>Frontend: Render activity feed
+    Frontend-->>User: Display activity

@@ -1,0 +1,24 @@
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant AuthService
+    participant Database
+    
+    User->>Frontend: Submit login credentials
+    Frontend->>AuthService: POST /sessions (email, password)
+    AuthService->>Database: Get user by email
+    alt Email not found
+        Database-->>AuthService: Not found
+        AuthService-->>Frontend: 401 Unauthorized
+        Frontend-->>User: Show error
+    else Email found
+        AuthService->>AuthService: Verify password hash
+        alt Password invalid
+            AuthService-->>Frontend: 401 Unauthorized
+            Frontend-->>User: Show error
+        else Password valid
+            AuthService->>Database: Create session (UUID)
+            AuthService-->>Frontend: 201 Created + Set-Cookie
+            Frontend-->>User: Redirect to dashboard
+        end
+    end

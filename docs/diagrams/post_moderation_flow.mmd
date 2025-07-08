@@ -1,0 +1,22 @@
+sequenceDiagram
+    participant Moderator
+    participant Frontend
+    participant ModerationService
+    participant Database
+    participant NotificationService
+    
+    Moderator->>Frontend: View moderation queue
+    Frontend->>ModerationService: GET /moderation/pending
+    ModerationService->>Database: Get pending posts
+    Database-->>ModerationService: Post list
+    ModerationService-->>Frontend: 200 OK with posts
+    Frontend-->>Moderator: Display posts
+    
+    Moderator->>Frontend: Approve/reject post
+    Frontend->>ModerationService: PUT /moderation/posts/{id} (action=approve)
+    ModerationService->>Database: Update post status (published)
+    ModerationService->>NotificationService: Notify author
+    NotificationService->>Database: Create notification
+    NotificationService-->>ModerationService: Done
+    ModerationService-->>Frontend: 200 OK
+    Frontend-->>Moderator: Show confirmation
