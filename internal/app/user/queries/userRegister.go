@@ -40,6 +40,7 @@ func (h userRegisterRequestHandler) Handle(req UserRegisterRequest) error {
 		Role:      "user",
 		ID:        h.uuidiProvider.NewUUID(),
 	}
+
 	err := h.repo.UserRegister(user)
 	if err != nil {
 		return err
