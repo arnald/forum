@@ -57,10 +57,9 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, sqlite.ErrDuplicateEmail):
-			helpers.RespondWithJSON(
+			helpers.RespondWithError(
 				w,
 				http.StatusUnprocessableEntity,
-				nil,
 				"a user with this email address already exists",
 			)
 		default:
