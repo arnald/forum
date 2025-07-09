@@ -3,6 +3,7 @@ package app
 import (
 	"github.com/arnald/forum/internal/app/user/queries"
 	"github.com/arnald/forum/internal/domain/user"
+	"github.com/arnald/forum/internal/pkg/uuid"
 )
 
 type Queries struct {
@@ -17,11 +18,11 @@ type Services struct {
 	UserServices UserServices
 }
 
-func NewServices(repo user.Repository) Services {
+func NewServices(repo user.Repository, up uuid.Provider) Services {
 	return Services{
 		UserServices: UserServices{
 			Queries: Queries{
-				queries.NewUserRegisterHandler(repo),
+				queries.NewUserRegisterHandler(repo, up),
 			},
 		},
 	}
