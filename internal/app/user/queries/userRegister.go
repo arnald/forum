@@ -44,12 +44,12 @@ func (h userRegisterRequestHandler) Handle(req UserRegisterRequest) error {
 		ID:        h.uuidiProvider.NewUUID(),
 	}
 
-	err := h.encryptionProvider.Set(*user.Password)
+	encryptedPass, err := h.encryptionProvider.Generate(*user.Password)
 	if err != nil {
 		return err
 	}
 
-	err = h.repo.UserRegister(user)
+	err = h.repo.UserRegister(user, encryptedPass)
 	if err != nil {
 		return err
 	}

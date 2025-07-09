@@ -7,33 +7,27 @@ import (
 )
 
 type Provider interface {
-	Set(plaintextPassword string) error
-	Matches(plaintextPassword string) (bool, error)
+	Generate(plaintextPassword string) ([]byte, error)
+	Matches(plaintextPassword string, encryptedPass []byte) (bool, error)
 }
 
 func NewProvider() Provider {
 	return &encryptionProvider{}
 }
 
-type encryptionProvider struct {
-	plaintext *string
-	hash      []byte
-}
+type encryptionProvider struct{}
 
-func (p *encryptionProvider) Set(plaintextPassword string) error {
+func (p *encryptionProvider) Generate(plaintextPassword string) ([]byte, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(plaintextPassword), 12)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	p.plaintext = &plaintextPassword
-	p.hash = hash
-
-	return nil
+	return hash, nil
 }
 
-func (p *encryptionProvider) Matches(plaintextPassword string) (bool, error) {
-	err := bcrypt.CompareHashAndPassword(p.hash, []byte(plaintextPassword))
+func (p *encryptionProvider) Matches(plaintextPassword string, encryptedPass []byte) (bool, error) {
+	err := bcrypt.CompareHashAndPassword(encryptedPass, []byte(plaintextPassword))
 	if err != nil {
 		switch {
 		case errors.Is(err, bcrypt.ErrMismatchedHashAndPassword):
