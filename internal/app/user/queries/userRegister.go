@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/arnald/forum/internal/domain/user"
-	"github.com/google/uuid"
+	"github.com/arnald/forum/internal/pkg/uuid"
 )
 
 type UserRegisterRequest struct {
@@ -19,12 +19,14 @@ type UserRegisterRequestHandler interface {
 }
 
 type userRegisterRequestHandler struct {
-	repo user.Repository
+	uuidiProvider uuid.Provider
+	repo          user.Repository
 }
 
-func NewUserRegisterHandler(repo user.Repository) userRegisterRequestHandler {
+func NewUserRegisterHandler(repo user.Repository, uuidProvider uuid.Provider) userRegisterRequestHandler {
 	return userRegisterRequestHandler{
-		repo: repo,
+		repo:          repo,
+		uuidiProvider: uuidProvider,
 	}
 }
 
@@ -36,7 +38,7 @@ func (h userRegisterRequestHandler) Handle(req UserRegisterRequest) error {
 		Username:  req.Name,
 		Email:     req.Email,
 		Role:      "user",
-		ID:        uuid.New(),
+		ID:        h.uuidiProvider.NewUUID(),
 	}
 	err := h.repo.UserRegister(user)
 	if err != nil {
