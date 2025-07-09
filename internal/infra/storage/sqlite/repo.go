@@ -3,9 +3,11 @@ package sqlite
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"log"
 
 	"github.com/arnald/forum/internal/domain/user"
+	"github.com/go-sql-driver/mysql"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -36,6 +38,13 @@ func (r Repo) UserRegister(user user.User) error {
 
 	_, err := r.DB.Exec(query, user.Username, user.Password, user.Email, user.ID.String(), user.CreatedAt.Format("2006-01-02 15:04:05"), user.Role)
 	if err != nil {
+		if mysqlErr, ok := err.(*mysql.MySQLError); ok {
+			if mysqlErr.Number == 1062 { // Error code for UNIQUE constraint violation
+				return ErrDuplicateEmail
+			} else {
+				return fmt.Errorf("mysql error %d: %s", mysqlErr.Number, mysqlErr.Message)
+			}
+		}
 		return err
 	}
 

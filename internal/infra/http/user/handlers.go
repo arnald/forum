@@ -2,12 +2,14 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"os"
 
 	"github.com/arnald/forum/internal/app"
 	"github.com/arnald/forum/internal/app/user/queries"
+	"github.com/arnald/forum/internal/infra/storage/sqlite"
 	"github.com/arnald/forum/internal/pkg/helpers"
 )
 
@@ -53,11 +55,21 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 		Email:    userToRegister.Email,
 	})
 	if err != nil {
-		helpers.RespondWithError(
-			w,
-			http.StatusInternalServerError,
-			err.Error(),
-		)
+		switch {
+		case errors.Is(err, sqlite.ErrDuplicateEmail):
+			helpers.RespondWithJSON(
+				w,
+				http.StatusUnprocessableEntity,
+				nil,
+				"a user with this email address already exists",
+			)
+		default:
+			helpers.RespondWithError(
+				w,
+				http.StatusInternalServerError,
+				err.Error(),
+			)
+		}
 		return
 	}
 
