@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/arnald/forum/internal/domain/user"
+	"github.com/arnald/forum/internal/pkg/bcrypt"
 	"github.com/arnald/forum/internal/pkg/uuid"
 )
 
@@ -19,14 +20,16 @@ type UserRegisterRequestHandler interface {
 }
 
 type userRegisterRequestHandler struct {
-	uuidiProvider uuid.Provider
-	repo          user.Repository
+	uuidiProvider      uuid.Provider
+	encryptionProvider bcrypt.Provider
+	repo               user.Repository
 }
 
-func NewUserRegisterHandler(repo user.Repository, uuidProvider uuid.Provider) userRegisterRequestHandler {
+func NewUserRegisterHandler(repo user.Repository, uuidProvider uuid.Provider, en bcrypt.Provider) userRegisterRequestHandler {
 	return userRegisterRequestHandler{
-		repo:          repo,
-		uuidiProvider: uuidProvider,
+		repo:               repo,
+		uuidiProvider:      uuidProvider,
+		encryptionProvider: en,
 	}
 }
 
@@ -41,7 +44,12 @@ func (h userRegisterRequestHandler) Handle(req UserRegisterRequest) error {
 		ID:        h.uuidiProvider.NewUUID(),
 	}
 
-	err := h.repo.UserRegister(user)
+	err := h.encryptionProvider.Set(*user.Password)
+	if err != nil {
+		return err
+	}
+
+	err = h.repo.UserRegister(user)
 	if err != nil {
 		return err
 	}
