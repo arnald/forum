@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/arnald/forum/internal/config"
 	"github.com/arnald/forum/internal/infra/http/health"
 )
 
@@ -19,6 +20,7 @@ const (
 type Server struct {
 	// ctx context.Context
 	// appServices app.Services
+	config *config.ServerConfig
 	router *http.ServeMux
 }
 
@@ -26,6 +28,7 @@ func NewServer() *Server {
 	httpServer := &Server{
 		router: http.NewServeMux(),
 	}
+	httpServer.loadConfiguration()
 	httpServer.AddHTTPRoutes()
 	return httpServer
 }
@@ -36,18 +39,27 @@ func (server *Server) AddHTTPRoutes() {
 }
 
 func (server *Server) ListenAndServe(port string) {
-	log.Printf("Server started port %s", port)
-
 	srv := &http.Server{
-		Addr:         port,
+		Addr:         server.config.Host + ":" + server.config.Port,
 		Handler:      server.router,
-		ReadTimeout:  readTimeout,
-		WriteTimeout: writeTimeout,
-		IdleTimeout:  idleTimeout,
+		ReadTimeout:  server.config.ReadTimeout,
+		WriteTimeout: server.config.WriteTimeout,
+		IdleTimeout:  server.config.IdleTimeout,
 	}
+
+	log.Printf("Server started port %s (%s environment)", port, server.config.Environment)
 
 	err := srv.ListenAndServe()
 	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatalf("Server failed: %v", err)
 	}
+}
+
+func (server *Server) loadConfiguration() {
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		log.Fatalf("Configuration error: %v", err)
+	}
+
+	server.config = cfg
 }
