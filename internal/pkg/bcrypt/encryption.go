@@ -6,6 +6,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+const encryptionCost = 12
+
 type Provider interface {
 	Generate(plaintextPassword string) ([]byte, error)
 	Matches(plaintextPassword string, encryptedPass []byte) (bool, error)
@@ -18,7 +20,7 @@ func NewProvider() Provider {
 type encryptionProvider struct{}
 
 func (p *encryptionProvider) Generate(plaintextPassword string) ([]byte, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(plaintextPassword), 12)
+	hash, err := bcrypt.GenerateFromPassword([]byte(plaintextPassword), encryptionCost)
 	if err != nil {
 		return nil, err
 	}

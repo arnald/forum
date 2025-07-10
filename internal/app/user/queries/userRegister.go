@@ -1,7 +1,7 @@
 package queries
 
 import (
-	"fmt"
+	"log"
 	"time"
 
 	"github.com/arnald/forum/internal/domain/user"
@@ -52,7 +52,7 @@ func (h userRegisterRequestHandler) Handle(req UserRegisterRequest) (*user.User,
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("User Registered Successfully")
+	log.Println("User Registered Successfully")
 
 	return user, err
 }
