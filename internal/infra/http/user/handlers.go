@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/arnald/forum/internal/app"
 	"github.com/arnald/forum/internal/app/user/queries"
@@ -49,7 +50,7 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 		)
 	}
 
-	err = h.UserServices.UserServices.Queries.UserRegister.Handle(queries.UserRegisterRequest{
+	user, err := h.UserServices.UserServices.Queries.UserRegister.Handle(queries.UserRegisterRequest{
 		Name:     userToRegister.Username,
 		Password: userToRegister.Password,
 		Email:    userToRegister.Email,
@@ -59,7 +60,7 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, sqlite.ErrDuplicateEmail):
 			helpers.RespondWithError(
 				w,
-				http.StatusUnprocessableEntity,
+				http.StatusConflict,
 				"a user with this email address already exists",
 			)
 		default:
@@ -72,10 +73,16 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	newSession, err := h.UserServices.UserServices.Queries.CreateSession.Handle(queries.CreateSessionRequest{
+		UserID:    user.ID.String(),
+		Expiry:    time.Now().Add(24 * time.Hour),
+		IPAddress: r.RemoteAddr,
+	})
+
 	helpers.RespondWithJSON(
 		w,
 		http.StatusOK,
 		nil,
-		"user registered succesfully",
+		newSession,
 	)
 }
