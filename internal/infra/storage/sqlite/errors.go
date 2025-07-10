@@ -2,6 +2,6 @@ package sqlite
 
 import "errors"
 
-var (
-	ErrDuplicateEmail = errors.New("duplicate email")
-)
+const uniqueConstraintViolationErrorCode = 1062
+
+var ErrDuplicateEmail = errors.New("duplicate email")

@@ -3,6 +3,7 @@ package sqlite
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 
@@ -35,29 +36,28 @@ func (r Repo) UserRegister(user *user.User, encryptedPass []byte) error {
 	INSERT INTO users (username, password, email, ID, created_at)
 	VALUES (?, ?, ?, ?, ?)`
 
-	_, err := r.DB.Exec(query, user.Username, encryptedPass, user.Email, user.ID.String(), user.CreatedAt.Format("2006-01-02 15:04:05"))
+	_, err := r.DB.ExecContext(context.TODO(), query, user.Username, encryptedPass, user.Email, user.ID.String(), user.CreatedAt.Format("2006-01-02 15:04:05"))
 	if err != nil {
-		if mysqlErr, ok := err.(*mysql.MySQLError); ok {
-			if mysqlErr.Number == 1062 { // Error code for UNIQUE constraint violation
+		mysqlErr := &mysql.MySQLError{}
+		if errors.As(err, &mysqlErr) {
+			if mysqlErr.Number == uniqueConstraintViolationErrorCode {
 				return ErrDuplicateEmail
-			} else {
-				return fmt.Errorf("mysql error %d: %s", mysqlErr.Number, mysqlErr.Message)
 			}
+			return fmt.Errorf("mysql error %d: %s", mysqlErr.Number, mysqlErr.Message)
 		}
 		return err
 	}
 
 	return nil
-
 }
 
 func (r Repo) CreateSession(session *user.Session) error {
-
 	query := `
         INSERT INTO sessions (token, user_id, expiry, ip_address)
         VALUES (?, ?, ?, ?)`
 
-	_, err := r.DB.Exec(
+	_, err := r.DB.ExecContext(
+		context.TODO(),
 		query,
 		session.Token,
 		session.UserID,
