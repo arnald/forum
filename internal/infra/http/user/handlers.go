@@ -78,6 +78,13 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 		Expiry:    time.Now().Add(24 * time.Hour),
 		IPAddress: r.RemoteAddr,
 	})
+	if err != nil {
+		helpers.RespondWithError(
+			w,
+			http.StatusInternalServerError,
+			err.Error(),
+		)
+	}
 
 	helpers.RespondWithJSON(
 		w,
