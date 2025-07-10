@@ -81,7 +81,7 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 
 	helpers.RespondWithJSON(
 		w,
-		http.StatusOK,
+		http.StatusCreated,
 		nil,
 		newSession,
 	)
