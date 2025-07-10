@@ -1,7 +1,7 @@
 package queries
 
 import (
-	"fmt"
+	"log"
 	"time"
 
 	"github.com/arnald/forum/internal/domain/user"
@@ -43,7 +43,7 @@ func (h createSessionRequestHandler) Handle(req CreateSessionRequest) (*user.Ses
 		return nil, err
 	}
 
-	fmt.Println("Session created sucessfully")
+	log.Println("Session created successfully")
 
 	return session, nil
 }
