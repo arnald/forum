@@ -16,7 +16,7 @@ type UserRegisterRequest struct {
 }
 
 type UserRegisterRequestHandler interface {
-	Handle(req UserRegisterRequest) error
+	Handle(req UserRegisterRequest) (*user.User, error)
 }
 
 type userRegisterRequestHandler struct {
@@ -33,27 +33,26 @@ func NewUserRegisterHandler(repo user.Repository, uuidProvider uuid.Provider, en
 	}
 }
 
-func (h userRegisterRequestHandler) Handle(req UserRegisterRequest) error {
-	user := user.User{
+func (h userRegisterRequestHandler) Handle(req UserRegisterRequest) (*user.User, error) {
+	user := &user.User{
 		CreatedAt: time.Now(),
 		Password:  &req.Password,
 		AvatarURL: nil,
 		Username:  req.Name,
 		Email:     req.Email,
-		Role:      "user",
 		ID:        h.uuidiProvider.NewUUID(),
 	}
 
 	encryptedPass, err := h.encryptionProvider.Generate(*user.Password)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = h.repo.UserRegister(user, encryptedPass)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	fmt.Println("User Registered Successfully")
 
-	return nil
+	return user, err
 }
