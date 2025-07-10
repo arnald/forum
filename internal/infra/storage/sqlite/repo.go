@@ -8,7 +8,6 @@ import (
 
 	"github.com/arnald/forum/internal/domain/user"
 	"github.com/go-sql-driver/mysql"
-	_ "github.com/go-sql-driver/mysql"
 )
 
 type Repo struct {
