@@ -8,7 +8,7 @@ import (
 )
 
 type Queries struct {
-	UserRegister queries.UserRegisterRequestHandler
+	UserRegister  queries.UserRegisterRequestHandler
 	CreateSession queries.CreateSessionRequestHandler
 }
 
