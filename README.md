@@ -38,7 +38,7 @@ Contains the core business entities and models that define the fundamental conce
 - Other domain-specific structs or classes.
 
 ---
-
+k
 ### 2. Application Layer
 
 **Purpose:**  
