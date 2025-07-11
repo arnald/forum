@@ -31,8 +31,8 @@ RUN apk --no-cache add ca-certificates
 
 # Copy binaries and assets from builder
 COPY --from=builder /bin/server /app/server
-COPY --from=builder /app/storage /app/storage  # Copy storage files if needed
-COPY --from=builder /app/RUNNING-FORUM/docs /app/docs  # Optional: Documentation
+COPY --from=builder /app/storage /app/storage 
+COPY --from=builder /app/RUNNING-FORUM/docs /app/docs 
 
 # Copy environment file template
 COPY --from=builder /app/env.example /app/.env
