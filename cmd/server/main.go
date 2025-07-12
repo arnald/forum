@@ -9,6 +9,8 @@ import (
 
 func main() {
 	infraProviders := infra.NewInfraProviders()
+	infraProviders.UserRepository.CreateSessionsTable()
+	infraProviders.UserRepository.CreateUserTable()
 	up := uuid.NewProvider()
 	en := bcrypt.NewProvider()
 	appServices := app.NewServices(infraProviders.UserRepository, up, en)
