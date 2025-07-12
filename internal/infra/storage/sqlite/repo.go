@@ -8,7 +8,7 @@ import (
 	"log"
 
 	"github.com/arnald/forum/internal/domain/user"
-	"github.com/go-sql-driver/mysql"
+	"github.com/mattn/go-sqlite3"
 )
 
 type Repo struct {
@@ -16,7 +16,7 @@ type Repo struct {
 }
 
 func NewRepo() Repo {
-	db, err := sql.Open("mysql", "georgeoik:123@tcp(localhost:3306)/forum")
+	db, err := sql.Open("sqlite3", "./forum.db")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -32,18 +32,41 @@ func (r Repo) GetAll(_ context.Context) ([]user.User, error) {
 }
 
 func (r Repo) UserRegister(user *user.User, encryptedPass []byte) error {
+	ctx := context.TODO()
+
 	query := `
-	INSERT INTO users (username, password, email, ID, created_at)
+	INSERT INTO users (username, password, email, id, created_at)
 	VALUES (?, ?, ?, ?, ?)`
 
-	_, err := r.DB.ExecContext(context.TODO(), query, user.Username, encryptedPass, user.Email, user.ID.String(), user.CreatedAt.Format("2006-01-02 15:04:05"))
+	stmt, err := r.DB.PrepareContext(ctx, query)
 	if err != nil {
-		mysqlErr := &mysql.MySQLError{}
-		if errors.As(err, &mysqlErr) {
-			if mysqlErr.Number == uniqueConstraintViolationErrorCode {
-				return ErrDuplicateEmail
+		return fmt.Errorf("prepare failed: %w", err)
+	}
+	defer stmt.Close()
+
+	_, err = r.DB.ExecContext(
+		context.TODO(),
+		query,
+		user.Username,
+		string(encryptedPass),
+		user.Email,
+		user.ID.String(),
+		user.CreatedAt.Format("2006-01-02 15:04:05"),
+	)
+	if err != nil {
+		var sqliteErr sqlite3.Error
+		if errors.As(err, &sqliteErr) {
+			if sqliteErr.Code == sqlite3.ErrConstraint {
+				switch sqliteErr.ExtendedCode {
+				case sqlite3.ErrConstraintUnique:
+					return ErrDuplicateEmail
+				case sqlite3.ErrConstraintPrimaryKey:
+					return fmt.Errorf("user with this ID already exists")
+				default:
+					return fmt.Errorf("sqlite constraint error: %v", sqliteErr)
+				}
 			}
-			return fmt.Errorf("mysql error %d: %s", mysqlErr.Number, mysqlErr.Message)
+			return fmt.Errorf("sqlite error %d: %s", sqliteErr.Code, sqliteErr.Error())
 		}
 		return err
 	}
@@ -52,16 +75,23 @@ func (r Repo) UserRegister(user *user.User, encryptedPass []byte) error {
 }
 
 func (r Repo) CreateSession(session *user.Session) error {
-	query := `
-        INSERT INTO sessions (token, user_id, expiry, ip_address)
-        VALUES (?, ?, ?, ?)`
+	ctx := context.TODO()
 
-	_, err := r.DB.ExecContext(
-		context.TODO(),
-		query,
+	query := `
+	INSERT INTO sessions (token, user_id, expiry, ip_address)
+	VALUES (?, ?, ?, ?)`
+
+	stmt, err := r.DB.PrepareContext(ctx, query)
+	if err != nil {
+		return fmt.Errorf("prepare failed: %w", err)
+	}
+	defer stmt.Close()
+
+	_, err = stmt.ExecContext(
+		ctx,
 		session.Token,
 		session.UserID,
-		session.Expiry,
+		session.Expiry.Format("2006-01-02 15:04:05"),
 		session.IPAddress,
 	)
 	if err != nil {
