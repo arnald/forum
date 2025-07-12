@@ -6,8 +6,10 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/arnald/forum/internal/app"
 	"github.com/arnald/forum/internal/config"
 	"github.com/arnald/forum/internal/infra/http/health"
+	handlers "github.com/arnald/forum/internal/infra/http/user"
 )
 
 const (
@@ -19,14 +21,15 @@ const (
 
 type Server struct {
 	// ctx context.Context
-	// appServices app.Services
-	config *config.ServerConfig
-	router *http.ServeMux
+	appServices app.Services
+	config      *config.ServerConfig
+	router      *http.ServeMux
 }
 
-func NewServer() *Server {
+func NewServer(appServices app.Services) *Server {
 	httpServer := &Server{
-		router: http.NewServeMux(),
+		router:      http.NewServeMux(),
+		appServices: appServices,
 	}
 	httpServer.loadConfiguration()
 	httpServer.AddHTTPRoutes()
@@ -36,6 +39,7 @@ func NewServer() *Server {
 func (server *Server) AddHTTPRoutes() {
 	// server.router.HandleFunc(apiContext+"/users", user.NewHandler(server.appServices.UserServices).GetAllUsers)
 	server.router.HandleFunc(apiContext+"/health", health.NewHandler().HealthCheck)
+	server.router.HandleFunc(apiContext+"/user", handlers.NewHandler(server.appServices).UserRegister)
 }
 
 func (server *Server) ListenAndServe(port string) {
