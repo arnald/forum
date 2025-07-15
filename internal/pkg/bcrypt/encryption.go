@@ -9,7 +9,7 @@ import (
 const encryptionCost = 12
 
 type Provider interface {
-	Generate(plaintextPassword string) ([]byte, error)
+	Generate(plaintextPassword string) (string, error)
 	Matches(plaintextPassword string, encryptedPass []byte) (bool, error)
 }
 
@@ -19,13 +19,13 @@ func NewProvider() Provider {
 
 type encryptionProvider struct{}
 
-func (p *encryptionProvider) Generate(plaintextPassword string) ([]byte, error) {
+func (p *encryptionProvider) Generate(plaintextPassword string) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(plaintextPassword), encryptionCost)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	return hash, nil
+	return string(hash[:]), nil
 }
 
 func (p *encryptionProvider) Matches(plaintextPassword string, encryptedPass []byte) (bool, error) {
