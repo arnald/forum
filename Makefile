@@ -143,6 +143,11 @@ bench-flame:
 bench-clean:
 	rm -f *.prof bench-*.txt
 
+# Clean database
+db-clean:
+	@echo "==> Cleaning database..."
+	rm -rf db/data
+
 # Show help
 help:
 	@echo "\033[1mCI Commands:\033[0m"
@@ -157,6 +162,7 @@ help:
 	@echo "  \033[36mtest\033[0m            Run tests with coverage"
 	@echo "  \033[36mtest-short\033[0m      Run quick tests"
 	@echo "  \033[36mclean\033[0m           Clean artifacts"
+	@echo "  \033[36mdb-clean\033[0m        Remove database"
 	
 	@echo "\n\033[1mBenchmarking & Profiling (Local):\033[0m"
 	@echo "  \033[36mbench-tools\033[0m     Install benchmark tools (benchstat)"
@@ -168,4 +174,4 @@ help:
 	@echo "\n\033[3mNote: Benchmark commands require 'make bench-tools' and Graphviz for flame graphs\033[0m"
 
 .PHONY: env tools bench-tools ci-mod format check-format staticcheck golangci-lint lint test test-short ci-bench ci clean \
-        bench-compare bench-profile bench-flame bench-clean help
+        bench-compare bench-profile bench-flame bench-clean db-clean help
