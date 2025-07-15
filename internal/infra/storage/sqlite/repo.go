@@ -3,12 +3,10 @@ package sqlite
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"log"
 
 	"github.com/arnald/forum/internal/domain/user"
-	"github.com/mattn/go-sqlite3"
 )
 
 type Repo struct {
@@ -53,21 +51,8 @@ func (r Repo) UserRegister(user *user.User, encryptedPass []byte) error {
 		user.ID.String(),
 		user.CreatedAt.Format("2006-01-02 15:04:05"),
 	)
-	if err != nil {
-		var sqliteErr sqlite3.Error
-		if errors.As(err, &sqliteErr) {
-			if sqliteErr.Code == sqlite3.ErrConstraint {
-				switch sqliteErr.ExtendedCode {
-				case sqlite3.ErrConstraintUnique:
-					return ErrDuplicateEmail
-				case sqlite3.ErrConstraintPrimaryKey:
-					return fmt.Errorf("user with this ID already exists")
-				default:
-					return fmt.Errorf("sqlite constraint error: %v", sqliteErr)
-				}
-			}
-			return fmt.Errorf("sqlite error %d: %s", sqliteErr.Code, sqliteErr.Error())
-		}
+
+	if err := MapSQLiteError(err); err != nil {
 		return err
 	}
 
