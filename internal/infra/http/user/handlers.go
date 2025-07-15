@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log"
@@ -49,8 +50,12 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 			"unable to decode json request",
 		)
 	}
+	defer r.Body.Close()
 
-	user, err := h.UserServices.UserServices.Queries.UserRegister.Handle(queries.UserRegisterRequest{
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Millisecond*80))
+	defer cancel()
+
+	user, err := h.UserServices.UserServices.Queries.UserRegister.Handle(ctx, queries.UserRegisterRequest{
 		Name:     userToRegister.Username,
 		Password: userToRegister.Password,
 		Email:    userToRegister.Email,

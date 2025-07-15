@@ -29,9 +29,7 @@ func (r Repo) GetAll(_ context.Context) ([]user.User, error) {
 	return nil, nil
 }
 
-func (r Repo) UserRegister(user *user.User, encryptedPass []byte) error {
-	ctx := context.TODO()
-
+func (r Repo) UserRegister(ctx context.Context, user *user.User) error {
 	query := `
 	INSERT INTO users (username, password, email, id, created_at)
 	VALUES (?, ?, ?, ?, ?)`
@@ -43,13 +41,12 @@ func (r Repo) UserRegister(user *user.User, encryptedPass []byte) error {
 	defer stmt.Close()
 
 	_, err = r.DB.ExecContext(
-		context.TODO(),
+		ctx,
 		query,
 		user.Username,
-		string(encryptedPass),
+		user.Password,
 		user.Email,
 		user.ID.String(),
-		user.CreatedAt.Format("2006-01-02 15:04:05"),
 	)
 
 	if err := MapSQLiteError(err); err != nil {
@@ -63,7 +60,7 @@ func (r Repo) CreateSession(session *user.Session) error {
 	ctx := context.TODO()
 
 	query := `
-	INSERT INTO sessions (token, user_id, expiry, ip_address)
+	INSERT INTO sessions (token, user_id, expiry)
 	VALUES (?, ?, ?, ?)`
 
 	stmt, err := r.DB.PrepareContext(ctx, query)
@@ -77,7 +74,6 @@ func (r Repo) CreateSession(session *user.Session) error {
 		session.Token,
 		session.UserID,
 		session.Expiry.Format("2006-01-02 15:04:05"),
-		session.IPAddress,
 	)
 	if err != nil {
 		return err

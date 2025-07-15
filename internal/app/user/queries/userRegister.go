@@ -1,6 +1,7 @@
 package queries
 
 import (
+	"context"
 	"log"
 	"time"
 
@@ -16,7 +17,7 @@ type UserRegisterRequest struct {
 }
 
 type UserRegisterRequestHandler interface {
-	Handle(req UserRegisterRequest) (*user.User, error)
+	Handle(ctx context.Context, req UserRegisterRequest) (*user.User, error)
 }
 
 type userRegisterRequestHandler struct {
@@ -33,22 +34,24 @@ func NewUserRegisterHandler(repo user.Repository, uuidProvider uuid.Provider, en
 	}
 }
 
-func (h userRegisterRequestHandler) Handle(req UserRegisterRequest) (*user.User, error) {
+func (h userRegisterRequestHandler) Handle(ctx context.Context, req UserRegisterRequest) (*user.User, error) {
 	user := &user.User{
 		CreatedAt: time.Now(),
-		Password:  &req.Password,
+		Password:  req.Password,
 		AvatarURL: nil,
 		Username:  req.Name,
 		Email:     req.Email,
 		ID:        h.uuidiProvider.NewUUID(),
 	}
 
-	encryptedPass, err := h.encryptionProvider.Generate(*user.Password)
+	encryptedPass, err := h.encryptionProvider.Generate(user.Password)
 	if err != nil {
 		return nil, err
 	}
 
-	err = h.repo.UserRegister(user, encryptedPass)
+	user.Password = encryptedPass
+
+	err = h.repo.UserRegister(ctx, user, encryptedPass)
 	if err != nil {
 		return nil, err
 	}
