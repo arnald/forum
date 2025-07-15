@@ -25,13 +25,23 @@ type ServerConfig struct {
 	Port         string
 	Environment  string
 	APIContext   string
+	Database     DatabaseConfig
 	ReadTimeout  time.Duration
 	WriteTimeout time.Duration
 	IdleTimeout  time.Duration
 }
 
+type DatabaseConfig struct {
+	Driver         string
+	Path           string
+	Pragma         string
+	MigrateOnStart bool
+	SeedOnStart    bool
+	OpenConn       int
+}
+
 func LoadConfig() (*ServerConfig, error) {
-	envFile, _ := os.ReadFile(".env")
+	envFile, _ := os.ReadFile("../../.env")
 	envMap := parseEnv(string(envFile))
 
 	cfg := &ServerConfig{
@@ -42,6 +52,14 @@ func LoadConfig() (*ServerConfig, error) {
 		ReadTimeout:  getEnvDuration("SERVER_READ_TIMEOUT", envMap, readTimeout),
 		WriteTimeout: getEnvDuration("SERVER_WRITE_TIMEOUT", envMap, writeTimeout),
 		IdleTimeout:  getEnvDuration("SERVER_IDLE_TIMEOUT", envMap, idleTimeout),
+		Database: DatabaseConfig{
+			Driver:         getEnv("DB_DRIVER", envMap, "sqlite3"),
+			Path:           getEnv("DB_PATH", envMap, "./data/forum.db"),
+			MigrateOnStart: getEnvBool("DB_MIGRATE_ON_START", envMap, true),
+			SeedOnStart:    getEnvBool("DB_SEED_ON_START", envMap, true),
+			Pragma:         getEnv("DB_PRAGMA", envMap, "_foreign_keys=on&_journal_mode=WAL"),
+			OpenConn:       getEnvInt("DB_OPEN_CONN", envMap, 1),
+		},
 	}
 
 	if cfg.Host == "" {
@@ -95,4 +113,28 @@ func getEnvDuration(key string, envMap map[string]string, defaultSeconds int) ti
 		return time.Duration(defaultSeconds) * time.Second
 	}
 	return time.Duration(seconds) * time.Second
+}
+
+func getEnvBool(key string, envMap map[string]string, defaultValue bool) bool {
+	strVal := getEnv(key, envMap, "")
+	if strVal == "" {
+		return defaultValue
+	}
+	b, err := strconv.ParseBool(strVal)
+	if err != nil {
+		return defaultValue
+	}
+	return b
+}
+
+func getEnvInt(s string, envMap map[string]string, defaultValue int) int {
+	strVal := getEnv(s, envMap, "")
+	if strVal == "" {
+		return defaultValue
+	}
+	i, err := strconv.Atoi(strVal)
+	if err != nil {
+		return defaultValue
+	}
+	return i
 }

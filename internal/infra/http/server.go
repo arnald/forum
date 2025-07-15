@@ -8,6 +8,7 @@ import (
 
 	"github.com/arnald/forum/internal/config"
 	"github.com/arnald/forum/internal/infra/http/health"
+	"github.com/arnald/forum/internal/infra/storage/sqlite"
 )
 
 const (
@@ -29,6 +30,7 @@ func NewServer() *Server {
 		router: http.NewServeMux(),
 	}
 	httpServer.loadConfiguration()
+	httpServer.loadDatabase()
 	httpServer.AddHTTPRoutes()
 	return httpServer
 }
@@ -62,4 +64,11 @@ func (server *Server) loadConfiguration() {
 	}
 
 	server.config = cfg
+}
+
+func (server *Server) loadDatabase() {
+	_, err := sqlite.InitializeDB(*server.config)
+	if err != nil {
+		log.Fatalf("Database error: %v", err)
+	}
 }
