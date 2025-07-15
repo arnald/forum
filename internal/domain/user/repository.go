@@ -8,6 +8,4 @@ type Repository interface {
 	GetAll(ctx context.Context) ([]User, error)
 	UserRegister(user *User, encryptedPass []byte) error
 	CreateSession(session *Session) error
-	CreateUserTable() error
-	CreateSessionsTable() error
 }
