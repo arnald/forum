@@ -51,7 +51,7 @@ func (h userRegisterRequestHandler) Handle(ctx context.Context, req UserRegister
 
 	user.Password = encryptedPass
 
-	err = h.repo.UserRegister(ctx, user, encryptedPass)
+	err = h.repo.UserRegister(ctx, user)
 	if err != nil {
 		return nil, err
 	}
