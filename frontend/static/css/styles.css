@@ -7,15 +7,15 @@
 
 /*----- Custom Properties -----*/
 :root {
-  --primary-color: #117050;
-  --primary-color-light: #20b185;
+  --primary-color: #0aa564;
+  --primary-color-light: #07c073;
   --secondary-color: #5f3dc4;
   --secondary-color-light: #845ef7;
   --dark-background: #333;
-  --tertiary-color: #006de2;
+  --white-background: #eee;
 }
 
-/*----- Main Styling -----*/
+/*----- Default Styles -----*/
 html {
   scroll-behavior: smooth;
 }
@@ -25,6 +25,13 @@ body {
   line-height: 1.4;
   background: #00c6ff; /* fallback for old browsers */
   background: linear-gradient(to right bottom, #0072ff, #00c6ff);
+}
+.forum-title {
+  font-size: 3.5rem;
+  color: var(--dark-background);
+  text-align: center;
+  margin-top: 2rem;
+  text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
 }
 
 /*----- Navbar -----*/
@@ -95,8 +102,25 @@ body {
   justify-content: space-between;
   align-items: center;
 }
-.welcome-user {
+.welcome-user-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}
+.welcome-user,
+.welcome-user-name {
   font-size: 1.2rem;
+}
+.user-avatar {
+  display: flex;
+  height: 30px;
+  background-color: var(--primary-color-light);
+  border-radius: 50%;
+  overflow: hidden;
+}
+.user-avatar img {
+  object-fit: cover;
 }
 .nav-icon-link {
   display: flex;
@@ -112,4 +136,45 @@ body {
 }
 .nav-link-create:hover {
   background-color: var(--primary-color-light);
+}
+
+/*----- Main Styling -----*/
+/* SearchBar */
+/* .main-container {
+  display: flex;
+  flex-direction: column;
+} */
+.input-box {
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 20%;
+  margin: 2rem auto;
+
+  padding: 0.2rem 0.5rem;
+  border-radius: 30px;
+  background: white;
+  transition: all 0.3s ease;
+}
+.input-box:focus-within {
+  /* With focus-within we can make the parent grow when
+    input is on focus state*/
+  outline: 2px solid var(--dark-background);
+  outline-offset: 2px;
+  width: 25%;
+}
+.search-icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 0.5rem;
+  flex-shrink: 0;
+}
+.search-input {
+  border: none;
+  outline: none;
+  flex-grow: 1;
+  font-size: 0.9rem;
+  font-family: inherit;
+  padding: 0.3rem;
+  background: transparent;
 }
