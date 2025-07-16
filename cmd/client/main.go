@@ -16,6 +16,7 @@ func main() {
 
 	router := setupRoutes()
 	log.Printf("Client started port: %s (%s environment)", cfg.Port, cfg.Environment)
+	//nolint:gosec // Client-side dev server doesn't need production timeouts
 	err = http.ListenAndServe(":"+cfg.Port, router)
 	if err != nil {
 		log.Fatal(err)

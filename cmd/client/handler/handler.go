@@ -24,7 +24,11 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
-	tmpl.Execute(w, nil)
+	err = tmpl.Execute(w, nil)
+	if err != nil {
+		log.Println("Error executing template:", err)
+		http.Error(w, "Failed to render page", http.StatusInternalServerError)
+	}
 }
 
 func notFoundHandler(w http.ResponseWriter, _ *http.Request, errorMessage string, httpStatus int) {
@@ -37,8 +41,12 @@ func notFoundHandler(w http.ResponseWriter, _ *http.Request, errorMessage string
 	}
 
 	w.WriteHeader(httpStatus)
-	tmpl.Execute(w, map[string]string{
+	err = tmpl.Execute(w, map[string]string{
 		"ErrorMessage":   errorMessage,
 		"HttpStatusCode": strconv.Itoa(httpStatus),
 	})
+	if err != nil {
+		log.Println("Error executing template:", err)
+		http.Error(w, errorMessage, httpStatus)
+	}
 }

@@ -1,3 +1,115 @@
-h1 {
-  color: red;
+/*----- Reset -----*/
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+/*----- Custom Properties -----*/
+:root {
+  --primary-color: #117050;
+  --primary-color-light: #20b185;
+  --secondary-color: #5f3dc4;
+  --secondary-color-light: #845ef7;
+  --dark-background: #333;
+  --tertiary-color: #006de2;
+}
+
+/*----- Main Styling -----*/
+html {
+  scroll-behavior: smooth;
+}
+body {
+  min-height: 100vh;
+  font-family: "Rubik", Arial, Helvetica, sans-serif;
+  line-height: 1.4;
+  background: #00c6ff; /* fallback for old browsers */
+  background: linear-gradient(to right bottom, #0072ff, #00c6ff);
+}
+
+/*----- Navbar -----*/
+.navbar {
+  height: 100%;
+  background-color: #eee;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+.nav-container {
+  width: 100%;
+  max-width: 1600px; /* Adjust as needed */
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.logo {
+  transition: all 0.3s;
+}
+.logo:hover {
+  transform: scale(1.03);
+}
+.logo-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+.logo-icon {
+  height: 50px;
+}
+.logo-icon img {
+  height: 100%;
+  object-fit: contain;
+}
+.logo-title {
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--dark-background);
+}
+.nav-links {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  list-style-type: none;
+}
+.nav-link {
+  background-color: var(--secondary-color);
+  padding: 0.3rem 0.6rem;
+  border-radius: 10px;
+}
+.nav-link a {
+  color: #fff;
+  text-decoration: none;
+}
+.nav-link:hover {
+  background-color: var(--secondary-color-light);
+}
+.nav-link:hover a {
+  color: #111;
+}
+/* Dynamic user navbar */
+.welcome-box {
+  width: 40%; /* make container smaller than parent */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.welcome-user {
+  font-size: 1.2rem;
+}
+.nav-icon-link {
+  display: flex;
+  align-items: center;
+  width: 30px;
+  color: var(--dark-background);
+}
+.nav-icon-link:hover {
+  color: var(--secondary-color-light);
+}
+.nav-link-create {
+  background-color: var(--primary-color);
+}
+.nav-link-create:hover {
+  background-color: var(--primary-color-light);
 }
