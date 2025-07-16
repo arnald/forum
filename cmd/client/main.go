@@ -25,7 +25,7 @@ func main() {
 func setupRoutes() *http.ServeMux {
 	router := http.NewServeMux()
 	router.HandleFunc("/", handler.HomePage)
-	router.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("../../frontend/"))))
+	router.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("frontend/static"))))
 
 	return router
 }

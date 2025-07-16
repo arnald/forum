@@ -26,7 +26,7 @@ func LoadClientConfig() (*Client, error) {
 
 	client := &Client{
 		Host:        helpers.GetEnv("CLIENT_HOST", envMap, "localhost"),
-		Port:        helpers.GetEnv("CLIENT_PORT", envMap, "3000"),
+		Port:        helpers.GetEnv("CLIENT_PORT", envMap, "3001"),
 		Environment: helpers.GetEnv("CLIENT_ENVIRONMENT", envMap, "development"),
 	}
 
