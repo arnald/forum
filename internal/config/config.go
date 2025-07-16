@@ -14,7 +14,6 @@ const (
 	readTimeout  = 5
 	writeTimeout = 10
 	idleTimeout  = 15
-	configParts  = 2
 )
 
 var (
@@ -48,13 +47,13 @@ func LoadConfig() (*ServerConfig, error) {
 	envMap := parseEnv(string(envFile))
 
 	cfg := &ServerConfig{
-		Host:         getEnv("SERVER_HOST", envMap, "localhost"),
-		Port:         getEnv("SERVER_PORT", envMap, "8080"),
-		Environment:  getEnv("SERVER_ENVIRONMENT", envMap, "development"),
-		APIContext:   getEnv("API_CONTEXT", envMap, "/api/v1"),
-		ReadTimeout:  getEnvDuration("SERVER_READ_TIMEOUT", envMap, readTimeout),
-		WriteTimeout: getEnvDuration("SERVER_WRITE_TIMEOUT", envMap, writeTimeout),
-		IdleTimeout:  getEnvDuration("SERVER_IDLE_TIMEOUT", envMap, idleTimeout),
+		Host:         helpers.GetEnv("SERVER_HOST", envMap, "localhost"),
+		Port:         helpers.GetEnv("SERVER_PORT", envMap, "8080"),
+		Environment:  helpers.GetEnv("SERVER_ENVIRONMENT", envMap, "development"),
+		APIContext:   helpers.GetEnv("API_CONTEXT", envMap, "/api/v1"),
+		ReadTimeout:  helpers.GetEnvDuration("SERVER_READ_TIMEOUT", envMap, readTimeout),
+		WriteTimeout: helpers.GetEnvDuration("SERVER_WRITE_TIMEOUT", envMap, writeTimeout),
+		IdleTimeout:  helpers.GetEnvDuration("SERVER_IDLE_TIMEOUT", envMap, idleTimeout),
 		Database: DatabaseConfig{
 			Driver:         getEnv("DB_DRIVER", envMap, "sqlite3"),
 			Path:           resolver.GetPath(getEnv("DB_PATH", envMap, "data/forum.db")),
@@ -74,70 +73,4 @@ func LoadConfig() (*ServerConfig, error) {
 	}
 
 	return cfg, nil
-}
-
-func parseEnv(content string) map[string]string {
-	env := make(map[string]string)
-	for line := range strings.SplitSeq(content, "\n") {
-		line = strings.TrimSpace(line)
-		if line == "" || strings.HasPrefix(line, "#") {
-			continue
-		}
-		parts := strings.SplitN(line, "=", configParts)
-		if len(parts) == configParts {
-			key := strings.TrimSpace(parts[0])
-			value := strings.TrimSpace(parts[1])
-			env[key] = value
-		}
-	}
-	return env
-}
-
-// Check OS environment -> .env file -> default values.
-func getEnv(key string, envMap map[string]string, defaultValue string) string {
-	if val, exists := os.LookupEnv(key); exists {
-		return val
-	}
-	if val, exists := envMap[key]; exists {
-		return val
-	}
-
-	return defaultValue
-}
-
-func getEnvDuration(key string, envMap map[string]string, defaultSeconds int) time.Duration {
-	strValue := getEnv(key, envMap, "")
-	if strValue == "" {
-		return time.Duration(defaultSeconds) * time.Second
-	}
-
-	seconds, err := strconv.Atoi(strValue)
-	if err != nil {
-		return time.Duration(defaultSeconds) * time.Second
-	}
-	return time.Duration(seconds) * time.Second
-}
-
-func getEnvBool(key string, envMap map[string]string, defaultValue bool) bool {
-	strVal := getEnv(key, envMap, "")
-	if strVal == "" {
-		return defaultValue
-	}
-	b, err := strconv.ParseBool(strVal)
-	if err != nil {
-		return defaultValue
-	}
-	return b
-}
-
-func getEnvInt(s string, envMap map[string]string, defaultValue int) int {
-	strVal := getEnv(s, envMap, "")
-	if strVal == "" {
-		return defaultValue
-	}
-	i, err := strconv.Atoi(strVal)
-	if err != nil {
-		return defaultValue
-	}
-	return i
 }
