@@ -23,7 +23,7 @@
           <div class="logo">
             <a class="logo-link" href="/">
               <div class="logo-icon">
-                <img src="/static/images/logo-icon.png" alt="Logo Icon" />
+                <img src="/static/images/icons/logo-icon.png" alt="Logo Icon" />
               </div>
               <span class="logo-title">Forum</span>
             </a>
@@ -32,29 +32,35 @@
 
           <!-- {If .User} -->
           <!-- <div class="welcome-box"> -->
-
           <!-- { .User.Username } This goes inside span for 
                 dynamic user name-->
-
-          <!-- <span class="welcome-user">Welcome, Alice</span>
-            <ul class="nav-links">
-              <li class="nav-icon">
-                <a href="/notifications" class="nav-icon-link">
-                  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path
-                      d="M12 22C13.1 22 14 21.1 14 20H10C10 21.1 10.9 22 12 22ZM18 16V11C18 7.93 16.37 5.36 13.5 4.68V4C13.5 3.17 12.83 2.5 12 2.5C11.17 2.5 10.5 3.17 10.5 4V4.68C7.64 5.36 6 7.92 6 11V16L4 18V19H20V18L18 16Z"
-                      fill="currentColor"
-                    />
-                  </svg>
-                </a>
-              </li>
-              <li class="nav-link nav-link-create">
-                <a href="/create-post">New Post</a>
-              </li>
-              <li class="nav-link">
-                <a href="/logout">Logout</a>
-              </li>
-            </ul> -->
+          <!-- <div class="welcome-user-box">
+            <div class="welcome-user-text">
+              <span class="welcome-user">Welcome,</span>
+              <span class="welcome-user-name">Alice</span>
+            </div>
+            <span class="user-avatar">
+              <img src="static/images/icons/user-avatar.png" alt="User Avatar" />
+            </span>
+          </div>
+          <ul class="nav-links">
+            <li class="nav-icon">
+              <a href="/notifications" class="nav-icon-link">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M12 22C13.1 22 14 21.1 14 20H10C10 21.1 10.9 22 12 22ZM18 16V11C18 7.93 16.37 5.36 13.5 4.68V4C13.5 3.17 12.83 2.5 12 2.5C11.17 2.5 10.5 3.17 10.5 4V4.68C7.64 5.36 6 7.92 6 11V16L4 18V19H20V18L18 16Z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </a>
+            </li>
+            <li class="nav-link nav-link-create">
+              <a href="/create-post">New Post</a>
+            </li>
+            <li class="nav-link">
+              <a href="/logout">Logout</a>
+            </li>
+          </ul> -->
           <!-- </div> -->
 
           <!-- {else} -->
@@ -73,6 +79,33 @@
         </div>
       </nav>
     </header>
-    <main></main>
+    <main>
+      <!-- Typically waiting dunamic content -->
+      <!-- { block "content" . }{ end } -->
+      <h1 class="forum-title">Welcome to Forum</h1>
+
+      <section>
+        <div class="main-container">
+          <!-- SearchBar -->
+          <div class="input-box">
+            <img
+              class="search-icon"
+              src="/static/images/icons/search-icon.png"
+              alt="search icon"
+            />
+            <input
+              type="text"
+              class="search-input"
+              id="search-input"
+              name="q"
+              placeholder="Type to search..."
+              autocomplete="off"
+            />
+          </div>
+
+          <h2>Recent Posts</h2>
+        </div>
+      </section>
+    </main>
   </body>
 </html>
