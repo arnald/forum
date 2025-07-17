@@ -11,7 +11,7 @@
   --primary-color-light: #07c073;
   --secondary-color: #5f3dc4;
   --secondary-color-light: #845ef7;
-  --dark-background: #333;
+  --dark-background: #222;
   --white-background: #eee;
 }
 
@@ -26,12 +26,31 @@ body {
   background: #00c6ff; /* fallback for old browsers */
   background: linear-gradient(to right bottom, #0072ff, #00c6ff);
 }
-.forum-title {
+h1 {
   font-size: 3.5rem;
   color: var(--dark-background);
   text-align: center;
   margin-top: 2rem;
+  margin-bottom: 4rem;
   text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
+}
+h2 {
+  font-size: 2.5rem;
+  color: var(--dark-background);
+  text-shadow: 2px 2px 10px rgba(255, 255, 255, 0.5);
+  margin-top: 4rem;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+h3 {
+  font-size: 1.8rem;
+  text-align: center;
+}
+.main-container {
+  max-width: 1200px;
+  /* border: 1px solid red; */
+  width: 100%;
+  margin: 0 auto;
 }
 
 /*----- Navbar -----*/
@@ -139,17 +158,19 @@ body {
 }
 
 /*----- Main Styling -----*/
-/* SearchBar */
-/* .main-container {
+/*--- SearchBar ---*/
+.search-wrapper {
+  max-width: 600px;
+  width: 100%;
+  margin: 0 auto;
   display: flex;
-  flex-direction: column;
-} */
+}
 .input-box {
   display: flex;
   align-items: center;
   position: relative;
-  width: 20%;
   margin: 2rem auto;
+  flex-grow: 0.8;
 
   padding: 0.2rem 0.5rem;
   border-radius: 30px;
@@ -161,7 +182,7 @@ body {
     input is on focus state*/
   outline: 2px solid var(--dark-background);
   outline-offset: 2px;
-  width: 25%;
+  flex-grow: 1;
 }
 .search-icon {
   width: 20px;
@@ -177,4 +198,78 @@ body {
   font-family: inherit;
   padding: 0.3rem;
   background: transparent;
+}
+
+/*--- Posts ---*/
+.post-card-container {
+  width: 100%; /* of the main container */
+  /* border: 1px solid green; */
+  display: flex;
+  flex-flow: column;
+  justify-content: center;
+  align-items: center;
+  row-gap: 2rem;
+}
+.post-card {
+  max-width: 800px;
+  width: 100%;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  border-radius: 10px;
+  background-color: var(--white-background);
+  padding: 0.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  row-gap: 1rem;
+  transition: all 0.3s;
+}
+.post-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.7);
+}
+.post-title a {
+  text-decoration: none;
+  color: var(--primary-color);
+}
+.post-title a:hover {
+  color: var(--primary-color-light);
+}
+.post-content {
+  width: 100%; /* of the post card */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  /* For multi-line truncation */
+  display: -webkit-box;
+  -webkit-line-clamp: 4; /* Number of lines to show */
+  -webkit-box-orient: vertical;
+}
+.post-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.icons-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* border: 1px solid saddlebrown; */
+  column-gap: 2rem;
+}
+.button-wrapper,
+.post-comments {
+  display: flex;
+  align-items: center;
+  column-gap: 0.3rem;
+}
+.post-like-btn,
+.post-dislike-btn {
+  border: none;
+  cursor: pointer;
+}
+.post-dislike-btn img,
+.post-comments img {
+  width: 28px;
+}
+.post-author {
+  font-size: 1.1rem;
+  margin-right: 3rem;
 }
