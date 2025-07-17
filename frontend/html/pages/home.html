@@ -87,23 +87,214 @@
       <section>
         <div class="main-container">
           <!-- SearchBar -->
-          <div class="input-box">
-            <img
-              class="search-icon"
-              src="/static/images/icons/search-icon.png"
-              alt="search icon"
-            />
-            <input
-              type="text"
-              class="search-input"
-              id="search-input"
-              name="q"
-              placeholder="Type to search..."
-              autocomplete="off"
-            />
+          <div class="search-wrapper">
+            <div class="input-box">
+              <img
+                class="search-icon"
+                src="/static/images/icons/search-icon.png"
+                alt="search icon"
+              />
+              <input
+                type="text"
+                class="search-input"
+                id="search-input"
+                name="search-text"
+                placeholder="Type to search..."
+                autocomplete="off"
+              />
+            </div>
           </div>
 
           <h2>Recent Posts</h2>
+          <!-- { if .Posts } -->
+          <!-- { range .Posts } -->
+          <div class="post-card-container">
+            <div class="post-card">
+              <h3 class="post-title">
+                <a href="/posts/{{ .ID }}" data-attribute="{{.Title}}"
+                  >Post Title Here</a
+                >
+              </h3>
+              <p class="post-content" data-attribute="{{ .Content }}">
+                Lorem ipsum dolor sit, amet consectetur adipisicing elit. Sint
+                unde sunt nam aspernatur maiores dolorem, facilis accusamus
+                doloribus ab eius ipsa, fugit sequi itaque non dolores in.
+                Commodi, corporis quia! Lorem ipsum dolor sit, amet consectetur
+                adipisicing elit. Voluptates aut illum blanditiis rerum ea dicta
+                porro quae iusto quisquam veritatis quibusdam, non neque, qui
+                vel earum amet temporibus aperiam fuga.
+              </p>
+              <div class="post-meta">
+                <div class="icons-wrapper">
+                  <div class="button-wrapper">
+                    <button class="post-like-btn">
+                      <span class="post-like-icon">
+                        <img
+                          src="/static/images/icons/icon-like.png"
+                          alt="Like Icon"
+                        />
+                      </span>
+                    </button>
+                    <span class="post-likes" data-attribute="{{ .Likes }}"
+                      >10</span
+                    >
+                  </div>
+                  <div class="button-wrapper">
+                    <button class="post-dislike-btn">
+                      <span class="post-dislike-icon">
+                        <img
+                          src="/static/images/icons/icon-dislike.png"
+                          alt="Dislike Icon"
+                        />
+                      </span>
+                    </button>
+                    <span class="post-dislikes" data-attribute="{{ .Dislikes }}"
+                      >1</span
+                    >
+                  </div>
+                  <div class="post-comments">
+                    <a href="/posts/{{ .ID }}#comments"
+                      ><img
+                        src="static/images/icons/icon-comments.png"
+                        alt="Comments Icon"
+                    /></a>
+                    <span class="post-comments-count"
+                      ><!--{ len .Comments }-->1</span
+                    >
+                  </div>
+                </div>
+                <span class="post-author" data-attribute="{{ .Author }}"
+                  >By alice</span
+                >
+              </div>
+            </div>
+
+            <!-- { end } -->
+            <!-- { else } -->
+            <!-- <p>No posts found.</p> -->
+            <!-- { end } -->
+            <!-- </div> -->
+
+            <div class="post-card">
+              <h3 class="post-title">
+                <a href="/posts/{{ .ID }}" data-attribute="{{.Title}}"
+                  >Post Title Here</a
+                >
+              </h3>
+              <p class="post-content" data-attribute="{{ .Content }}">
+                Lorem ipsum dolor sit, amet consectetur adipisicing elit. Sint
+                unde sunt nam aspernatur maiores dolorem, facilis accusamus
+                doloribus ab eius ipsa, fugit sequi itaque non dolores in.
+                Commodi, corporis quia! Lorem ipsum dolor sit, amet consectetur
+                adipisicing elit. Voluptates aut illum blanditiis rerum ea dicta
+                porro quae iusto quisquam veritatis quibusdam, non neque, qui
+                vel earum amet temporibus aperiam fuga.
+              </p>
+              <div class="post-meta">
+                <div class="icons-wrapper">
+                  <div class="button-wrapper">
+                    <button class="post-like-btn">
+                      <span class="post-like-icon">
+                        <img
+                          src="/static/images/icons/icon-like.png"
+                          alt="Like Icon"
+                        />
+                      </span>
+                    </button>
+                    <span class="post-likes" data-attribute="{{ .Likes }}"
+                      >10</span
+                    >
+                  </div>
+                  <div class="button-wrapper">
+                    <button class="post-dislike-btn">
+                      <span class="post-dislike-icon">
+                        <img
+                          src="/static/images/icons/icon-dislike.png"
+                          alt="Dislike Icon"
+                        />
+                      </span>
+                    </button>
+                    <span class="post-dislikes" data-attribute="{{ .Dislikes }}"
+                      >1</span
+                    >
+                  </div>
+                  <div class="post-comments">
+                    <a href="/posts/{{ .ID }}#comments"
+                      ><img
+                        src="static/images/icons/icon-comments.png"
+                        alt="Comments Icon"
+                    /></a>
+                    <span class="post-comments-count"
+                      ><!--{ len .Comments }-->1</span
+                    >
+                  </div>
+                </div>
+                <span class="post-author" data-attribute="{{ .Author }}"
+                  >By alice</span
+                >
+              </div>
+            </div>
+
+            <div class="post-card">
+              <h3 class="post-title">
+                <a href="/posts/{{ .ID }}" data-attribute="{{.Title}}"
+                  >Post Title Here</a
+                >
+              </h3>
+              <p class="post-content" data-attribute="{{ .Content }}">
+                Lorem ipsum dolor sit, amet consectetur adipisicing elit. Sint
+                unde sunt nam aspernatur maiores dolorem, facilis accusamus
+                doloribus ab eius ipsa, fugit sequi itaque non dolores in.
+                Commodi, corporis quia! Lorem ipsum dolor sit, amet consectetur
+                adipisicing elit. Voluptates aut illum blanditiis rerum ea dicta
+                porro quae iusto quisquam veritatis quibusdam, non neque, qui
+                vel earum amet temporibus aperiam fuga.
+              </p>
+              <div class="post-meta">
+                <div class="icons-wrapper">
+                  <div class="button-wrapper">
+                    <button class="post-like-btn">
+                      <span class="post-like-icon">
+                        <img
+                          src="/static/images/icons/icon-like.png"
+                          alt="Like Icon"
+                        />
+                      </span>
+                    </button>
+                    <span class="post-likes" data-attribute="{{ .Likes }}"
+                      >10</span
+                    >
+                  </div>
+                  <div class="button-wrapper">
+                    <button class="post-dislike-btn">
+                      <span class="post-dislike-icon">
+                        <img
+                          src="/static/images/icons/icon-dislike.png"
+                          alt="Dislike Icon"
+                        />
+                      </span>
+                    </button>
+                    <span class="post-dislikes" data-attribute="{{ .Dislikes }}"
+                      >1</span
+                    >
+                  </div>
+                  <div class="post-comments">
+                    <a href="/posts/{{ .ID }}#comments"
+                      ><img
+                        src="static/images/icons/icon-comments.png"
+                        alt="Comments Icon"
+                    /></a>
+                    <span class="post-comments-count"
+                      ><!--{ len .Comments }-->1</span
+                    >
+                  </div>
+                </div>
+                <span class="post-author" data-attribute="{{ .Author }}"
+                  >By alice</span
+                >
+              </div>
+            </div>
+          </div>
         </div>
       </section>
     </main>
