@@ -52,7 +52,7 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Millisecond*80))
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Hour*3))
 	defer cancel()
 
 	user, err := h.UserServices.UserServices.Queries.UserRegister.Handle(ctx, queries.UserRegisterRequest{

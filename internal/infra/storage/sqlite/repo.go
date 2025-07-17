@@ -14,7 +14,7 @@ type Repo struct {
 }
 
 func NewRepo() Repo {
-	db, err := sql.Open("sqlite3", "./forum.db")
+	db, err := sql.Open("sqlite3", "./data/forum.db")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -31,8 +31,8 @@ func (r Repo) GetAll(_ context.Context) ([]user.User, error) {
 
 func (r Repo) UserRegister(ctx context.Context, user *user.User) error {
 	query := `
-	INSERT INTO users (username, password, email, id, created_at)
-	VALUES (?, ?, ?, ?, ?)`
+	INSERT INTO users (username, password_hash, email, id)
+	VALUES (?, ?, ?, ?)`
 
 	stmt, err := r.DB.PrepareContext(ctx, query)
 	if err != nil {
@@ -60,8 +60,8 @@ func (r Repo) CreateSession(session *user.Session) error {
 	ctx := context.TODO()
 
 	query := `
-	INSERT INTO sessions (token, user_id, expiry)
-	VALUES (?, ?, ?, ?)`
+	INSERT INTO sessions (token, user_id, expires_at)
+	VALUES (?, ?, ?)`
 
 	stmt, err := r.DB.PrepareContext(ctx, query)
 	if err != nil {
