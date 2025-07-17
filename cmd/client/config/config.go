@@ -5,8 +5,16 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/arnald/forum/internal/pkg/helpers"
+)
+
+const (
+	readHeaderTimeout = 5
+	readTimeout       = 10
+	writeTimeout      = 20
+	idleTimeout       = 30
 )
 
 var (
@@ -15,9 +23,17 @@ var (
 )
 
 type Client struct {
-	Host        string
-	Port        string
-	Environment string
+	Host         string
+	Port         string
+	Environment  string
+	HTTPTimeouts HTTPTimeouts
+}
+
+type HTTPTimeouts struct {
+	ReadHeader time.Duration
+	Read       time.Duration
+	Write      time.Duration
+	Idle       time.Duration
 }
 
 func LoadClientConfig() (*Client, error) {
@@ -28,6 +44,12 @@ func LoadClientConfig() (*Client, error) {
 		Host:        helpers.GetEnv("CLIENT_HOST", envMap, "localhost"),
 		Port:        helpers.GetEnv("CLIENT_PORT", envMap, "3001"),
 		Environment: helpers.GetEnv("CLIENT_ENVIRONMENT", envMap, "development"),
+		HTTPTimeouts: HTTPTimeouts{
+			ReadHeader: helpers.GetEnvDuration("CLIENT_READ_HEADER_TIMEOUT", envMap, readHeaderTimeout),
+			Read:       helpers.GetEnvDuration("CLIENT_READ_TIMEOUT", envMap, readTimeout),
+			Write:      helpers.GetEnvDuration("CLIENT_WRITE_TIMEOUT", envMap, writeTimeout),
+			Idle:       helpers.GetEnvDuration("CLIENT_IDLE_TIMEOUT", envMap, idleTimeout),
+		},
 	}
 
 	if client.Host == "" {
