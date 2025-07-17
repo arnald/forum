@@ -8,7 +8,7 @@ import (
 
 type User struct {
 	CreatedAt time.Time
-	Password  *string
+	Password  string
 	AvatarURL *string
 	Username  string
 	Email     string
