@@ -15,18 +15,26 @@ func main() {
 	}
 
 	router := setupRoutes()
+	client := &http.Server{
+		Addr:              ":" + cfg.Port,
+		Handler:           router,
+		ReadHeaderTimeout: cfg.HTTPTimeouts.ReadHeader,
+		ReadTimeout:       cfg.HTTPTimeouts.Read,
+		WriteTimeout:      cfg.HTTPTimeouts.Write,
+		IdleTimeout:       cfg.HTTPTimeouts.Idle,
+	}
+
 	log.Printf("Client started port: %s (%s environment)", cfg.Port, cfg.Environment)
-	//nolint:gosec // Client-side dev server doesn't need production timeouts
-	err = http.ListenAndServe(":"+cfg.Port, router)
+	err = client.ListenAndServe()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Client error: ", err)
 	}
 }
 
 func setupRoutes() *http.ServeMux {
 	router := http.NewServeMux()
 	router.HandleFunc("/", handler.HomePage)
-	router.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("frontend/static"))))
+	router.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("../../frontend/static"))))
 
 	return router
 }
