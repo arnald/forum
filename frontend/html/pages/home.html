@@ -15,6 +15,7 @@
     />
     <!----- Stylesheets ----->
     <link rel="stylesheet" href="/static/css/styles.css" />
+    <link rel="stylesheet" href="/static/css/keyframes.css" />
   </head>
   <body>
     <header>
@@ -84,219 +85,342 @@
       <!-- { block "content" . }{ end } -->
       <h1 class="forum-title">Welcome to Forum</h1>
 
-      <section>
-        <div class="main-container">
-          <!-- SearchBar -->
-          <div class="search-wrapper">
-            <div class="input-box">
-              <img
-                class="search-icon"
-                src="/static/images/icons/search-icon.png"
-                alt="search icon"
-              />
-              <input
-                type="text"
-                class="search-input"
-                id="search-input"
-                name="search-text"
-                placeholder="Type to search..."
-                autocomplete="off"
-              />
+      <div class="main-container">
+        <!-- Details Categories -->
+        <div class="nav-categories">
+          <details class="category-details">
+            <summary>Categories</summary>
+            <div class="details-content">
+              <a href="/category/technology" class="details-category-link">
+                <div class="details-text-box">
+                  <span class="details-category-color tech"></span>
+                  <span class="details-category-title">Technology</span>
+                </div>
+                <span class="category-count">3</span>
+              </a>
+
+              <a href="/category/science" class="details-category-link">
+                <div class="details-text-box">
+                  <span class="details-category-color science"></span>
+                  <span class="details-category-title">Science</span>
+                </div>
+                <span class="category-count">3</span>
+              </a>
+
+              <a href="/category/health" class="details-category-link">
+                <div class="details-text-box">
+                  <span class="details-category-color health"></span>
+                  <span class="details-category-title">Health</span>
+                </div>
+                <span class="category-count">36</span>
+              </a>
+
+              <a href="/category/business" class="details-category-link">
+                <div class="details-text-box">
+                  <span class="details-category-color business"></span>
+                  <span class="details-category-title">Business</span>
+                </div>
+                <span class="category-count">324</span>
+              </a>
+            </div>
+          </details>
+          <a href="/categories" class="nav-categories-btn active">Categories</a>
+          <a href="/latest_posts" class="nav-categories-btn">Latest</a>
+          <a href="/top_posts" class="nav-categories-btn">Top</a>
+        </div>
+
+        <!-- Categories -->
+        <div class="categories-container">
+          <div class="category">
+            <div class="category-wrapper">
+              <div class="category-img-box">
+                <a href="/category/start" class="category-link">
+                  <svg
+                    viewBox="0 0 1024 1024"
+                    class="category-img start"
+                    version="1.1"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="#000000"
+                  >
+                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                    <g
+                      id="SVGRepo_tracerCarrier"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    ></g>
+                    <g id="SVGRepo_iconCarrier">
+                      <path
+                        d="M810.666667 896H213.333333c-46.933333 0-85.333333-38.4-85.333333-85.333333V213.333333c0-46.933333 38.4-85.333333 85.333333-85.333333h597.333334c46.933333 0 85.333333 38.4 85.333333 85.333333v597.333334c0 46.933333-38.4 85.333333-85.333333 85.333333z"
+                        fill="#fd1e4b"
+                      ></path>
+                      <path
+                        d="M661.333333 512l-234.666666-170.666667v341.333334z"
+                        fill="#FFFFFF"
+                      ></path>
+                    </g>
+                  </svg>
+                </a>
+              </div>
+
+              <div class="category-info">
+                <div class="category-info-box">
+                  <a href="/category/start" class="category-link">
+                    <div class="category-title-box">
+                      <span class="category-title-color tech"></span>
+                      <span class="category-title">Get Started</span>
+                    </div>
+                  </a>
+                  <p class="category-description">
+                    New to the forum? Here’s what you need to know.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="category-posts">
+              <div class="category-post">
+                <a href="/topic/id" class="topic-link">
+                  <span class="category-post-title"
+                    >Tips and tricks for using the forum
+                  </span>
+                </a>
+                <span class="category-post-date">Feb 2023</span>
+              </div>
+              <div class="category-post">
+                <a href="/topic/id" class="topic-link">
+                  <span class="category-post-title">Forum Guidelines </span>
+                </a>
+                <span class="category-post-date">Feb 2023</span>
+              </div>
+              <div class="category-post">
+                <a href="/topic/id" class="topic-link">
+                  <span class="category-post-title"
+                    >Welcome to our new Forum</span
+                  >
+                </a>
+                <span class="category-post-date">Feb 2023</span>
+              </div>
             </div>
           </div>
 
-          <h2>Recent Posts</h2>
-          <!-- { if .Posts } -->
-          <!-- { range .Posts } -->
-          <div class="post-card-container">
-            <div class="post-card">
-              <h3 class="post-title">
-                <a href="/posts/{{ .ID }}" data-attribute="{{.Title}}"
-                  >Post Title Here</a
-                >
-              </h3>
-              <p class="post-content" data-attribute="{{ .Content }}">
-                Lorem ipsum dolor sit, amet consectetur adipisicing elit. Sint
-                unde sunt nam aspernatur maiores dolorem, facilis accusamus
-                doloribus ab eius ipsa, fugit sequi itaque non dolores in.
-                Commodi, corporis quia! Lorem ipsum dolor sit, amet consectetur
-                adipisicing elit. Voluptates aut illum blanditiis rerum ea dicta
-                porro quae iusto quisquam veritatis quibusdam, non neque, qui
-                vel earum amet temporibus aperiam fuga.
-              </p>
-              <div class="post-meta">
-                <div class="icons-wrapper">
-                  <div class="button-wrapper">
-                    <button class="post-like-btn">
-                      <span class="post-like-icon">
-                        <img
-                          src="/static/images/icons/icon-like.png"
-                          alt="Like Icon"
-                        />
-                      </span>
-                    </button>
-                    <span class="post-likes" data-attribute="{{ .Likes }}"
-                      >10</span
-                    >
-                  </div>
-                  <div class="button-wrapper">
-                    <button class="post-dislike-btn">
-                      <span class="post-dislike-icon">
-                        <img
-                          src="/static/images/icons/icon-dislike.png"
-                          alt="Dislike Icon"
-                        />
-                      </span>
-                    </button>
-                    <span class="post-dislikes" data-attribute="{{ .Dislikes }}"
-                      >1</span
-                    >
-                  </div>
-                  <div class="post-comments">
-                    <a href="/posts/{{ .ID }}#comments"
-                      ><img
-                        src="static/images/icons/icon-comments.png"
-                        alt="Comments Icon"
-                    /></a>
-                    <span class="post-comments-count"
-                      ><!--{ len .Comments }-->1</span
-                    >
-                  </div>
+          <div class="category">
+            <div class="category-wrapper">
+              <div class="category-img-box">
+                <a href="/category/start" class="category-link">
+                  <svg
+                    viewBox="0 0 1024 1024"
+                    class="category-img start"
+                    version="1.1"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="#000000"
+                  >
+                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                    <g
+                      id="SVGRepo_tracerCarrier"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    ></g>
+                    <g id="SVGRepo_iconCarrier">
+                      <path
+                        d="M810.666667 896H213.333333c-46.933333 0-85.333333-38.4-85.333333-85.333333V213.333333c0-46.933333 38.4-85.333333 85.333333-85.333333h597.333334c46.933333 0 85.333333 38.4 85.333333 85.333333v597.333334c0 46.933333-38.4 85.333333-85.333333 85.333333z"
+                        fill="#1eb81b"
+                      ></path>
+                      <path
+                        d="M661.333333 512l-234.666666-170.666667v341.333334z"
+                        fill="#FFFFFF"
+                      ></path>
+                    </g>
+                  </svg>
+                </a>
+              </div>
+
+              <div class="category-info">
+                <div class="category-info-box">
+                  <a href="/category/start" class="category-link">
+                    <div class="category-title-box">
+                      <span class="category-title-color science"></span>
+                      <span class="category-title">Get Started</span>
+                    </div>
+                  </a>
+                  <p class="category-description">
+                    New to the forum? Here’s what you need to know.
+                  </p>
                 </div>
-                <span class="post-author" data-attribute="{{ .Author }}"
-                  >By alice</span
-                >
               </div>
             </div>
 
-            <!-- { end } -->
-            <!-- { else } -->
-            <!-- <p>No posts found.</p> -->
-            <!-- { end } -->
-            <!-- </div> -->
+            <div class="category-posts">
+              <div class="category-post">
+                <a href="/topic/id" class="topic-link">
+                  <span class="category-post-title"
+                    >Tips and tricks for using the forum
+                  </span>
+                </a>
+                <span class="category-post-date">Feb 2023</span>
+              </div>
+              <div class="category-post">
+                <a href="/topic/id" class="topic-link">
+                  <span class="category-post-title">Forum Guidelines </span>
+                </a>
+                <span class="category-post-date">Feb 2023</span>
+              </div>
+              <div class="category-post">
+                <a href="/topic/id" class="topic-link">
+                  <span class="category-post-title"
+                    >Welcome to our new Forum</span
+                  >
+                </a>
+                <span class="category-post-date">Feb 2023</span>
+              </div>
+            </div>
+          </div>
 
-            <div class="post-card">
-              <h3 class="post-title">
-                <a href="/posts/{{ .ID }}" data-attribute="{{.Title}}"
-                  >Post Title Here</a
-                >
-              </h3>
-              <p class="post-content" data-attribute="{{ .Content }}">
-                Lorem ipsum dolor sit, amet consectetur adipisicing elit. Sint
-                unde sunt nam aspernatur maiores dolorem, facilis accusamus
-                doloribus ab eius ipsa, fugit sequi itaque non dolores in.
-                Commodi, corporis quia! Lorem ipsum dolor sit, amet consectetur
-                adipisicing elit. Voluptates aut illum blanditiis rerum ea dicta
-                porro quae iusto quisquam veritatis quibusdam, non neque, qui
-                vel earum amet temporibus aperiam fuga.
-              </p>
-              <div class="post-meta">
-                <div class="icons-wrapper">
-                  <div class="button-wrapper">
-                    <button class="post-like-btn">
-                      <span class="post-like-icon">
-                        <img
-                          src="/static/images/icons/icon-like.png"
-                          alt="Like Icon"
-                        />
-                      </span>
-                    </button>
-                    <span class="post-likes" data-attribute="{{ .Likes }}"
-                      >10</span
-                    >
-                  </div>
-                  <div class="button-wrapper">
-                    <button class="post-dislike-btn">
-                      <span class="post-dislike-icon">
-                        <img
-                          src="/static/images/icons/icon-dislike.png"
-                          alt="Dislike Icon"
-                        />
-                      </span>
-                    </button>
-                    <span class="post-dislikes" data-attribute="{{ .Dislikes }}"
-                      >1</span
-                    >
-                  </div>
-                  <div class="post-comments">
-                    <a href="/posts/{{ .ID }}#comments"
-                      ><img
-                        src="static/images/icons/icon-comments.png"
-                        alt="Comments Icon"
-                    /></a>
-                    <span class="post-comments-count"
-                      ><!--{ len .Comments }-->1</span
-                    >
-                  </div>
+          <div class="category">
+            <div class="category-wrapper">
+              <div class="category-img-box">
+                <a href="/category/start" class="category-link">
+                  <svg
+                    viewBox="0 0 1024 1024"
+                    class="category-img start"
+                    version="1.1"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="#000000"
+                  >
+                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                    <g
+                      id="SVGRepo_tracerCarrier"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    ></g>
+                    <g id="SVGRepo_iconCarrier">
+                      <path
+                        d="M810.666667 896H213.333333c-46.933333 0-85.333333-38.4-85.333333-85.333333V213.333333c0-46.933333 38.4-85.333333 85.333333-85.333333h597.333334c46.933333 0 85.333333 38.4 85.333333 85.333333v597.333334c0 46.933333-38.4 85.333333-85.333333 85.333333z"
+                        fill="#b038e7"
+                      ></path>
+                      <path
+                        d="M661.333333 512l-234.666666-170.666667v341.333334z"
+                        fill="#FFFFFF"
+                      ></path>
+                    </g>
+                  </svg>
+                </a>
+              </div>
+
+              <div class="category-info">
+                <div class="category-info-box">
+                  <a href="/category/start" class="category-link">
+                    <div class="category-title-box">
+                      <span class="category-title-color health"></span>
+                      <span class="category-title">Get Started</span>
+                    </div>
+                  </a>
+                  <p class="category-description">
+                    New to the forum? Here’s what you need to know.
+                  </p>
                 </div>
-                <span class="post-author" data-attribute="{{ .Author }}"
-                  >By alice</span
-                >
               </div>
             </div>
 
-            <div class="post-card">
-              <h3 class="post-title">
-                <a href="/posts/{{ .ID }}" data-attribute="{{.Title}}"
-                  >Post Title Here</a
-                >
-              </h3>
-              <p class="post-content" data-attribute="{{ .Content }}">
-                Lorem ipsum dolor sit, amet consectetur adipisicing elit. Sint
-                unde sunt nam aspernatur maiores dolorem, facilis accusamus
-                doloribus ab eius ipsa, fugit sequi itaque non dolores in.
-                Commodi, corporis quia! Lorem ipsum dolor sit, amet consectetur
-                adipisicing elit. Voluptates aut illum blanditiis rerum ea dicta
-                porro quae iusto quisquam veritatis quibusdam, non neque, qui
-                vel earum amet temporibus aperiam fuga.
-              </p>
-              <div class="post-meta">
-                <div class="icons-wrapper">
-                  <div class="button-wrapper">
-                    <button class="post-like-btn">
-                      <span class="post-like-icon">
-                        <img
-                          src="/static/images/icons/icon-like.png"
-                          alt="Like Icon"
-                        />
-                      </span>
-                    </button>
-                    <span class="post-likes" data-attribute="{{ .Likes }}"
-                      >10</span
-                    >
-                  </div>
-                  <div class="button-wrapper">
-                    <button class="post-dislike-btn">
-                      <span class="post-dislike-icon">
-                        <img
-                          src="/static/images/icons/icon-dislike.png"
-                          alt="Dislike Icon"
-                        />
-                      </span>
-                    </button>
-                    <span class="post-dislikes" data-attribute="{{ .Dislikes }}"
-                      >1</span
-                    >
-                  </div>
-                  <div class="post-comments">
-                    <a href="/posts/{{ .ID }}#comments"
-                      ><img
-                        src="static/images/icons/icon-comments.png"
-                        alt="Comments Icon"
-                    /></a>
-                    <span class="post-comments-count"
-                      ><!--{ len .Comments }-->1</span
-                    >
-                  </div>
+            <div class="category-posts">
+              <div class="category-post">
+                <a href="/topic/id" class="topic-link">
+                  <span class="category-post-title"
+                    >Tips and tricks for using the forum
+                  </span>
+                </a>
+                <span class="category-post-date">Feb 2023</span>
+              </div>
+              <div class="category-post">
+                <a href="/topic/id" class="topic-link">
+                  <span class="category-post-title">Forum Guidelines </span>
+                </a>
+                <span class="category-post-date">Feb 2023</span>
+              </div>
+              <div class="category-post">
+                <a href="/topic/id" class="topic-link">
+                  <span class="category-post-title"
+                    >Welcome to our new Forum</span
+                  >
+                </a>
+                <span class="category-post-date">Feb 2023</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="category">
+            <div class="category-wrapper">
+              <div class="category-img-box">
+                <a href="/category/start" class="category-link">
+                  <svg
+                    viewBox="0 0 1024 1024"
+                    class="category-img start"
+                    version="1.1"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="#000000"
+                  >
+                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                    <g
+                      id="SVGRepo_tracerCarrier"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    ></g>
+                    <g id="SVGRepo_iconCarrier">
+                      <path
+                        d="M810.666667 896H213.333333c-46.933333 0-85.333333-38.4-85.333333-85.333333V213.333333c0-46.933333 38.4-85.333333 85.333333-85.333333h597.333334c46.933333 0 85.333333 38.4 85.333333 85.333333v597.333334c0 46.933333-38.4 85.333333-85.333333 85.333333z"
+                        fill="#e7c738"
+                      ></path>
+                      <path
+                        d="M661.333333 512l-234.666666-170.666667v341.333334z"
+                        fill="#FFFFFF"
+                      ></path>
+                    </g>
+                  </svg>
+                </a>
+              </div>
+
+              <div class="category-info">
+                <div class="category-info-box">
+                  <a href="/category/start" class="category-link">
+                    <div class="category-title-box">
+                      <span class="category-title-color business"></span>
+                      <span class="category-title">Get Started</span>
+                    </div>
+                  </a>
+                  <p class="category-description">
+                    New to the forum? Here’s what you need to know.
+                  </p>
                 </div>
-                <span class="post-author" data-attribute="{{ .Author }}"
-                  >By alice</span
-                >
+              </div>
+            </div>
+
+            <div class="category-posts">
+              <div class="category-post">
+                <a href="/topic/id" class="topic-link">
+                  <span class="category-post-title"
+                    >Tips and tricks for using the forum
+                  </span>
+                </a>
+                <span class="category-post-date">Feb 2023</span>
+              </div>
+              <div class="category-post">
+                <a href="/topic/id" class="topic-link">
+                  <span class="category-post-title">Forum Guidelines </span>
+                </a>
+                <span class="category-post-date">Feb 2023</span>
+              </div>
+              <div class="category-post">
+                <a href="/topic/id" class="topic-link">
+                  <span class="category-post-title"
+                    >Welcome to our new Forum</span
+                  >
+                </a>
+                <span class="category-post-date">Feb 2023</span>
               </div>
             </div>
           </div>
         </div>
-      </section>
+      </div>
     </main>
+    <script src="/static/js/script.js"></script>
   </body>
 </html>
