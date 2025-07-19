@@ -13,6 +13,10 @@
   --secondary-color-light: #845ef7;
   --dark-background: #222;
   --white-background: #eee;
+  --white-background-light: #fff;
+  --grey-color: #555;
+  --grey-color-light: #ccc;
+  --grey-color-dark: #444;
 }
 
 /*----- Default Styles -----*/
@@ -33,6 +37,16 @@ h1 {
   margin-top: 2rem;
   margin-bottom: 4rem;
   text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
+  animation: headingSlideIn 1s ease forwards;
+}
+header {
+  /* We put sticky in header so it can scroll to body */
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+main {
+  padding: 1rem;
 }
 h2 {
   font-size: 2.5rem;
@@ -41,27 +55,28 @@ h2 {
   margin-top: 4rem;
   margin-bottom: 2rem;
   text-align: center;
+  animation: FadeUp 1s 0.5s ease forwards;
 }
 h3 {
   font-size: 1.8rem;
   text-align: center;
 }
+
 .main-container {
   max-width: 1200px;
-  /* border: 1px solid red; */
   width: 100%;
   margin: 0 auto;
 }
 
 /*----- Navbar -----*/
 .navbar {
-  height: 100%;
-  background-color: #eee;
+  padding: 0.5rem 0;
+  background-color: rgba(255, 255, 255, 0.9); /* a little transparent */
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
 }
 .nav-container {
   width: 100%;
-  max-width: 1600px; /* Adjust as needed */
+  max-width: 1200px; /* Adjust as needed */
   margin: 0 auto;
   padding: 0 1.5rem;
   display: flex;
@@ -101,12 +116,13 @@ h3 {
 }
 .nav-link {
   background-color: var(--secondary-color);
-  padding: 0.3rem 0.6rem;
+  padding: 0.4rem 0.6rem;
   border-radius: 10px;
 }
 .nav-link a {
-  color: #fff;
+  color: var(--white-background-light);
   text-decoration: none;
+  transition: all 0.3s;
 }
 .nav-link:hover {
   background-color: var(--secondary-color-light);
@@ -157,119 +173,212 @@ h3 {
   background-color: var(--primary-color-light);
 }
 
-/*----- Main Styling -----*/
-/*--- SearchBar ---*/
-.search-wrapper {
-  max-width: 600px;
-  width: 100%;
-  margin: 0 auto;
+/*----- Main Content -----*/
+.nav-categories {
   display: flex;
-}
-.input-box {
-  display: flex;
+  column-gap: 1rem;
   align-items: center;
-  position: relative;
-  margin: 2rem auto;
-  flex-grow: 0.8;
-
-  padding: 0.2rem 0.5rem;
-  border-radius: 30px;
-  background: white;
-  transition: all 0.3s ease;
+  margin-bottom: 2rem;
 }
-.input-box:focus-within {
-  /* With focus-within we can make the parent grow when
-    input is on focus state*/
-  outline: 2px solid var(--dark-background);
-  outline-offset: 2px;
-  flex-grow: 1;
-}
-.search-icon {
-  width: 20px;
-  height: 20px;
-  margin-right: 0.5rem;
-  flex-shrink: 0;
-}
-.search-input {
-  border: none;
-  outline: none;
-  flex-grow: 1;
-  font-size: 0.9rem;
+/*--- Details Category, Buttons ---*/
+.category-details {
   font-family: inherit;
-  padding: 0.3rem;
-  background: transparent;
+  border-radius: 4px;
+  background: var(--white-background-light);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+}
+.category-details summary:hover {
+  background-color: var(--grey-color-light);
 }
 
-/*--- Posts ---*/
-.post-card-container {
-  width: 100%; /* of the main container */
-  /* border: 1px solid green; */
-  display: flex;
-  flex-flow: column;
-  justify-content: center;
-  align-items: center;
-  row-gap: 2rem;
-}
-.post-card {
-  max-width: 800px;
-  width: 100%;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-  border-radius: 10px;
-  background-color: var(--white-background);
-  padding: 0.5rem 2rem;
-  display: flex;
-  flex-direction: column;
-  row-gap: 1rem;
+.category-details summary {
+  border-radius: 4px;
+  position: relative;
+  list-style: none; /* Removes default arrow in some browsers */
+  padding: 0.8rem 2rem 0.8rem 0.8rem; /* space for triangle */
   transition: all 0.3s;
 }
-.post-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.7);
+.category-details summary::after {
+  content: "▶";
+  font-size: 0.8rem;
+  position: absolute;
+  margin-right: 0.5rem;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: transform 0.3s ease;
 }
-.post-title a {
-  text-decoration: none;
-  color: var(--primary-color);
+.category-details[open] summary::after {
+  transform: translateY(-50%) rotate(90deg);
 }
-.post-title a:hover {
-  color: var(--primary-color-light);
+.details-content {
+  position: absolute;
+  top: calc(100% + 0.3rem); /* Appears below with gap */
+  left: 0;
+  background-color: var(--white-background);
+  min-width: 200px;
+  padding: 0.6rem 0.2rem;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  z-index: 100;
 }
-.post-content {
-  width: 100%; /* of the post card */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  /* For multi-line truncation */
-  display: -webkit-box;
-  -webkit-line-clamp: 4; /* Number of lines to show */
-  -webkit-box-orient: vertical;
-}
-.post-meta {
+.details-category-link {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  text-decoration: none;
+  padding: 0.3rem 0.6rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
 }
-.icons-wrapper {
+.details-category-link:hover {
+  background-color: var(--grey-color-light);
+}
+.details-text-box {
+  display: flex;
+  align-items: center;
+  column-gap: 0.2rem;
+}
+.details-category-color {
+  width: 12px;
+  height: 12px;
+  transform: translateY(-1px);
+}
+/* Add unique colors per category */
+.details-category-color.tech,
+.category-title-color.tech {
+  background-color: #fd1e4b;
+}
+.details-category-color.science,
+.category-title-color.science {
+  background-color: #1eb81b;
+}
+.details-category-color.health,
+.category-title-color.health {
+  background-color: #b038e7;
+}
+.details-category-color.business,
+.category-title-color.business {
+  background-color: #e7c738;
+}
+.details-category-title {
+  color: var(--grey-color);
+}
+
+.category-count {
   display: flex;
   justify-content: center;
-  align-items: center;
-  /* border: 1px solid saddlebrown; */
-  column-gap: 2rem;
+  min-width: 35px;
+  padding: 0 0.2rem;
+  height: fit-content;
+  background-color: var(--secondary-color-light);
+  border-radius: 10px;
+  font-size: 0.75rem;
+  color: var(--white-background);
+  font-weight: 500;
 }
-.button-wrapper,
-.post-comments {
+.nav-categories-btn {
+  padding: 0.8rem 1rem;
+  text-decoration: none;
+  border-radius: 4px;
+  color: var(--white-background);
+  transition: all 0.3s;
+}
+.nav-categories-btn:hover {
+  background-color: var(--grey-color-light);
+  color: var(--dark-background);
+}
+.nav-categories-btn:active {
+  background-color: var(--primary-color-light);
+  color: var(--white-background);
+}
+
+/*--- Categories ---*/
+.categories-container {
+  width: 100%; /* of main container */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  background-color: var(--white-background-light);
+  border-radius: 8px;
+}
+.category {
+  display: flex;
+  column-gap: 3rem;
+  padding: 1.5rem;
+  border-radius: 8px 8px 0 0;
+  border-bottom: 1px solid var(--dark-background);
+}
+.category:last-child {
+  border: none;
+}
+.category-wrapper {
+  display: flex;
+  column-gap: 2rem;
+  padding: 1rem 0;
+}
+.category-img-box {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  transform: translateY(-6px);
+  transition: all 0.3s;
+}
+.category-img-box:hover {
+  transform: scale(1.1) rotate(10deg);
+}
+.category-info-box {
+  display: flex;
+  flex-direction: column;
+  row-gap: 0.3rem;
+}
+.category-title-box {
   display: flex;
   align-items: center;
   column-gap: 0.3rem;
+  row-gap: 0.3rem;
 }
-.post-like-btn,
-.post-dislike-btn {
-  border: none;
+.category-title-color {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  transform: translateY(-1px);
+}
+.category-title {
+  font-size: 1.2rem;
+  color: var(--dark-background);
+  font-weight: bold;
+}
+.category-link {
+  text-decoration: none;
+}
+.category-description {
+  color: var(--grey-color-dark);
+}
+.category-posts {
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
+  row-gap: 0.8rem;
+  padding: 1rem 0;
+}
+.category-post {
+  display: flex;
+  align-items: baseline;
+  column-gap: 0.3rem;
+}
+.topic-link {
+  text-decoration: none;
+  color: var(--dark-background);
+}
+.category-post-date {
+  font-size: 0.9rem;
+  color: var(--grey-color);
   cursor: pointer;
+  transition: all 0.3s;
 }
-.post-dislike-btn img,
-.post-comments img {
-  width: 28px;
-}
-.post-author {
-  font-size: 1.1rem;
-  margin-right: 3rem;
+.category-post-date:hover {
+  color: var(--dark-background);
 }
