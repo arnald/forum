@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/arnald/forum/internal/pkg/path"
 )
 
 const (
@@ -41,7 +43,8 @@ type DatabaseConfig struct {
 }
 
 func LoadConfig() (*ServerConfig, error) {
-	envFile, _ := os.ReadFile("../../.env")
+	resolver := path.NewResolver()
+	envFile, _ := os.ReadFile(resolver.GetPath(".env"))
 	envMap := parseEnv(string(envFile))
 
 	cfg := &ServerConfig{
@@ -54,7 +57,7 @@ func LoadConfig() (*ServerConfig, error) {
 		IdleTimeout:  getEnvDuration("SERVER_IDLE_TIMEOUT", envMap, idleTimeout),
 		Database: DatabaseConfig{
 			Driver:         getEnv("DB_DRIVER", envMap, "sqlite3"),
-			Path:           getEnv("DB_PATH", envMap, "./data/forum.db"),
+			Path:           resolver.GetPath(getEnv("DB_PATH", envMap, "data/forum.db")),
 			MigrateOnStart: getEnvBool("DB_MIGRATE_ON_START", envMap, true),
 			SeedOnStart:    getEnvBool("DB_SEED_ON_START", envMap, true),
 			Pragma:         getEnv("DB_PRAGMA", envMap, "_foreign_keys=on&_journal_mode=WAL"),
