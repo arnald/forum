@@ -1,0 +1,91 @@
+{
+    "data": {
+        "can_create_category": false,
+        "can_create_topic": false,
+        "categories": [
+            {
+                "id": 16,
+                "name": "Get started",
+                "color": "FA6400",
+                "slug": "get-started",
+                "description": "New to the forum? Here’s what you need to know.",
+                "logo": {
+                    "id": 3416,
+                    "url": "https://europe1.discourse-cdn.com/flex013/uploads/sketch/original/2X/9/97efd7fa2ba969cdc3a95243a7e55843610ebe5e.png",
+                    "width": 128,
+                    "height": 128
+                },
+                "topics": [
+                    {
+                        "id": 161,
+                        "title": "Tips and tricks for using the forum"
+                    },
+                    {
+                        "id": 5,
+                        "title": "Forum Guidelines"
+                    },
+                    {
+                        "id": 262,
+                        "title": "Welcome to our new Sketch forum"
+                    }
+                ]
+            },
+            {
+                "id": 5,
+                "name": "Newsroom",
+                "slug": "newsroom",
+                "color": "00D16E",
+                "description": "A place for announcements, AMA events and sneak previews of what’s next.",
+                "logo": {
+                    "id": 3416,
+                    "url": "https://europe1.discourse-cdn.com/flex013/uploads/sketch/original/2X/c/c853167f9bb2adc0e3ae637e97083f927b04cb4a.png",
+                    "width": 128,
+                    "height": 128
+                },
+                "topics": [
+                    {
+                        "id": 4943,
+                        "title": "New Mac beta: 2025.2 (Barcelona) available now"
+                    },
+                    {
+                        "id": 4109,
+                        "title": "Sneak Peek: Components in the Command Bar"
+                    },
+                    {
+                        "id": 4774,
+                        "title": "Sketch Athens (2025.1) is out now!"
+                    }
+                ]
+            },
+            {
+                "id": 6,
+                "name": "Share your knowledge",
+                "color": "B24DFF",
+                "slug": "share-your-knowledge",
+                "description": "Ask questions, show off your Sketch skills, or simply browse around.",
+                "logo": {
+                    "id": 3416,
+                    "url": "https://europe1.discourse-cdn.com/flex013/uploads/sketch/original/2X/6/6c61577f885be985a1b6b94829f2583226fcb61c.png",
+                    "width": 128,
+                    "height": 128
+                },
+                "topics": [
+                    {
+                        "id": 5185,
+                        "title": "Athens is not ready"
+                    },
+                    {
+                        "id": 5180,
+                        "title": "Drop Shadow/Inner Shadow inconsistency"
+                    },
+                    {
+                        "id": 5044,
+                        "title": "iOS 18 App Icon Template - alpha or transparency?"
+                    }
+                ]
+            }
+                
+            
+        ]
+    }
+}

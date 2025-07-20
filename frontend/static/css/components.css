@@ -1,100 +1,33 @@
-/*----- Reset -----*/
-* {
-  padding: 0;
-  margin: 0;
-  box-sizing: border-box;
-}
-
-/*----- Custom Properties -----*/
-:root {
-  --primary-color: #0aa564;
-  --primary-color-light: #07c073;
-  --secondary-color: #5f3dc4;
-  --secondary-color-light: #845ef7;
-  --dark-background: #222;
-  --white-background: #eee;
-  --white-background-light: #fff;
-  --grey-color: #555;
-  --grey-color-light: #ccc;
-  --grey-color-dark: #444;
-}
-
-/*----- Default Styles -----*/
-html {
-  scroll-behavior: smooth;
-}
-body {
-  min-height: 100vh;
-  font-family: "Rubik", Arial, Helvetica, sans-serif;
-  line-height: 1.4;
-  background: #00c6ff; /* fallback for old browsers */
-  background: linear-gradient(to right bottom, #0072ff, #00c6ff);
-}
-h1 {
-  font-size: 3.5rem;
-  color: var(--dark-background);
-  text-align: center;
-  margin-top: 2rem;
-  margin-bottom: 4rem;
-  text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
-  animation: headingSlideIn 1s ease forwards;
-}
-header {
-  /* We put sticky in header so it can scroll to body */
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-main {
-  padding: 1rem;
-}
-h2 {
-  font-size: 2.5rem;
-  color: var(--dark-background);
-  text-shadow: 2px 2px 10px rgba(255, 255, 255, 0.5);
-  margin-top: 4rem;
-  margin-bottom: 2rem;
-  text-align: center;
-  animation: FadeUp 1s 0.5s ease forwards;
-}
-h3 {
-  font-size: 1.8rem;
-  text-align: center;
-}
-
-.main-container {
-  max-width: 1200px;
-  width: 100%;
-  margin: 0 auto;
-}
-
 /*----- Navbar -----*/
 .navbar {
   padding: 0.5rem 0;
-  background-color: rgba(255, 255, 255, 0.9); /* a little transparent */
+  background-color: rgba(255, 255, 255, 0.9);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
 }
+
 .nav-container {
   width: 100%;
-  max-width: 1200px; /* Adjust as needed */
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 0 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
+
 .logo {
   transition: all 0.3s;
 }
 .logo:hover {
   transform: scale(1.03);
 }
+
 .logo-link {
   display: flex;
   align-items: center;
   justify-content: center;
   text-decoration: none;
 }
+
 .logo-icon {
   height: 50px;
 }
@@ -102,11 +35,13 @@ h3 {
   height: 100%;
   object-fit: contain;
 }
+
 .logo-title {
   font-size: 1.5rem;
   font-weight: 500;
   color: var(--dark-background);
 }
+
 .nav-links {
   display: flex;
   justify-content: center;
@@ -114,6 +49,7 @@ h3 {
   gap: 1rem;
   list-style-type: none;
 }
+
 .nav-link {
   background-color: var(--secondary-color);
   padding: 0.4rem 0.6rem;
@@ -130,23 +66,26 @@ h3 {
 .nav-link:hover a {
   color: #111;
 }
-/* Dynamic user navbar */
+
 .welcome-box {
-  width: 40%; /* make container smaller than parent */
+  width: 40%;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
+
 .welcome-user-box {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 1rem;
 }
+
 .welcome-user,
 .welcome-user-name {
   font-size: 1.2rem;
 }
+
 .user-avatar {
   display: flex;
   height: 30px;
@@ -157,6 +96,7 @@ h3 {
 .user-avatar img {
   object-fit: cover;
 }
+
 .nav-icon-link {
   display: flex;
   align-items: center;
@@ -166,6 +106,7 @@ h3 {
 .nav-icon-link:hover {
   color: var(--secondary-color-light);
 }
+
 .nav-link-create {
   background-color: var(--primary-color);
 }
@@ -173,22 +114,25 @@ h3 {
   background-color: var(--primary-color-light);
 }
 
-/*----- Main Content -----*/
+/*----- Category Components -----*/
+/*--- Category Details  ---*/
 .nav-categories {
   display: flex;
   column-gap: 1rem;
   align-items: center;
   margin-bottom: 2rem;
 }
-/*--- Details Category, Buttons ---*/
+
 .category-details {
+  position: relative;
   font-family: inherit;
   border-radius: 4px;
   background: var(--white-background-light);
   transition: all 0.3s ease;
   cursor: pointer;
-  position: relative;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
+
 .category-details summary:hover {
   background-color: var(--grey-color-light);
 }
@@ -196,10 +140,11 @@ h3 {
 .category-details summary {
   border-radius: 4px;
   position: relative;
-  list-style: none; /* Removes default arrow in some browsers */
-  padding: 0.8rem 2rem 0.8rem 0.8rem; /* space for triangle */
+  list-style: none;
+  padding: 0.8rem 2rem 0.8rem 0.8rem;
   transition: all 0.3s;
 }
+
 .category-details summary::after {
   content: "▶";
   font-size: 0.8rem;
@@ -210,45 +155,55 @@ h3 {
   transform: translateY(-50%);
   transition: transform 0.3s ease;
 }
+
 .category-details[open] summary::after {
   transform: translateY(-50%) rotate(90deg);
 }
+
 .details-content {
   position: absolute;
-  top: calc(100% + 0.3rem); /* Appears below with gap */
+  top: calc(100% + 0.3rem);
   left: 0;
-  background-color: var(--white-background);
-  min-width: 200px;
+  background-color: var(--white-background-light);
+  min-width: 220px;
+  width: max-content;
   padding: 0.6rem 0.2rem;
   border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   z-index: 100;
+  transition: all 0.3s ease;
 }
+
 .details-category-link {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  column-gap: 0.5rem;
   text-decoration: none;
   padding: 0.3rem 0.6rem;
   border-radius: 8px;
   transition: all 0.3s ease;
 }
+
 .details-category-link:hover {
   background-color: var(--grey-color-light);
 }
+
 .details-text-box {
   display: flex;
   align-items: center;
   column-gap: 0.2rem;
 }
+
 .details-category-color {
   width: 12px;
   height: 12px;
   transform: translateY(-1px);
 }
-/* Add unique colors per category */
+
 .details-category-color.tech,
 .category-title-color.tech {
   background-color: #fd1e4b;
@@ -265,6 +220,7 @@ h3 {
 .category-title-color.business {
   background-color: #e7c738;
 }
+
 .details-category-title {
   color: var(--grey-color);
 }
@@ -281,6 +237,7 @@ h3 {
   color: var(--white-background);
   font-weight: 500;
 }
+
 .nav-categories-btn {
   padding: 0.8rem 1rem;
   text-decoration: none;
@@ -295,15 +252,17 @@ h3 {
 .nav-categories-btn:active {
   background-color: var(--primary-color-light);
   color: var(--white-background);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
 
-/*--- Categories ---*/
+/*----- Categories Overview Homepage -----*/
 .categories-container {
-  width: 100%; /* of main container */
+  width: 100%;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
   background-color: var(--white-background-light);
   border-radius: 8px;
 }
+
 .category {
   display: flex;
   column-gap: 3rem;
@@ -314,49 +273,63 @@ h3 {
 .category:last-child {
   border: none;
 }
+
 .category-wrapper {
   display: flex;
   column-gap: 2rem;
   padding: 1rem 0;
+  flex-basis: 50%;
 }
+
 .category-img-box {
   flex-shrink: 0;
-  width: 64px;
-  height: 64px;
   transform: translateY(-6px);
   transition: all 0.3s;
 }
 .category-img-box:hover {
   transform: scale(1.1) rotate(10deg);
 }
+
+.category-img {
+  width: 64px;
+  height: 64px;
+}
+
 .category-info-box {
   display: flex;
   flex-direction: column;
   row-gap: 0.3rem;
 }
+
 .category-title-box {
   display: flex;
   align-items: center;
   column-gap: 0.3rem;
   row-gap: 0.3rem;
 }
+
 .category-title-color {
   flex-shrink: 0;
   width: 14px;
   height: 14px;
   transform: translateY(-1px);
 }
+
 .category-title {
   font-size: 1.2rem;
   color: var(--dark-background);
   font-weight: bold;
 }
+
 .category-link {
   text-decoration: none;
 }
+
 .category-description {
   color: var(--grey-color-dark);
 }
+
+/*----- Topic Lists Overview Homepage -----*/
 .category-posts {
   display: flex;
   flex-direction: column;
@@ -364,15 +337,29 @@ h3 {
   row-gap: 0.8rem;
   padding: 1rem 0;
 }
+
 .category-post {
   display: flex;
   align-items: baseline;
   column-gap: 0.3rem;
 }
+
 .topic-link {
   text-decoration: none;
   color: var(--dark-background);
+  transition: all 0.3s;
 }
+.topic-link:hover .left-arrow {
+  transform: translateX(3px) translateY(2px);
+}
+
+.left-arrow {
+  display: inline-block;
+  font-size: 1.5rem;
+  transform: translateY(2px);
+  transition: all 0.3s;
+}
+
 .category-post-date {
   font-size: 0.9rem;
   color: var(--grey-color);
