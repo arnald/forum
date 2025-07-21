@@ -47,6 +47,8 @@ func setupRoutes() *http.ServeMux {
 	router.HandleFunc("/", handler.HomePage)
 	// Register page
 	router.HandleFunc("/register", handler.RegisterPage)
+	// Login page
+	router.HandleFunc("/login", handler.LoginPage)
 
 	return router
 }

@@ -121,6 +121,35 @@ func RegisterPage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Login Handler
+func LoginPage(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	basePath, err := os.Getwd()
+	if err != nil {
+		log.Println("Error getting working directory:", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	tmplPath := filepath.Join(basePath, "frontend", "html", "pages", "login.html")
+	tmpl, err := template.ParseFiles(tmplPath)
+	if err != nil {
+		log.Println("Error parsing login.html:", err)
+		http.Error(w, "Failed to load page", http.StatusInternalServerError)
+		return
+	}
+
+	err = tmpl.ExecuteTemplate(w, "login", nil)
+	if err != nil {
+		log.Println("Error executing login.html:", err)
+		http.Error(w, "Failed to render page", http.StatusInternalServerError)
+	}
+}
+
 func notFoundHandler(w http.ResponseWriter, _ *http.Request, errorMessage string, httpStatus int) {
 	basePath, err := os.Getwd()
 	if err != nil {

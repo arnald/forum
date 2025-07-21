@@ -1,16 +1,4 @@
 /*----- SignUp Page -----*/
-/* :root {
-  --primary-color: #0aa564;
-  --primary-color-light: #07c073;
-  --secondary-color: #5f3dc4;
-  --secondary-color-light: #845ef7;
-  --dark-background: #222;
-  --white-background: #eee;
-  --white-background-light: #fff;
-  --grey-color: #555;
-  --grey-color-light: #ccc;
-  --grey-color-dark: #444;
-} */
 .signup-container {
   padding: 0.5rem;
 }
@@ -29,12 +17,6 @@
   margin-top: 2rem;
   font-size: 2.3rem;
 }
-.log-in-wrapper {
-  padding: 1rem 2rem;
-  background-color: var(--white-background-light);
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
-  border-radius: 5px;
-}
 .text-base a {
   font-size: 1.1rem;
   margin-left: 0.3rem;
@@ -47,13 +29,6 @@
 }
 .text-base a:hover {
   text-decoration-thickness: 4px;
-}
-.btn-box {
-  display: flex;
-  flex-direction: column;
-  row-gap: 1rem;
-  width: 100%;
-  margin-top: 1rem;
 }
 .signup-provider-btn {
   width: 100%;
@@ -150,13 +125,14 @@
 .password-box {
   margin-top: 1rem;
 }
-.login-text {
-  margin-top: 1rem;
-}
-.login-text a {
-  color: #000;
-}
 /*--- Buttons ---*/
+.btn-box {
+  display: flex;
+  flex-direction: column;
+  row-gap: 1rem;
+  width: 100%;
+  margin-top: 0.3rem;
+}
 .btn-reset-form {
   max-width: 50%;
   font-family: inherit;
