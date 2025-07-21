@@ -1,6 +1,7 @@
 package http
 
 import (
+	"database/sql"
 	"errors"
 	"log"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 	"github.com/arnald/forum/internal/config"
 	"github.com/arnald/forum/internal/infra/http/health"
 	handlers "github.com/arnald/forum/internal/infra/http/user"
+	"github.com/arnald/forum/internal/infra/session"
 	"github.com/arnald/forum/internal/infra/storage/sqlite"
 )
 
@@ -21,10 +23,11 @@ const (
 )
 
 type Server struct {
-	// ctx context.Context
-	appServices app.Services
-	config      *config.ServerConfig
-	router      *http.ServeMux
+	appServices    app.Services
+	config         *config.ServerConfig
+	router         *http.ServeMux
+	sessionManager *session.SessionManager
+	db             *sql.DB
 }
 
 func NewServer(appServices app.Services) *Server {
@@ -34,6 +37,7 @@ func NewServer(appServices app.Services) *Server {
 	}
 	httpServer.loadConfiguration()
 	httpServer.loadDatabase()
+	httpServer.initSessionManager()
 	httpServer.AddHTTPRoutes()
 	return httpServer
 }
@@ -41,7 +45,10 @@ func NewServer(appServices app.Services) *Server {
 func (server *Server) AddHTTPRoutes() {
 	// server.router.HandleFunc(apiContext+"/users", user.NewHandler(server.appServices.UserServices).GetAllUsers)
 	server.router.HandleFunc(apiContext+"/health", health.NewHandler().HealthCheck)
-	server.router.HandleFunc(apiContext+"/user", handlers.NewHandler(server.appServices).UserRegister)
+	server.router.HandleFunc(
+		apiContext+"/register",
+		handlers.NewHandler(server.appServices, server.sessionManager).UserRegister, // Inject session manager
+	)
 }
 
 func (server *Server) ListenAndServe(port string) {
@@ -71,8 +78,13 @@ func (server *Server) loadConfiguration() {
 }
 
 func (server *Server) loadDatabase() {
-	_, err := sqlite.InitializeDB(*server.config)
+	db, err := sqlite.InitializeDB(*server.config)
 	if err != nil {
 		log.Fatalf("Database error: %v", err)
 	}
+	server.db = db
+}
+
+func (server *Server) initSessionManager() {
+	server.sessionManager = session.NewSessionManager(server.db, server.config.SessionManager)
 }

@@ -5,7 +5,7 @@ import (
 )
 
 type Provider interface {
-	NewUUID() uuid.UUID
+	NewUUID() string
 }
 
 func NewProvider() Provider {
@@ -14,6 +14,6 @@ func NewProvider() Provider {
 
 type uuidProvider struct{}
 
-func (u uuidProvider) NewUUID() uuid.UUID {
-	return uuid.New()
+func (u uuidProvider) NewUUID() string {
+	return uuid.New().String()
 }

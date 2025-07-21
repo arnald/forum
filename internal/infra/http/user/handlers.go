@@ -11,17 +11,20 @@ import (
 
 	"github.com/arnald/forum/internal/app"
 	"github.com/arnald/forum/internal/app/user/queries"
+	"github.com/arnald/forum/internal/infra/session"
 	"github.com/arnald/forum/internal/infra/storage/sqlite"
 	"github.com/arnald/forum/internal/pkg/helpers"
 )
 
 type Handler struct {
-	UserServices app.Services
+	UserServices   app.Services
+	SessionManager *session.SessionManager
 }
 
-func NewHandler(app app.Services) *Handler {
+func NewHandler(app app.Services, sm *session.SessionManager) *Handler {
 	return &Handler{
-		UserServices: app,
+		UserServices:   app,
+		SessionManager: sm,
 	}
 }
 
@@ -36,7 +39,6 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 		logger := log.New(os.Stdout, "ERROR: ", log.Ldate|log.Ltime)
 		logger.Printf("Invalid request method %v\n", r.Method)
 		helpers.RespondWithError(w, http.StatusMethodNotAllowed, "Invalid request method")
-
 		return
 	}
 
@@ -78,17 +80,14 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newSession, err := h.UserServices.UserServices.Queries.CreateSession.Handle(queries.CreateSessionRequest{
-		UserID:    user.ID.String(),
-		Expiry:    time.Now().Add(24 * time.Hour),
-		IPAddress: r.RemoteAddr,
-	})
+	newSession, err := h.SessionManager.CreateSession(user.ID)
 	if err != nil {
 		helpers.RespondWithError(
 			w,
 			http.StatusInternalServerError,
 			err.Error(),
 		)
+		return
 	}
 
 	helpers.RespondWithJSON(

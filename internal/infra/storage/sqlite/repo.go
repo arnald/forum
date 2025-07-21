@@ -46,7 +46,7 @@ func (r Repo) UserRegister(ctx context.Context, user *user.User) error {
 		user.Username,
 		user.Password,
 		user.Email,
-		user.ID.String(),
+		user.ID,
 	)
 
 	if err := MapSQLiteError(err); err != nil {

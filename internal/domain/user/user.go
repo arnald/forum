@@ -2,8 +2,6 @@ package user
 
 import (
 	"time"
-
-	"github.com/google/uuid"
 )
 
 type User struct {
@@ -13,5 +11,5 @@ type User struct {
 	Username  string
 	Email     string
 	Role      string
-	ID        uuid.UUID
+	ID        string
 }

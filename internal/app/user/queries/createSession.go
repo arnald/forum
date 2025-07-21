@@ -32,7 +32,7 @@ func NewCreateSessionRequestHandler(repo user.Repository, uuidProvider uuid.Prov
 
 func (h createSessionRequestHandler) Handle(req CreateSessionRequest) (*user.Session, error) {
 	session := &user.Session{
-		Token:     []byte(h.uuidProvider.NewUUID().String()),
+		Token:     []byte(h.uuidProvider.NewUUID()),
 		UserID:    req.UserID,
 		Expiry:    req.Expiry,
 		IPAddress: req.IPAddress,
