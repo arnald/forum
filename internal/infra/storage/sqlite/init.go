@@ -10,9 +10,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/arnald/forum/internal/config"
 	// Need to import sqlite driver.
 	_ "github.com/mattn/go-sqlite3"
+
+	"github.com/arnald/forum/internal/config"
+	"github.com/arnald/forum/internal/pkg/path"
 )
 
 const (
@@ -53,9 +55,10 @@ func InitializeDB(cfg config.ServerConfig) (*sql.DB, error) {
 }
 
 func migrateDB(db *sql.DB) error {
+	resolver := path.NewResolver()
 	migrationFiles := []string{
-		"../../db/migrations/schema.sql",
-		"../../db/migrations/indexes.sql",
+		resolver.GetPath("db/migrations/schema.sql"),
+		resolver.GetPath("db/migrations/indexes.sql"),
 	}
 
 	for _, file := range migrationFiles {
@@ -125,11 +128,12 @@ func execSQLFile(db *sql.DB, path string) error {
 }
 
 func seedDB(db *sql.DB, env string) error {
+	resolver := path.NewResolver()
 	switch env {
 	case "development":
-		return execSQLFile(db, "../../db/seeds/dev_data.sql")
+		return execSQLFile(db, resolver.GetPath("db/seeds/dev_data.sql"))
 	case "staging":
-		return execSQLFile(db, "db/seeds/test.sql")
+		return execSQLFile(db, resolver.GetPath("db/seeds/test.sql"))
 	default:
 		return nil // No seeding in production
 	}

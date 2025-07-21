@@ -3,8 +3,9 @@ package uuid_test
 import (
 	"testing"
 
-	u "github.com/arnald/forum/internal/pkg/uuid"
 	"github.com/google/uuid"
+
+	u "github.com/arnald/forum/internal/pkg/uuid"
 )
 
 func TestNewUUIDSuccess(t *testing.T) {

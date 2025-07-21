@@ -94,3 +94,9 @@ formatters:
     generated: lax
     paths:
       - frontend/
+  settings:
+    gci:
+        sections:
+          - standard   # Standard library
+          - default    # Third-party imports
+          - prefix(github.com/arnald/forum)
