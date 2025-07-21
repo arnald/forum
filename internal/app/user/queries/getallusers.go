@@ -4,8 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/arnald/forum/internal/domain/user"
 	"github.com/google/uuid"
+
+	"github.com/arnald/forum/internal/domain/user"
 )
 
 type GetAllUsersResult struct {
