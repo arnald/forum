@@ -38,6 +38,8 @@ func setupRoutes() *http.ServeMux {
 	resolver := path.NewResolver()
 	router.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(resolver.GetPath("frontend/static/")))))
 	router.HandleFunc("/", handler.HomePage)
+	// Register page
+	router.HandleFunc("/register", handler.RegisterPage)
 
 	return router
 }

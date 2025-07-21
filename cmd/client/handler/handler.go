@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"github.com/arnald/forum/cmd/client/domain"
 	h "github.com/arnald/forum/cmd/client/helpers"
@@ -16,6 +17,35 @@ const (
 	notFoundMessage = "Oops! The page you're looking for has vanished into the digital void."
 )
 
+type Topic struct {
+	Title string `json:"title"`
+	ID    int    `json:"id"`
+}
+
+type Logo struct {
+	URL    string `json:"url"`
+	ID     int    `json:"id"`
+	Width  int    `json:"width"`
+	Height int    `json:"height"`
+}
+
+type Category struct {
+	Name        string  `json:"name"`
+	Color       string  `json:"color"`
+	Slug        string  `json:"slug"`
+	Description string  `json:"description"`
+	Topics      []Topic `json:"topics"`
+	Logo        Logo    `json:"logo"`
+	ID          int     `json:"id"`
+}
+
+type CategoryData struct {
+	Data struct {
+		Categories []Category `json:"categories"`
+	} `json:"data"`
+}
+
+// HomePage Handler
 func HomePage(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		notFoundHandler(w, r, notFoundMessage, http.StatusNotFound)
@@ -54,6 +84,35 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 	err = tmpl.ExecuteTemplate(w, "base", categoryData.Data.Categories)
 	if err != nil {
 		log.Println("Error executing template:", err)
+		http.Error(w, "Failed to render page", http.StatusInternalServerError)
+	}
+}
+
+// Register Handler
+func RegisterPage(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	basePath, err := os.Getwd()
+	if err != nil {
+		log.Println("Error getting working directory:", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	tmplPath := filepath.Join(basePath, "frontend", "html", "pages", "register.html")
+	tmpl, err := template.ParseFiles(tmplPath)
+	if err != nil {
+		log.Println("Error parsing register.html:", err)
+		http.Error(w, "Failed to load page", http.StatusInternalServerError)
+		return
+	}
+
+	err = tmpl.ExecuteTemplate(w, "register", nil)
+	if err != nil {
+		log.Println("Error executing register.html:", err)
 		http.Error(w, "Failed to render page", http.StatusInternalServerError)
 	}
 }
