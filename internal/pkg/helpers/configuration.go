@@ -26,7 +26,7 @@ func ParseEnv(content string) map[string]string {
 	return env
 }
 
-// Check OS environment -> .env file -> default values.
+// GetEnv Check OS environment -> .env file -> default values.
 func GetEnv(key string, envMap map[string]string, defaultValue string) string {
 	if val, exists := os.LookupEnv(key); exists {
 		return val

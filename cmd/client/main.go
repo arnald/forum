@@ -3,11 +3,10 @@ package main
 import (
 	"log"
 	"net/http"
-	"os"
-	"path/filepath"
 
 	"github.com/arnald/forum/cmd/client/config"
 	"github.com/arnald/forum/cmd/client/handler"
+	"github.com/arnald/forum/internal/pkg/path"
 )
 
 func main() {
@@ -36,13 +35,8 @@ func main() {
 func setupRoutes() *http.ServeMux {
 	router := http.NewServeMux()
 
-	basePath, err := os.Getwd()
-	if err != nil {
-		log.Fatalf("Failed to get working directory: %v", err)
-	}
-
-	staticPath := filepath.Join(basePath, "frontend", "static")
-	router.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(staticPath))))
+	resolver := path.NewResolver()
+	router.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(resolver.GetPath("frontend/static/")))))
 	router.HandleFunc("/", handler.HomePage)
 
 	return router

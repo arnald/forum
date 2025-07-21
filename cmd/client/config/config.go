@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/arnald/forum/internal/pkg/helpers"
+	"github.com/arnald/forum/internal/pkg/path"
 )
 
 const (
@@ -37,7 +38,8 @@ type HTTPTimeouts struct {
 }
 
 func LoadClientConfig() (*Client, error) {
-	envFile, _ := os.ReadFile("../../.env")
+	resolver := path.NewResolver()
+	envFile, _ := os.ReadFile(resolver.GetPath(".env"))
 	envMap := helpers.ParseEnv(string(envFile))
 
 	client := &Client{

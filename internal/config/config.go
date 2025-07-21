@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/arnald/forum/internal/pkg/helpers"
 	"github.com/arnald/forum/internal/pkg/path"
 )
 
@@ -44,7 +45,7 @@ type DatabaseConfig struct {
 func LoadConfig() (*ServerConfig, error) {
 	resolver := path.NewResolver()
 	envFile, _ := os.ReadFile(resolver.GetPath(".env"))
-	envMap := parseEnv(string(envFile))
+	envMap := helpers.ParseEnv(string(envFile))
 
 	cfg := &ServerConfig{
 		Host:         helpers.GetEnv("SERVER_HOST", envMap, "localhost"),
@@ -55,12 +56,12 @@ func LoadConfig() (*ServerConfig, error) {
 		WriteTimeout: helpers.GetEnvDuration("SERVER_WRITE_TIMEOUT", envMap, writeTimeout),
 		IdleTimeout:  helpers.GetEnvDuration("SERVER_IDLE_TIMEOUT", envMap, idleTimeout),
 		Database: DatabaseConfig{
-			Driver:         getEnv("DB_DRIVER", envMap, "sqlite3"),
-			Path:           resolver.GetPath(getEnv("DB_PATH", envMap, "data/forum.db")),
-			MigrateOnStart: getEnvBool("DB_MIGRATE_ON_START", envMap, true),
-			SeedOnStart:    getEnvBool("DB_SEED_ON_START", envMap, true),
-			Pragma:         getEnv("DB_PRAGMA", envMap, "_foreign_keys=on&_journal_mode=WAL"),
-			OpenConn:       getEnvInt("DB_OPEN_CONN", envMap, 1),
+			Driver:         helpers.GetEnv("DB_DRIVER", envMap, "sqlite3"),
+			Path:           resolver.GetPath(helpers.GetEnv("DB_PATH", envMap, "data/forum.db")),
+			MigrateOnStart: helpers.GetEnvBool("DB_MIGRATE_ON_START", envMap, true),
+			SeedOnStart:    helpers.GetEnvBool("DB_SEED_ON_START", envMap, true),
+			Pragma:         helpers.GetEnv("DB_PRAGMA", envMap, "_foreign_keys=on&_journal_mode=WAL"),
+			OpenConn:       helpers.GetEnvInt("DB_OPEN_CONN", envMap, 1),
 		},
 	}
 
