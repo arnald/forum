@@ -1,3 +1,4 @@
+// ==== Homepage ==== //
 // Close the details when clicking outside
 document.addEventListener("click", function (event) {
   const details = document.querySelector(".category-details");
@@ -18,6 +19,20 @@ document.addEventListener("DOMContentLoaded", function () {
     button.classList.remove("active");
     if (button.getAttribute("href") === path) {
       button.classList.add("active");
+    }
+  });
+});
+
+// ==== Signup ==== //
+document.addEventListener("DOMContentLoaded", function () {
+  const passwordInput = document.getElementById("password");
+  const toggleCheckbox = document.getElementById("togglePassword");
+
+  toggleCheckbox.addEventListener("change", function () {
+    if (toggleCheckbox.checked) {
+      passwordInput.type = "text";
+    } else {
+      passwordInput.type = "password";
     }
   });
 });

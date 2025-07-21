@@ -43,7 +43,10 @@ func setupRoutes() *http.ServeMux {
 
 	staticPath := filepath.Join(basePath, "frontend", "static")
 	router.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(staticPath))))
+	// Homepage
 	router.HandleFunc("/", handler.HomePage)
+	// Register page
+	router.HandleFunc("/register", handler.RegisterPage)
 
 	return router
 }

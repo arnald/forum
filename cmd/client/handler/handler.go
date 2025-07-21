@@ -14,25 +14,25 @@ const (
 )
 
 type Topic struct {
-	ID    int    `json:"id"`
 	Title string `json:"title"`
+	ID    int    `json:"id"`
 }
 
 type Logo struct {
-	ID     int    `json:"id"`
 	URL    string `json:"url"`
+	ID     int    `json:"id"`
 	Width  int    `json:"width"`
 	Height int    `json:"height"`
 }
 
 type Category struct {
-	ID          int     `json:"id"`
 	Name        string  `json:"name"`
 	Color       string  `json:"color"`
 	Slug        string  `json:"slug"`
 	Description string  `json:"description"`
-	Logo        Logo    `json:"logo"`
 	Topics      []Topic `json:"topics"`
+	Logo        Logo    `json:"logo"`
+	ID          int     `json:"id"`
 }
 
 type CategoryData struct {
@@ -41,6 +41,7 @@ type CategoryData struct {
 	} `json:"data"`
 }
 
+// HomePage Handler
 func HomePage(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		notFoundHandler(w, r, notFoundMessage, http.StatusNotFound)
@@ -57,6 +58,8 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 
 	// Load categories.json
 	jsonPath := filepath.Join(basePath, "cmd", "client", "data", "categories.json")
+	jsonPath = filepath.Clean(jsonPath)
+
 	file, err := os.Open(jsonPath)
 	if err != nil {
 		log.Println("Error opening categories.json:", err)
@@ -66,7 +69,8 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 
 	var data CategoryData
-	if err := json.NewDecoder(file).Decode(&data); err != nil {
+	err = json.NewDecoder(file).Decode(&data)
+	if err != nil {
 		log.Println("Error decoding JSON:", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
@@ -88,6 +92,35 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Register Handler
+func RegisterPage(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	basePath, err := os.Getwd()
+	if err != nil {
+		log.Println("Error getting working directory:", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	tmplPath := filepath.Join(basePath, "frontend", "html", "pages", "register.html")
+	tmpl, err := template.ParseFiles(tmplPath)
+	if err != nil {
+		log.Println("Error parsing register.html:", err)
+		http.Error(w, "Failed to load page", http.StatusInternalServerError)
+		return
+	}
+
+	err = tmpl.ExecuteTemplate(w, "register", nil)
+	if err != nil {
+		log.Println("Error executing register.html:", err)
+		http.Error(w, "Failed to render page", http.StatusInternalServerError)
+	}
+}
+
 func notFoundHandler(w http.ResponseWriter, _ *http.Request, errorMessage string, httpStatus int) {
 	basePath, err := os.Getwd()
 	if err != nil {
@@ -97,6 +130,8 @@ func notFoundHandler(w http.ResponseWriter, _ *http.Request, errorMessage string
 	}
 
 	templatePath := filepath.Join(basePath, "frontend", "html", "pages", "not_found.html")
+	templatePath = filepath.Clean(templatePath)
+
 	tmpl, err := template.ParseFiles(templatePath)
 	if err != nil {
 		http.Error(w, errorMessage, httpStatus)
