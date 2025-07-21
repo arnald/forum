@@ -222,3 +222,13 @@
   background-color: var(--secondary-color);
   transform: translateY(-3px);
 }
+/* Input Errors */
+.error-message {
+  /* hidden by default */
+  color: red; /* or use var(--error-color) */
+  font-size: 0.9rem;
+  margin-left: 3px;
+}
+.error-message.show {
+  display: inline-block;
+}
