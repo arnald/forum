@@ -51,12 +51,13 @@ func (sm *Manager) CreateSession(ctx context.Context, userID string) (*user.Sess
 	defer stmt.Close()
 
 	newSessionToken := sm.tokenGenerator.NewUUID()
+	expiry := time.Now().Add(sm.sessionConfig.DefaultExpiry)
 
 	_, err = stmt.ExecContext(
 		ctx,
 		newSessionToken,
 		userID,
-		sm.sessionConfig.DefaultExpiry,
+		expiry.Format("2006-01-02 15:04:05"),
 	)
 	if err != nil {
 		return nil, err
@@ -65,6 +66,7 @@ func (sm *Manager) CreateSession(ctx context.Context, userID string) (*user.Sess
 	session := &user.Session{
 		Token:  newSessionToken,
 		UserID: userID,
+		Expiry: expiry,
 	}
 
 	return session, nil
