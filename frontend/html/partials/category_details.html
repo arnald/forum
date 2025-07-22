@@ -1,0 +1,25 @@
+{{ define "category_details" }}
+<!-- Details Categories -->
+<div class="nav-categories">
+  <details class="category-details">
+    <summary>Categories</summary>
+    <div class="details-content">
+      {{ range . }}
+      <a href="/category/{{ .Slug }}" class="details-category-link">
+        <div class="details-text-box">
+          <span
+            class="category-title-color"
+            style="background-color: {{ .Color }}"
+          ></span>
+          <span class="details-category-title">{{ .Name }}</span>
+        </div>
+        <span class="category-count">{{ .TopicCount }}</span>
+      </a>
+      {{ end }}
+    </div>
+  </details>
+  <a href="/categories" class="nav-categories-btn active">Categories</a>
+  <a href="/latest_posts" class="nav-categories-btn">Latest</a>
+  <a href="/top_posts" class="nav-categories-btn">Top</a>
+</div>
+{{ end }}
