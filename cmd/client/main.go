@@ -46,9 +46,30 @@ func setupRoutes() *http.ServeMux {
 	// Homepage
 	router.HandleFunc("/", handler.HomePage)
 	// Register page
-	router.HandleFunc("/register", handler.RegisterPage)
+	router.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			handler.RegisterPage(w, r)
+		case http.MethodPost:
+			handler.RegisterPost(w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+
+	})
+	// router.HandleFunc("/register", handler.RegisterPage)
 	// Login page
-	router.HandleFunc("/login", handler.LoginPage)
+	router.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			handler.LoginPage(w, r)
+		case http.MethodPost:
+			handler.LoginPost(w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
+	// router.HandleFunc("/login", handler.LoginPage)
 
 	return router
 }

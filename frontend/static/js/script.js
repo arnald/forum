@@ -24,6 +24,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // ==== Signup ==== //
+/*--- Show/Hide Password ---*/
 document.addEventListener("DOMContentLoaded", function () {
   const passwordInput = document.getElementById("password");
   const toggleCheckbox = document.getElementById("togglePassword");
@@ -34,5 +35,27 @@ document.addEventListener("DOMContentLoaded", function () {
     } else {
       passwordInput.type = "password";
     }
+  });
+});
+
+// ==== Signin ==== //
+/*--- Remove errors after new input ---*/
+document.addEventListener("DOMContentLoaded", () => {
+  const inputs = document.querySelectorAll(".form-input");
+
+  inputs.forEach((input) => {
+    input.addEventListener("input", () => {
+      if (input.classList.contains("input-error")) {
+        input.classList.remove("input-error");
+
+        const errorSpan = input
+          .closest(".input-box")
+          .querySelector(".error-message");
+
+        if (errorSpan) {
+          errorSpan.textContent = "";
+        }
+      }
+    });
   });
 });

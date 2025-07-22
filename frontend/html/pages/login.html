@@ -55,7 +55,7 @@
             <span class="border-text">or</span>
           </div>
 
-          <form class="signup" action="">
+          <form class="signup" method="post" action="/login">
             <div class="input-wrapper">
               <div class="input-box">
                 <label for="email">Email address</label>
@@ -63,10 +63,14 @@
                   type="email"
                   name="email"
                   id="email"
+                  class="form-input {{ if .Email }}input-error{{ end }}"
                   placeholder="Enter your email"
-                  aria-label="email submission"
+                  {{if
+                  .Email}}autofocus{{end}}
                 />
-                <span class="error-message" id="email-error"></span>
+                {{ if .Email }}
+                <span class="error-message">{{ .Email }}</span>
+                {{ end }}
               </div>
               <div class="input-box">
                 <div class="password-wrapper">
@@ -75,10 +79,11 @@
                     type="password"
                     name="password"
                     id="password"
+                    class="form-input {{ if .Password }}input-error{{ end }}"
                     placeholder="Enter your password"
-                    aria-label="password submission"
+                    {{if
+                    .Password}}autofocus{{end}}
                   />
-
                   <label for="togglePassword" class="togglePassword">
                     <img
                       src="/static/images/icons/eye.png"
@@ -93,7 +98,9 @@
                     aria-label="show/hide password"
                   />
                 </div>
-                <span class="error-message" id="password-error"></span>
+                {{ if .Password }}
+                <span class="error-message">{{ .Password }}</span>
+                {{ end }}
               </div>
             </div>
 

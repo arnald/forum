@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"net/mail"
 	"os"
 	"path/filepath"
 	"text/template"
+	"unicode"
 )
 
 const (
@@ -39,6 +41,85 @@ type CategoryData struct {
 	Data struct {
 		Categories []Category `json:"categories"`
 	} `json:"data"`
+}
+
+/*
+type BasePageData struct {
+	Categories []Category
+	User       *User // when you add auth
+}
+// When .User is nil, you show login/register links.
+// When .User is populated, you show the user’s name, avatar, logout, etc.
+*/
+
+// TemplateData is an empty interface that marks types that can be passed to templates
+type TemplateData interface{}
+
+type LoginErrors struct {
+	Email    string
+	Password string
+}
+
+type RegisterErrors struct {
+	Username string
+	Email    string
+	Password string
+}
+
+// helper functions
+func isValidEmail(email string) bool {
+	_, err := mail.ParseAddress(email)
+	return err == nil
+}
+
+func isValidPassword(pw string) bool {
+	if len(pw) < 8 {
+		return false
+	}
+
+	hasLower := false
+	hasUpper := false
+	hasDigit := false
+	hasSpecial := false
+
+	for _, c := range pw {
+		switch {
+		case unicode.IsLower(c):
+			hasLower = true
+		case unicode.IsUpper(c):
+			hasUpper = true
+		case unicode.IsDigit(c):
+			hasDigit = true
+		case !unicode.IsLetter(c) && !unicode.IsDigit(c):
+			hasSpecial = true
+		}
+	}
+
+	return hasLower && hasUpper && hasDigit && hasSpecial
+}
+
+func renderTemplate(w http.ResponseWriter, templateName string, data interface{}) {
+	basePath, err := os.Getwd()
+	if err != nil {
+		log.Println("Error getting working directory:", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	tmplPath := filepath.Join(basePath, "frontend", "html", "pages", templateName+".html")
+	tmpl, err := template.ParseFiles(tmplPath)
+	if err != nil {
+		log.Printf("Error parsing %s: %v", templateName, err)
+		http.Error(w, "Failed to load page", http.StatusInternalServerError)
+		return
+	}
+
+	err = tmpl.ExecuteTemplate(w, templateName, data)
+	if err != nil {
+		log.Printf("Error executing %s: %v", templateName, err)
+		http.Error(w, "Failed to render page", http.StatusInternalServerError)
+	}
+
 }
 
 // HomePage Handler
@@ -76,8 +157,14 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// templatePath := filepath.Join(basePath, "frontend", "html", "pages", "home.html")
-	// tmpl, err := template.ParseFiles(templatePath)
+	/*
+		data := BasePageData{
+			Categories: data.Data.Categories,
+			User:       nil, // or retrieve user from session/cookie when you implement auth
+		}
+		tmpl.ExecuteTemplate(w, "base", data)
+	*/
+
 	tmpl, err := template.ParseGlob(filepath.Join(basePath, "frontend/html/**/*.html"))
 	if err != nil {
 		log.Println("Error loading home.html:", err)
@@ -92,62 +179,125 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Register Handler
+// Register Handler GET
 func RegisterPage(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-
-	basePath, err := os.Getwd()
-	if err != nil {
-		log.Println("Error getting working directory:", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
-
-	tmplPath := filepath.Join(basePath, "frontend", "html", "pages", "register.html")
-	tmpl, err := template.ParseFiles(tmplPath)
-	if err != nil {
-		log.Println("Error parsing register.html:", err)
-		http.Error(w, "Failed to load page", http.StatusInternalServerError)
-		return
-	}
-
-	err = tmpl.ExecuteTemplate(w, "register", nil)
-	if err != nil {
-		log.Println("Error executing register.html:", err)
-		http.Error(w, "Failed to render page", http.StatusInternalServerError)
-	}
+	renderTemplate(w, "register", nil)
 }
 
-// Login Handler
+// Login Handler GET
 func LoginPage(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+	renderTemplate(w, "login", nil)
+}
 
-	basePath, err := os.Getwd()
-	if err != nil {
-		log.Println("Error getting working directory:", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+// Login Handler POST
+func LoginPost(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	tmplPath := filepath.Join(basePath, "frontend", "html", "pages", "login.html")
-	tmpl, err := template.ParseFiles(tmplPath)
+	err := r.ParseForm()
 	if err != nil {
-		log.Println("Error parsing login.html:", err)
-		http.Error(w, "Failed to load page", http.StatusInternalServerError)
+		http.Error(w, "Invalid form data", http.StatusBadRequest)
 		return
 	}
 
-	err = tmpl.ExecuteTemplate(w, "login", nil)
-	if err != nil {
-		log.Println("Error executing login.html:", err)
-		http.Error(w, "Failed to render page", http.StatusInternalServerError)
+	email := r.FormValue("email")
+	password := r.FormValue("password")
+
+	data := LoginErrors{
+		Email:    email,
+		Password: password,
 	}
+
+	// Validate email
+	if email == "" {
+		data.Email = "Email is required."
+	} else if !isValidEmail(email) {
+		data.Email = "Invalid email format."
+	}
+
+	// Validate password
+	if password == "" {
+		data.Password = "Password is required."
+	} else if !isValidPassword(password) {
+		data.Password = "Password must be 8+ chars, including uppercase, lowercase, number, and special char."
+	}
+
+	// If errors, re-render login page with errors
+	if data.Email != "" || data.Password != "" {
+		renderTemplate(w, "login", data)
+		return
+	}
+
+	// TODO: Authenticate user (check DB)
+	// If auth fails, set an error like:
+	// data.Errors.Password = "Invalid email or password."
+	// renderLoginTemplate(w, data)
+	// return
+
+	// On success, redirect to homepage or user dashboard
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+// Register Handler POST
+func RegisterPost(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	err := r.ParseForm()
+	if err != nil {
+		http.Error(w, "Invalid form data", http.StatusBadRequest)
+		return
+	}
+
+	username := r.FormValue("username")
+	email := r.FormValue("email")
+	password := r.FormValue("password")
+
+	data := RegisterErrors{
+		Username: username,
+		Email:    email,
+		Password: password,
+	}
+
+	// Validate username
+	if username == "" {
+		data.Username = "Username is required."
+	}
+
+	// Validate email
+	if email == "" {
+		data.Email = "Email is required."
+	} else if !isValidEmail(email) {
+		data.Email = "Invalid email format."
+	}
+
+	// Validate password
+	if password == "" {
+		data.Password = "Password is required."
+	} else if !isValidPassword(password) {
+		data.Password = "Password must be 8+ chars, including uppercase, lowercase, number, and special char."
+	}
+
+	// If errors, re-render register page with errors
+	if data.Username != "" || data.Email != "" || data.Password != "" {
+		renderTemplate(w, "register", data)
+		return
+	}
+
+	// TODO: Register user in database
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func notFoundHandler(w http.ResponseWriter, _ *http.Request, errorMessage string, httpStatus int) {

@@ -199,12 +199,13 @@
   transform: translateY(-3px);
 }
 /* Input Errors */
-.error-message {
-  /* hidden by default */
-  color: red; /* or use var(--error-color) */
-  font-size: 0.9rem;
-  margin-left: 3px;
+.form-input.input-error {
+  border: 2px solid #e63946; /* or any red tone you like */
 }
-.error-message.show {
-  display: inline-block;
+.error-message {
+  color: #e63946; /* or use var(--error-color) */
+  font-size: 0.85rem;
+  margin-left: 3px;
+  /* margin-top: 4px; */
+  display: block;
 }
