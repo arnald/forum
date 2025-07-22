@@ -7,40 +7,14 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/arnald/forum/cmd/client/domain"
+	h "github.com/arnald/forum/cmd/client/helpers"
 	"github.com/arnald/forum/internal/pkg/path"
 )
 
 const (
 	notFoundMessage = "Oops! The page you're looking for has vanished into the digital void."
 )
-
-type CategoryData struct {
-	Data struct {
-		Categories []Category `json:"categories"`
-	} `json:"data"`
-}
-
-type Category struct {
-	Name        string  `json:"name"`
-	Color       string  `json:"color"`
-	Slug        string  `json:"slug,omitzero"`
-	Description string  `json:"description,omitzero"`
-	Topics      []Topic `json:"topics,omitzero"`
-	Logo        Logo    `json:"logo"`
-	ID          int     `json:"id"`
-}
-
-type Logo struct {
-	URL    string `json:"url"`
-	ID     int    `json:"id"`
-	Width  int    `json:"width"`
-	Height int    `json:"height"`
-}
-
-type Topic struct {
-	Title string `json:"title"`
-	ID    int    `json:"id"`
-}
 
 func HomePage(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
@@ -59,13 +33,15 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	var categoryData CategoryData
+	var categoryData domain.CategoryData
 	err = json.NewDecoder(file).Decode(&categoryData)
 	if err != nil {
 		log.Println("Error decoding JSON:", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
+
+	h.PrepareCategories(categoryData.Data.Categories)
 
 	tmpl, err := template.ParseGlob(resolver.GetPath("frontend/html/**/*.html"))
 	if err != nil {

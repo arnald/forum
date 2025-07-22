@@ -8,12 +8,12 @@
       <a href="/category/{{ .Slug }}" class="details-category-link">
         <div class="details-text-box">
           <span
-            class="details-category-color"
-            style="background-color: #{{ .Color }}"
+            class="category-title-color"
+            style="background-color: {{ .Color }}"
           ></span>
           <span class="details-category-title">{{ .Name }}</span>
         </div>
-        <span class="category-count">{{ len .Topics }}</span>
+        <span class="category-count">{{ .TopicCount }}</span>
       </a>
       {{ end }}
     </div>
