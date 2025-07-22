@@ -28,12 +28,21 @@ document.addEventListener("DOMContentLoaded", function () {
 document.addEventListener("DOMContentLoaded", function () {
   const passwordInput = document.getElementById("password");
   const toggleCheckbox = document.getElementById("togglePassword");
+  const showIcon = document.getElementById("eye-icon");
+  const hiddenIcon = document.getElementById("hidden-icon");
+
+  // Initially hide the hidden icon
+  hiddenIcon.style.display = "none";
 
   toggleCheckbox.addEventListener("change", function () {
     if (toggleCheckbox.checked) {
       passwordInput.type = "text";
+      showIcon.style.display = "none";
+      hiddenIcon.style.display = "block";
     } else {
       passwordInput.type = "password";
+      showIcon.style.display = "block";
+      hiddenIcon.style.display = "none";
     }
   });
 });

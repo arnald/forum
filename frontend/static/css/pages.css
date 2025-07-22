@@ -105,7 +105,8 @@
 .password-wrapper {
   position: relative;
 }
-.eye-icon {
+.eye-icon,
+.hidden-icon {
   width: 20px;
   height: 20px;
   display: block;
@@ -200,10 +201,10 @@
 }
 /* Input Errors */
 .form-input.input-error {
-  border: 2px solid #e63946; /* or any red tone you like */
+  border: 2px solid #e63946;
 }
 .error-message {
-  color: #e63946; /* or use var(--error-color) */
+  color: #e63946;
   font-size: 0.85rem;
   margin-left: 3px;
   /* margin-top: 4px; */

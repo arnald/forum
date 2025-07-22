@@ -7,6 +7,7 @@ import (
 	"net/mail"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 	"unicode"
 )
@@ -55,49 +56,101 @@ type BasePageData struct {
 // TemplateData is an empty interface that marks types that can be passed to templates
 type TemplateData interface{}
 
-type LoginErrors struct {
-	Email    string
-	Password string
+type FormErrors struct {
+	Username string `json:"username,omitempty"`
+	Email    string `json:"email,omitempty"`
+	Password string `json:"password,omitempty"`
 }
 
-type RegisterErrors struct {
-	Username string
-	Email    string
-	Password string
+// Validation helpers
+func validateEmail(email string) string {
+	if email == "" {
+		return "Email is required."
+	}
+	if !isValidEmail(email) {
+		return "Invalid email format."
+	}
+	return ""
 }
 
-// helper functions
+func validateUsername(username string) string {
+	if username == "" {
+		return "Username is required."
+	}
+	return ""
+}
+
 func isValidEmail(email string) bool {
 	_, err := mail.ParseAddress(email)
 	return err == nil
 }
 
-func isValidPassword(pw string) bool {
-	if len(pw) < 8 {
-		return false
-	}
-
-	hasLower := false
-	hasUpper := false
-	hasDigit := false
-	hasSpecial := false
-
-	for _, c := range pw {
-		switch {
-		case unicode.IsLower(c):
-			hasLower = true
-		case unicode.IsUpper(c):
-			hasUpper = true
-		case unicode.IsDigit(c):
-			hasDigit = true
-		case !unicode.IsLetter(c) && !unicode.IsDigit(c):
-			hasSpecial = true
+func hasLower(s string) bool {
+	for _, c := range s {
+		if unicode.IsLower(c) {
+			return true
 		}
 	}
-
-	return hasLower && hasUpper && hasDigit && hasSpecial
+	return false
 }
 
+func hasUpper(s string) bool {
+	for _, c := range s {
+		if unicode.IsUpper(c) {
+			return true
+		}
+	}
+	return false
+}
+
+func hasDigit(s string) bool {
+	for _, c := range s {
+		if unicode.IsDigit(c) {
+			return true
+		}
+	}
+	return false
+}
+
+func hasSpecial(s string) bool {
+	for _, c := range s {
+		if !unicode.IsLetter(c) && !unicode.IsDigit(c) && !unicode.IsSpace(c) {
+			return true
+		}
+	}
+	return false
+}
+
+func validatePassword(pw string) string {
+	if pw == "" {
+		return "Password is required."
+	}
+	if len(pw) < 8 {
+		return "Password must be 8+ chars"
+	}
+
+	var missing []string
+	if !hasLower(pw) {
+		missing = append(missing, "lowercase letter")
+	}
+	if !hasUpper(pw) {
+		missing = append(missing, "uppercase letter")
+	}
+	if !hasDigit(pw) {
+		missing = append(missing, "number")
+	}
+	if !hasSpecial(pw) {
+		missing = append(missing, "special character")
+	}
+
+	if len(missing) > 0 {
+		return "Missing: " + strings.Join(missing, ", ")
+	}
+
+	return "" // empty string means no error
+}
+
+// Helper for rendering different templates (login/register)
 func renderTemplate(w http.ResponseWriter, templateName string, data interface{}) {
 	basePath, err := os.Getwd()
 	if err != nil {
@@ -213,24 +266,10 @@ func LoginPost(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
 	password := r.FormValue("password")
 
-	data := LoginErrors{
-		Email:    email,
-		Password: password,
-	}
+	data := FormErrors{}
 
-	// Validate email
-	if email == "" {
-		data.Email = "Email is required."
-	} else if !isValidEmail(email) {
-		data.Email = "Invalid email format."
-	}
-
-	// Validate password
-	if password == "" {
-		data.Password = "Password is required."
-	} else if !isValidPassword(password) {
-		data.Password = "Password must be 8+ chars, including uppercase, lowercase, number, and special char."
-	}
+	data.Email = validateEmail(email)
+	data.Password = validatePassword(password)
 
 	// If errors, re-render login page with errors
 	if data.Email != "" || data.Password != "" {
@@ -265,30 +304,11 @@ func RegisterPost(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
 	password := r.FormValue("password")
 
-	data := RegisterErrors{
-		Username: username,
-		Email:    email,
-		Password: password,
-	}
+	data := FormErrors{}
 
-	// Validate username
-	if username == "" {
-		data.Username = "Username is required."
-	}
-
-	// Validate email
-	if email == "" {
-		data.Email = "Email is required."
-	} else if !isValidEmail(email) {
-		data.Email = "Invalid email format."
-	}
-
-	// Validate password
-	if password == "" {
-		data.Password = "Password is required."
-	} else if !isValidPassword(password) {
-		data.Password = "Password must be 8+ chars, including uppercase, lowercase, number, and special char."
-	}
+	data.Username = validateUsername(username)
+	data.Email = validateEmail(email)
+	data.Password = validatePassword(password)
 
 	// If errors, re-render register page with errors
 	if data.Username != "" || data.Email != "" || data.Password != "" {
