@@ -51,7 +51,7 @@ func (server *Server) AddHTTPRoutes() {
 	)
 }
 
-func (server *Server) ListenAndServe(port string) {
+func (server *Server) ListenAndServe() {
 	srv := &http.Server{
 		Addr:         server.config.Host + ":" + server.config.Port,
 		Handler:      server.router,
@@ -60,8 +60,7 @@ func (server *Server) ListenAndServe(port string) {
 		IdleTimeout:  server.config.IdleTimeout,
 	}
 
-	log.Printf("Server started port %s (%s environment)", port, server.config.Environment)
-
+	log.Printf("Server started port: %s (%s environment)", server.config.Port, server.config.Environment)
 	err := srv.ListenAndServe()
 	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatalf("Server failed: %v", err)

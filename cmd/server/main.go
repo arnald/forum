@@ -13,5 +13,5 @@ func main() {
 	en := bcrypt.NewProvider()
 	appServices := app.NewServices(infraProviders.UserRepository, up, en)
 	infraHTTPServer := infra.NewHTTPServer(appServices)
-	infraHTTPServer.ListenAndServe(":8080")
+	infraHTTPServer.ListenAndServe()
 }

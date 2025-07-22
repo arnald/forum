@@ -1,0 +1,44 @@
+{{ define "categories" }}
+<!-- Categories -->
+<div class="categories-container">
+  {{ range . }}
+  <div class="category">
+    <div class="category-wrapper">
+      <div class="category-img-box">
+        <a href="/category/{{ .Slug }}" class="category-link">
+          <img class="category-img" src="{{ .Logo.URL }}" alt="{{ .Name }}" />
+        </a>
+      </div>
+      <div class="category-info">
+        <div class="category-info-box">
+          <a href="/category/{{ .Slug }}" class="category-link">
+            <div class="category-title-box">
+              <span
+                class="category-title-color"
+                style="background-color: {{ .Color }}"
+              ></span>
+              <span class="category-title">{{ .Name }}</span>
+            </div>
+          </a>
+          <p class="category-description">{{ .Description }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="category-posts">
+      {{ range $index, $topic := .Topics }}
+      <!-- Only show first 3 topics -->
+      {{ if lt $index 3 }}
+      <div class="category-post">
+        <a href="/topic/{{ .ID }}" class="topic-link">
+          <span class="category-post-title">
+            <span class="left-arrow">&#10147;</span> {{ $topic.Title }}
+          </span>
+        </a>
+        <span class="category-post-date">Feb 2023</span>
+      </div>
+      {{ end }} {{ end }}
+    </div>
+  </div>
+  {{ end }}
+</div>
+{{end}}
