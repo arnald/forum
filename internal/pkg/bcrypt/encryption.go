@@ -25,7 +25,7 @@ func (p *encryptionProvider) Generate(plaintextPassword string) (string, error) 
 		return "", err
 	}
 
-	return string(hash[:]), nil
+	return string(hash), nil
 }
 
 func (p *encryptionProvider) Matches(plaintextPassword string, encryptedPass []byte) (bool, error) {

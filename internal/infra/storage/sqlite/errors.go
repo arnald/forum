@@ -8,8 +8,12 @@ import (
 	"github.com/mattn/go-sqlite3"
 )
 
-var ErrDuplicateEmail = errors.New("duplicate email")
-var ErrDuplicateUsername = errors.New("duplicate username")
+var (
+	ErrDuplicateEmail    = errors.New("duplicate email")
+	ErrDuplicateUsername = errors.New("duplicate username")
+	ErrConstraint        = errors.New("sqlite constrain error")
+	ErrUnknownConstraint = errors.New("sqlite unknow constraint error")
+)
 
 func MapSQLiteError(err error) error {
 	var sqliteErr sqlite3.Error
@@ -23,10 +27,10 @@ func MapSQLiteError(err error) error {
 			case strings.Contains(msg, "users.username"):
 				return ErrDuplicateUsername
 			default:
-				return fmt.Errorf("sqlite constraint error: %v", sqliteErr)
+				return fmt.Errorf("%w: , %w", ErrConstraint, sqliteErr)
 			}
 		}
-		return fmt.Errorf("sqlite error %d: %s", sqliteErr.Code, sqliteErr.Error())
+		return fmt.Errorf("%w: %w: %s ", ErrUnknownConstraint, sqliteErr.Code, sqliteErr.Error())
 	}
 	return err
 }

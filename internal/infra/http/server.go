@@ -26,7 +26,7 @@ type Server struct {
 	appServices    app.Services
 	config         *config.ServerConfig
 	router         *http.ServeMux
-	sessionManager *session.SessionManager
+	sessionManager *session.Manager
 	db             *sql.DB
 }
 

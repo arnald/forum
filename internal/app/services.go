@@ -8,8 +8,7 @@ import (
 )
 
 type Queries struct {
-	UserRegister  queries.UserRegisterRequestHandler
-	CreateSession queries.CreateSessionRequestHandler
+	UserRegister queries.UserRegisterRequestHandler
 }
 
 type UserServices struct {
@@ -25,7 +24,6 @@ func NewServices(repo user.Repository, up uuid.Provider, en bcrypt.Provider) Ser
 		UserServices: UserServices{
 			Queries: Queries{
 				queries.NewUserRegisterHandler(repo, up, en),
-				queries.NewCreateSessionRequestHandler(repo, up),
 			},
 		},
 	}

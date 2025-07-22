@@ -16,12 +16,14 @@ import (
 	"github.com/arnald/forum/internal/pkg/helpers"
 )
 
+const contextTimeout = 15 * time.Second
+
 type Handler struct {
 	UserServices   app.Services
-	SessionManager *session.SessionManager
+	SessionManager *session.Manager
 }
 
-func NewHandler(app app.Services, sm *session.SessionManager) *Handler {
+func NewHandler(app app.Services, sm *session.Manager) *Handler {
 	return &Handler{
 		UserServices:   app,
 		SessionManager: sm,
@@ -54,7 +56,7 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Hour*3))
+	ctx, cancel := context.WithTimeout(r.Context(), contextTimeout)
 	defer cancel()
 
 	user, err := h.UserServices.UserServices.Queries.UserRegister.Handle(ctx, queries.UserRegisterRequest{
@@ -80,7 +82,7 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newSession, err := h.SessionManager.CreateSession(user.ID)
+	newSession, err := h.SessionManager.CreateSession(ctx, user.ID)
 	if err != nil {
 		helpers.RespondWithError(
 			w,
@@ -89,6 +91,10 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 		)
 		return
 	}
+
+	cookie := h.SessionManager.NewSessionCookie(newSession.Token)
+
+	http.SetCookie(w, cookie)
 
 	helpers.RespondWithJSON(
 		w,

@@ -49,8 +49,9 @@ func (r Repo) UserRegister(ctx context.Context, user *user.User) error {
 		user.ID,
 	)
 
-	if err := MapSQLiteError(err); err != nil {
-		return err
+	mapErr := MapSQLiteError(err)
+	if mapErr != nil {
+		return mapErr
 	}
 
 	return nil

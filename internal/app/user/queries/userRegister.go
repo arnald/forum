@@ -2,7 +2,6 @@ package queries
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"github.com/arnald/forum/internal/domain/user"
@@ -26,7 +25,7 @@ type userRegisterRequestHandler struct {
 	repo               user.Repository
 }
 
-func NewUserRegisterHandler(repo user.Repository, uuidProvider uuid.Provider, en bcrypt.Provider) userRegisterRequestHandler {
+func NewUserRegisterHandler(repo user.Repository, uuidProvider uuid.Provider, en bcrypt.Provider) UserRegisterRequestHandler {
 	return userRegisterRequestHandler{
 		repo:               repo,
 		uuidiProvider:      uuidProvider,
@@ -55,7 +54,6 @@ func (h userRegisterRequestHandler) Handle(ctx context.Context, req UserRegister
 	if err != nil {
 		return nil, err
 	}
-	log.Println("User Registered Successfully")
 
 	return user, err
 }

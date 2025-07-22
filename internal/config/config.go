@@ -11,10 +11,14 @@ import (
 )
 
 const (
-	readTimeout  = 5
-	writeTimeout = 10
-	idleTimeout  = 15
-	configParts  = 2
+	readTimeout        = 5
+	writeTimeout       = 10
+	idleTimeout        = 15
+	configParts        = 2
+	defaultExpiry      = 86400
+	cleanupInternal    = 3600
+	maxSessionsPerUser = 5
+	sessionIDLenght    = 32
 )
 
 var (
@@ -44,16 +48,16 @@ type DatabaseConfig struct {
 }
 
 type SessionManagerConfig struct {
-	DefaultExpiry      time.Duration
-	SecureCookie       bool
 	CookieName         string
 	CookiePath         string
 	CookieDomain       string
-	HttpOnlyCookie     bool
 	SameSite           string
+	DefaultExpiry      time.Duration
 	CleanupInterval    time.Duration
 	MaxSessionsPerUser int
 	SessionIDLength    int
+	SecureCookie       bool
+	HTTPOnlyCookie     bool
 	EnablePersistence  bool
 	LogSessions        bool
 }
@@ -80,16 +84,16 @@ func LoadConfig() (*ServerConfig, error) {
 			OpenConn:       getEnvInt("DB_OPEN_CONN", envMap, 1),
 		},
 		SessionManager: SessionManagerConfig{
-			DefaultExpiry:      getEnvDuration("SESSION_DEFAULT_EXPIRY", envMap, 86400),
+			DefaultExpiry:      getEnvDuration("SESSION_DEFAULT_EXPIRY", envMap, defaultExpiry),
 			SecureCookie:       getEnvBool("SESSION_SECURE_COOKIE", envMap, false),
 			CookieName:         getEnv("SESSION_COOKIE_NAME", envMap, "session_id"),
 			CookiePath:         getEnv("SESSION_COOKIE_PATH", envMap, "/"),
 			CookieDomain:       getEnv("SESSION_COOKIE_DOMAIN", envMap, ""),
-			HttpOnlyCookie:     getEnvBool("SESSION_HTTPONLY_COOKIE", envMap, true),
+			HTTPOnlyCookie:     getEnvBool("SESSION_HTTPONLY_COOKIE", envMap, true),
 			SameSite:           getEnv("SESSION_SAMESITE", envMap, "Lax"),
-			CleanupInterval:    getEnvDuration("SESSION_CLEANUP_INTERVAL", envMap, 3600),
-			MaxSessionsPerUser: getEnvInt("SESSION_MAX_SESSIONS_PER_USER", envMap, 5),
-			SessionIDLength:    getEnvInt("SESSION_ID_LENGTH", envMap, 32),
+			CleanupInterval:    getEnvDuration("SESSION_CLEANUP_INTERVAL", envMap, cleanupInternal),
+			MaxSessionsPerUser: getEnvInt("SESSION_MAX_SESSIONS_PER_USER", envMap, maxSessionsPerUser),
+			SessionIDLength:    getEnvInt("SESSION_ID_LENGTH", envMap, sessionIDLenght),
 			EnablePersistence:  getEnvBool("SESSION_ENABLE_PERSISTENCE", envMap, true),
 			LogSessions:        getEnvBool("SESSION_LOG_SESSIONS", envMap, false),
 		},
