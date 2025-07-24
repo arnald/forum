@@ -6,12 +6,12 @@ import (
 	"testing"
 
 	"github.com/arnald/forum/internal/domain/user"
-	mocks "github.com/arnald/forum/internal/pkg/testing"
+	testhelpers "github.com/arnald/forum/internal/pkg/testing"
 )
 
 func TestUserLoginHandler_Handle(t *testing.T) {
 	t.Run("group: user login", func(t *testing.T) {
-		testCases := newUserLogingTestCases()
+		testCases := newUserLoginTestCases()
 		for _, tt := range testCases {
 			t.Run(tt.name, runUserLoginTest(tt))
 		}
@@ -21,14 +21,12 @@ func TestUserLoginHandler_Handle(t *testing.T) {
 type userLoginTestCase struct {
 	name       string
 	request    UserLoginRequest
-	setupMocks func(*mocks.MockRepository, *mocks.MockEncryptionProvider)
+	setupMocks func(*testhelpers.MockRepository, *testhelpers.MockEncryptionProvider)
 	wantErr    error
 	wantUser   *user.User
 }
 
-func newUserLogingTestCases() []userLoginTestCase {
-	var testErr = errors.New("test error")
-
+func newUserLoginTestCases() []userLoginTestCase {
 	return []userLoginTestCase{
 		{
 			name: "successful login",
@@ -36,7 +34,7 @@ func newUserLogingTestCases() []userLoginTestCase {
 				Email:    "test@example.com",
 				Password: "password123",
 			},
-			setupMocks: func(repo *mocks.MockRepository, enc *mocks.MockEncryptionProvider) {
+			setupMocks: func(repo *testhelpers.MockRepository, enc *testhelpers.MockEncryptionProvider) {
 				repo.GetUserByEmailFunc = func(ctx context.Context, email string) (*user.User, error) {
 					return &user.User{
 						ID:       "test-uuid",
@@ -60,12 +58,12 @@ func newUserLogingTestCases() []userLoginTestCase {
 			request: UserLoginRequest{
 				Email: "notfound@example.com",
 			},
-			setupMocks: func(repo *mocks.MockRepository, enc *mocks.MockEncryptionProvider) {
+			setupMocks: func(repo *testhelpers.MockRepository, enc *testhelpers.MockEncryptionProvider) {
 				repo.GetUserByEmailFunc = func(ctx context.Context, email string) (*user.User, error) {
-					return nil, testErr
+					return nil, testhelpers.ErrTest
 				}
 			},
-			wantErr:  testErr,
+			wantErr:  testhelpers.ErrTest,
 			wantUser: nil,
 		},
 		{
@@ -74,7 +72,7 @@ func newUserLogingTestCases() []userLoginTestCase {
 				Email:    "test@example.com",
 				Password: "wrongpassword",
 			},
-			setupMocks: func(repo *mocks.MockRepository, enc *mocks.MockEncryptionProvider) {
+			setupMocks: func(repo *testhelpers.MockRepository, enc *testhelpers.MockEncryptionProvider) {
 				repo.GetUserByEmailFunc = func(ctx context.Context, email string) (*user.User, error) {
 					return &user.User{
 						ID:       "test-uuid",
@@ -83,10 +81,10 @@ func newUserLogingTestCases() []userLoginTestCase {
 					}, nil
 				}
 				enc.MatchesFunc = func(hashedPassword string, plaintextPassword string) error {
-					return testErr
+					return testhelpers.ErrTest
 				}
 			},
-			wantErr:  testErr,
+			wantErr:  testhelpers.ErrTest,
 			wantUser: nil,
 		},
 		{
@@ -95,7 +93,7 @@ func newUserLogingTestCases() []userLoginTestCase {
 				Email:    "test@example.com",
 				Password: "Password123",
 			},
-			setupMocks: func(repo *mocks.MockRepository, enc *mocks.MockEncryptionProvider) {
+			setupMocks: func(repo *testhelpers.MockRepository, enc *testhelpers.MockEncryptionProvider) {
 				repo.GetUserByEmailFunc = func(ctx context.Context, email string) (*user.User, error) {
 					return &user.User{
 						ID:       "test-uuid",
@@ -104,10 +102,10 @@ func newUserLogingTestCases() []userLoginTestCase {
 					}, nil
 				}
 				enc.MatchesFunc = func(hashedPassword string, plaintextPassword string) error {
-					return testErr
+					return testhelpers.ErrTest
 				}
 			},
-			wantErr:  testErr,
+			wantErr:  testhelpers.ErrTest,
 			wantUser: nil,
 		},
 	}
@@ -115,8 +113,8 @@ func newUserLogingTestCases() []userLoginTestCase {
 
 func runUserLoginTest(tt userLoginTestCase) func(t *testing.T) {
 	return func(t *testing.T) {
-		repo := &mocks.MockRepository{}
-		enc := &mocks.MockEncryptionProvider{}
+		repo := &testhelpers.MockRepository{}
+		enc := &testhelpers.MockEncryptionProvider{}
 
 		tt.setupMocks(repo, enc)
 		handler := NewUserLoginHandler(repo, enc)
@@ -126,13 +124,13 @@ func runUserLoginTest(tt userLoginTestCase) func(t *testing.T) {
 			return
 		}
 
-		assertUserMatch(t, user, tt.wantUser)
+		testhelpers.AssertUserMatch(t, user, tt.wantUser)
 	}
 }
 
 func TestNewUserLoginHandler(t *testing.T) {
-	repo := &mocks.MockRepository{}
-	enc := &mocks.MockEncryptionProvider{}
+	repo := &testhelpers.MockRepository{}
+	enc := &testhelpers.MockEncryptionProvider{}
 
 	got := NewUserLoginHandler(repo, enc)
 	if got == nil {
