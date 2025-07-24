@@ -4,8 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/google/uuid"
-
 	"github.com/arnald/forum/internal/domain/user"
 )
 
@@ -13,7 +11,7 @@ type GetAllUsersResult struct {
 	CreatedAt time.Time
 	Name      string
 	Role      string
-	ID        uuid.UUID
+	ID        string
 }
 
 type GetAllUsersRequestHandler interface {
