@@ -1,10 +1,13 @@
-package testing
+package testhelpers
 
 import (
 	"context"
+	"errors"
 
 	"github.com/arnald/forum/internal/domain/user"
 )
+
+var ErrTest = errors.New("test error")
 
 type MockRepository struct {
 	UserRegisterFunc   func(ctx context.Context, user *user.User) error
@@ -20,14 +23,14 @@ func (m *MockRepository) GetUserByEmail(ctx context.Context, email string) (*use
 	if m.GetUserByEmailFunc != nil {
 		return m.GetUserByEmailFunc(ctx, email)
 	}
-	return nil, nil
+	return nil, ErrTest
 }
 
 func (m *MockRepository) GetAll(ctx context.Context) ([]user.User, error) {
 	if m.GetAllFunc != nil {
 		return m.GetAllFunc(ctx)
 	}
-	return nil, nil
+	return nil, ErrTest
 }
 
 type MockUUIDProvider struct {

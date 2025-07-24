@@ -1,4 +1,4 @@
-package testing
+package testhelpers
 
 import (
 	"testing"
@@ -6,7 +6,7 @@ import (
 	"github.com/arnald/forum/internal/domain/user"
 )
 
-func assertUserMatch(t *testing.T, got, want *user.User) {
+func AssertUserMatch(t *testing.T, got, want *user.User) {
 	t.Helper()
 
 	if want == nil {
@@ -21,10 +21,10 @@ func assertUserMatch(t *testing.T, got, want *user.User) {
 		return
 	}
 
-	compareUserFields(t, got, want)
+	CompareUserFields(t, got, want)
 }
 
-func compareUserFields(t *testing.T, got, want *user.User) {
+func CompareUserFields(t *testing.T, got, want *user.User) {
 	t.Helper()
 
 	if got.ID != want.ID {

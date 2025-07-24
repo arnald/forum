@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/arnald/forum/internal/domain/user"
-	mocks "github.com/arnald/forum/internal/pkg/testing"
+	testhelpers "github.com/arnald/forum/internal/pkg/testing"
 )
 
 func TestUserRegisterHandler_Handle(t *testing.T) {
@@ -21,14 +21,12 @@ func TestUserRegisterHandler_Handle(t *testing.T) {
 type userRegisterTestCase struct {
 	name       string
 	request    UserRegisterRequest
-	setupMocks func(*mocks.MockRepository, *mocks.MockUUIDProvider, *mocks.MockEncryptionProvider)
+	setupMocks func(*testhelpers.MockRepository, *testhelpers.MockUUIDProvider, *testhelpers.MockEncryptionProvider)
 	wantErr    error
 	wantUser   *user.User
 }
 
 func newUserRegisterTestCases() []userRegisterTestCase {
-	testErr := errors.New("test error")
-
 	return []userRegisterTestCase{
 		{
 			name: "successful registration",
@@ -37,7 +35,7 @@ func newUserRegisterTestCases() []userRegisterTestCase {
 				Password: "password123",
 				Email:    "test@example.com",
 			},
-			setupMocks: func(repo *mocks.MockRepository, uuid *mocks.MockUUIDProvider, enc *mocks.MockEncryptionProvider) {
+			setupMocks: func(repo *testhelpers.MockRepository, uuid *testhelpers.MockUUIDProvider, enc *testhelpers.MockEncryptionProvider) {
 				uuid.NewUUIDFunc = func() string { return "test-uuid" }
 				enc.GenerateFunc = func(pass string) (string, error) { return "hashed_password", nil }
 				repo.UserRegisterFunc = func(ctx context.Context, u *user.User) error { return nil }
@@ -57,12 +55,12 @@ func newUserRegisterTestCases() []userRegisterTestCase {
 				Password: "password123",
 				Email:    "test@example.com",
 			},
-			setupMocks: func(repo *mocks.MockRepository, uuid *mocks.MockUUIDProvider, enc *mocks.MockEncryptionProvider) {
+			setupMocks: func(repo *testhelpers.MockRepository, uuid *testhelpers.MockUUIDProvider, enc *testhelpers.MockEncryptionProvider) {
 				uuid.NewUUIDFunc = func() string { return "test-uuid" }
-				enc.GenerateFunc = func(pass string) (string, error) { return "", testErr }
+				enc.GenerateFunc = func(pass string) (string, error) { return "", testhelpers.ErrTest }
 				repo.UserRegisterFunc = func(ctx context.Context, u *user.User) error { return nil }
 			},
-			wantErr:  testErr,
+			wantErr:  testhelpers.ErrTest,
 			wantUser: nil,
 		},
 		{
@@ -72,12 +70,12 @@ func newUserRegisterTestCases() []userRegisterTestCase {
 				Password: "password123",
 				Email:    "test@example.com",
 			},
-			setupMocks: func(repo *mocks.MockRepository, uuid *mocks.MockUUIDProvider, enc *mocks.MockEncryptionProvider) {
+			setupMocks: func(repo *testhelpers.MockRepository, uuid *testhelpers.MockUUIDProvider, enc *testhelpers.MockEncryptionProvider) {
 				uuid.NewUUIDFunc = func() string { return "test-uuid" }
 				enc.GenerateFunc = func(pass string) (string, error) { return "hashed_password", nil }
-				repo.UserRegisterFunc = func(ctx context.Context, u *user.User) error { return testErr }
+				repo.UserRegisterFunc = func(ctx context.Context, u *user.User) error { return testhelpers.ErrTest }
 			},
-			wantErr:  testErr,
+			wantErr:  testhelpers.ErrTest,
 			wantUser: nil,
 		},
 	}
@@ -85,9 +83,9 @@ func newUserRegisterTestCases() []userRegisterTestCase {
 
 func runUserRegisterTest(tt userRegisterTestCase) func(*testing.T) {
 	return func(t *testing.T) {
-		repo := &mocks.MockRepository{}
-		uuid := &mocks.MockUUIDProvider{}
-		enc := &mocks.MockEncryptionProvider{}
+		repo := &testhelpers.MockRepository{}
+		uuid := &testhelpers.MockUUIDProvider{}
+		enc := &testhelpers.MockEncryptionProvider{}
 		tt.setupMocks(repo, uuid, enc)
 
 		handler := NewUserRegisterHandler(repo, uuid, enc)
@@ -98,49 +96,14 @@ func runUserRegisterTest(tt userRegisterTestCase) func(*testing.T) {
 			return
 		}
 
-		assertUserMatch(t, got, tt.wantUser)
-	}
-}
-
-func assertUserMatch(t *testing.T, got, want *user.User) {
-	t.Helper()
-
-	if want == nil {
-		if got != nil {
-			t.Error("Handle() expected nil user, got non-nil")
-		}
-		return
-	}
-
-	if got == nil {
-		t.Fatalf("Handle() got nil user, want user with ID %s", want.ID)
-		return
-	}
-
-	compareUserFields(t, got, want)
-}
-
-func compareUserFields(t *testing.T, got, want *user.User) {
-	t.Helper()
-
-	if got.ID != want.ID {
-		t.Errorf("Handle() got ID = %v, want %v", got.ID, want.ID)
-	}
-	if got.Username != want.Username {
-		t.Errorf("Handle() got Username = %v, want %v", got.Username, want.Username)
-	}
-	if got.Email != want.Email {
-		t.Errorf("Handle() got Email = %v, want %v", got.Email, want.Email)
-	}
-	if got.Password != want.Password {
-		t.Errorf("Handle() got Password = %v, want %v", got.Password, want.Password)
+		testhelpers.AssertUserMatch(t, got, tt.wantUser)
 	}
 }
 
 func TestNewUserRegisterHandler(t *testing.T) {
-	repo := &mocks.MockRepository{}
-	uuid := &mocks.MockUUIDProvider{}
-	enc := &mocks.MockEncryptionProvider{}
+	repo := &testhelpers.MockRepository{}
+	uuid := &testhelpers.MockUUIDProvider{}
+	enc := &testhelpers.MockEncryptionProvider{}
 
 	got := NewUserRegisterHandler(repo, uuid, enc)
 	if got == nil {
