@@ -10,7 +10,8 @@ import (
 	"github.com/arnald/forum/internal/app"
 	"github.com/arnald/forum/internal/config"
 	"github.com/arnald/forum/internal/infra/http/health"
-	handlers "github.com/arnald/forum/internal/infra/http/user"
+	userLogin "github.com/arnald/forum/internal/infra/http/login"
+	userRegister "github.com/arnald/forum/internal/infra/http/register"
 	"github.com/arnald/forum/internal/infra/session"
 	"github.com/arnald/forum/internal/infra/storage/sqlite"
 )
@@ -46,8 +47,13 @@ func (server *Server) AddHTTPRoutes() {
 	// server.router.HandleFunc(apiContext+"/users", user.NewHandler(server.appServices.UserServices).GetAllUsers)
 	server.router.HandleFunc(apiContext+"/health", health.NewHandler().HealthCheck)
 	server.router.HandleFunc(
+		// Registration handler removed due to missing userRegister package
+		apiContext+"/login",
+		userLogin.NewHandler(server.config, server.appServices, server.sessionManager).UserLogin,
+	)
+	server.router.HandleFunc(
 		apiContext+"/register",
-		handlers.NewHandler(server.config, server.appServices, server.sessionManager).UserRegister, // Inject session manager
+		userRegister.NewHandler(server.config, server.appServices, server.sessionManager).UserRegister,
 	)
 }
 

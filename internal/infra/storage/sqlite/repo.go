@@ -82,3 +82,23 @@ func (r Repo) CreateSession(session *user.Session) error {
 
 	return nil
 }
+
+func (r Repo) GetUserByEmail(ctx context.Context, email string) (*user.User, error) {
+	query := `
+	SELECT id, username, password_hash, email
+	FROM users
+	WHERE email = ?`
+
+	row := r.DB.QueryRowContext(ctx, query, email)
+
+	var u user.User
+	err := row.Scan(&u.ID, &u.Username, &u.Password, &u.Email)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("user not found: %w", err)
+		}
+		return nil, fmt.Errorf("scan failed: %w", err)
+	}
+
+	return &u, nil
+}
