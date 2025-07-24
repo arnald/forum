@@ -1,9 +1,8 @@
-package userRegister
+package userlogin
 
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"log"
 	"net/http"
 	"os"
@@ -12,7 +11,6 @@ import (
 	"github.com/arnald/forum/internal/app/user/queries"
 	"github.com/arnald/forum/internal/config"
 	"github.com/arnald/forum/internal/infra/session"
-	"github.com/arnald/forum/internal/infra/storage/sqlite"
 	"github.com/arnald/forum/internal/pkg/helpers"
 )
 
@@ -30,13 +28,12 @@ func NewHandler(config *config.ServerConfig, app app.Services, sm *session.Manag
 	}
 }
 
-type RegisterUserReguestModel struct {
-	Username string `json:"username"`
+type LoginUserReguestModel struct {
 	Password string `json:"password"`
 	Email    string `json:"email"`
 }
 
-func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
+func (h Handler) UserLogin(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		logger := log.New(os.Stdout, "ERROR: ", log.Ldate|log.Ltime)
 		logger.Printf("Invalid request method %v\n", r.Method)
@@ -47,59 +44,45 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), h.Config.Timeouts.HandlerTimeouts.UserRegister)
 	defer cancel()
 
-	var userToRegister RegisterUserReguestModel
+	var userToLogin LoginUserReguestModel
 
-	err := json.NewDecoder(r.Body).Decode(&userToRegister)
+	err := json.NewDecoder(r.Body).Decode(&userToLogin)
 	if err != nil {
 		helpers.RespondWithError(
 			w,
 			http.StatusInternalServerError,
 			"unable to decode json request",
 		)
+		return
 	}
-	defer r.Body.Close()
 
-	user, err := h.UserServices.UserServices.Queries.UserRegister.Handle(ctx, queries.UserRegisterRequest{
-		Name:     userToRegister.Username,
-		Password: userToRegister.Password,
-		Email:    userToRegister.Email,
+	defer r.Body.Close()
+	user, err := h.UserServices.UserServices.Queries.UserLogin.Handle(ctx, queries.UserLoginRequest{
+		Email:    userToLogin.Email,
+		Password: userToLogin.Password,
 	})
 	if err != nil {
-		switch {
-		case errors.Is(err, sqlite.ErrDuplicateEmail):
-			helpers.RespondWithError(
-				w,
-				http.StatusConflict,
-				"a user with this email address already exists",
-			)
-		default:
-			helpers.RespondWithError(
-				w,
-				http.StatusInternalServerError,
-				err.Error(),
-			)
-		}
+		logger := log.New(os.Stdout, "ERROR: ", log.Ldate|log.Ltime)
+		logger.Printf("Error logging in user: %v\n", err)
+		helpers.RespondWithError(w, http.StatusInternalServerError, "error logging in user")
 		return
 	}
 
 	newSession, err := h.SessionManager.CreateSession(ctx, user.ID)
 	if err != nil {
-		helpers.RespondWithError(
-			w,
-			http.StatusInternalServerError,
-			err.Error(),
-		)
+		logger := log.New(os.Stdout, "ERROR: ", log.Ldate|log.Ltime)
+		logger.Printf("Error creating session: %v\n", err)
+		helpers.RespondWithError(w, http.StatusInternalServerError, "error creating session")
 		return
 	}
 
 	cookie := h.SessionManager.NewSessionCookie(newSession.Token)
-
 	http.SetCookie(w, cookie)
 
 	helpers.RespondWithJSON(
 		w,
-		http.StatusCreated,
+		http.StatusOK,
 		nil,
-		newSession,
+		"User logged in successfully",
 	)
 }

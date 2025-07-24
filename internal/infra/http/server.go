@@ -10,8 +10,8 @@ import (
 	"github.com/arnald/forum/internal/app"
 	"github.com/arnald/forum/internal/config"
 	"github.com/arnald/forum/internal/infra/http/health"
-	userLogin "github.com/arnald/forum/internal/infra/http/login"
-	userRegister "github.com/arnald/forum/internal/infra/http/register"
+	userLogin "github.com/arnald/forum/internal/infra/http/user/login"
+	userRegister "github.com/arnald/forum/internal/infra/http/user/register"
 	"github.com/arnald/forum/internal/infra/session"
 	"github.com/arnald/forum/internal/infra/storage/sqlite"
 )

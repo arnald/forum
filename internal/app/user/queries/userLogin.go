@@ -35,8 +35,9 @@ func (h *userLoginRequestHandler) Handle(ctx context.Context, req UserLoginReque
 		return nil, fmt.Errorf("failed to get user by email: %w", err)
 	}
 
-	if err := h.encryptionProvider.Matches(user.Password, req.Password); err != nil {
-		return nil, fmt.Errorf("password mismatch: %w", err)
+	err = h.encryptionProvider.Matches(user.Password, req.Password)
+	if err != nil {
+		return nil, fmt.Errorf("password does not match: %w", err)
 	}
 
 	return user, nil

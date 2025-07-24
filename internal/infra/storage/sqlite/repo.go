@@ -3,6 +3,7 @@ package sqlite
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 
@@ -57,45 +58,20 @@ func (r Repo) UserRegister(ctx context.Context, user *user.User) error {
 	return nil
 }
 
-func (r Repo) CreateSession(session *user.Session) error {
-	ctx := context.TODO()
-
-	query := `
-	INSERT INTO sessions (token, user_id, expires_at)
-	VALUES (?, ?, ?)`
-
-	stmt, err := r.DB.PrepareContext(ctx, query)
+func (r Repo) GetUserByEmail(ctx context.Context, email string) (*user.User, error) {
+	stmt, err := r.DB.PrepareContext(ctx, "SELECT id, username, password_hash, email FROM users WHERE email = ?")
 	if err != nil {
-		return fmt.Errorf("prepare failed: %w", err)
+		return nil, fmt.Errorf("prepare failed: %w", err)
 	}
 	defer stmt.Close()
 
-	_, err = stmt.ExecContext(
-		ctx,
-		session.Token,
-		session.UserID,
-		session.Expiry.Format("2006-01-02 15:04:05"),
-	)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (r Repo) GetUserByEmail(ctx context.Context, email string) (*user.User, error) {
-	query := `
-	SELECT id, username, password_hash, email
-	FROM users
-	WHERE email = ?`
-
-	row := r.DB.QueryRowContext(ctx, query, email)
+	row := stmt.QueryRowContext(ctx, email)
 
 	var u user.User
-	err := row.Scan(&u.ID, &u.Username, &u.Password, &u.Email)
+	err = row.Scan(&u.ID, &u.Username, &u.Password, &u.Email)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("user not found: %w", err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrUserNotFound
 		}
 		return nil, fmt.Errorf("scan failed: %w", err)
 	}

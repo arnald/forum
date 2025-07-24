@@ -10,7 +10,6 @@ import (
 
 type mockRepository struct {
 	userRegisterFunc   func(ctx context.Context, user *user.User) error
-	createSessionFunc  func(session *user.Session) error
 	getUserByEmailFunc func(ctx context.Context, email string) (*user.User, error)
 }
 
@@ -18,18 +17,11 @@ func (m *mockRepository) UserRegister(ctx context.Context, user *user.User) erro
 	return m.userRegisterFunc(ctx, user)
 }
 
-func (m *mockRepository) CreateSession(session *user.Session) error {
-	if m.createSessionFunc != nil {
-		return m.createSessionFunc(session)
-	}
-	return nil
-}
-
 func (m *mockRepository) GetUserByEmail(ctx context.Context, email string) (*user.User, error) {
 	if m.getUserByEmailFunc != nil {
 		return m.getUserByEmailFunc(ctx, email)
 	}
-	return nil, nil
+	return nil, errors.New("not implemented")
 }
 
 func (m *mockRepository) GetAll(ctx context.Context) ([]user.User, error) {

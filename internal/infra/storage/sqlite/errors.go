@@ -13,6 +13,7 @@ var (
 	ErrDuplicateUsername = errors.New("duplicate username")
 	ErrConstraint        = errors.New("sqlite constrain error")
 	ErrUnknownConstraint = errors.New("sqlite unknow constraint error")
+	ErrUserNotFound      = errors.New("user not found")
 )
 
 func MapSQLiteError(err error) error {
