@@ -7,26 +7,26 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/arnald/forum/internal/app"
 	"github.com/arnald/forum/internal/app/user/queries"
+	"github.com/arnald/forum/internal/config"
 	"github.com/arnald/forum/internal/infra/session"
 	"github.com/arnald/forum/internal/infra/storage/sqlite"
 	"github.com/arnald/forum/internal/pkg/helpers"
 )
 
-const contextTimeout = 15 * time.Second
-
 type Handler struct {
 	UserServices   app.Services
 	SessionManager *session.Manager
+	Config         *config.ServerConfig
 }
 
-func NewHandler(app app.Services, sm *session.Manager) *Handler {
+func NewHandler(config *config.ServerConfig, app app.Services, sm *session.Manager) *Handler {
 	return &Handler{
 		UserServices:   app,
 		SessionManager: sm,
+		Config:         config,
 	}
 }
 
@@ -56,7 +56,7 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	ctx, cancel := context.WithTimeout(r.Context(), contextTimeout)
+	ctx, cancel := context.WithTimeout(r.Context(), h.Config.Timeouts.HandlerTimeouts.UserRegister)
 	defer cancel()
 
 	user, err := h.UserServices.UserServices.Queries.UserRegister.Handle(ctx, queries.UserRegisterRequest{

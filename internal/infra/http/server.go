@@ -47,7 +47,7 @@ func (server *Server) AddHTTPRoutes() {
 	server.router.HandleFunc(apiContext+"/health", health.NewHandler().HealthCheck)
 	server.router.HandleFunc(
 		apiContext+"/register",
-		handlers.NewHandler(server.appServices, server.sessionManager).UserRegister, // Inject session manager
+		handlers.NewHandler(server.config, server.appServices, server.sessionManager).UserRegister, // Inject session manager
 	)
 }
 

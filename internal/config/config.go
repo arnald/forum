@@ -12,14 +12,15 @@ import (
 )
 
 const (
-	readTimeout        = 5
-	writeTimeout       = 10
-	idleTimeout        = 15
-	configParts        = 2
-	defaultExpiry      = 86400
-	cleanupInternal    = 3600
-	maxSessionsPerUser = 5
-	sessionIDLenght    = 32
+	readTimeout         = 5
+	writeTimeout        = 10
+	idleTimeout         = 15
+	configParts         = 2
+	defaultExpiry       = 86400
+	cleanupInternal     = 3600
+	maxSessionsPerUser  = 5
+	sessionIDLenght     = 32
+	userRegisterTimeout = 15
 )
 
 var (
@@ -34,6 +35,7 @@ type ServerConfig struct {
 	APIContext     string
 	Database       DatabaseConfig
 	SessionManager SessionManagerConfig
+	Timeouts       TimeoutsConfig
 	ReadTimeout    time.Duration
 	WriteTimeout   time.Duration
 	IdleTimeout    time.Duration
@@ -61,6 +63,19 @@ type SessionManagerConfig struct {
 	HTTPOnlyCookie     bool
 	EnablePersistence  bool
 	LogSessions        bool
+}
+
+type TimeoutsConfig struct {
+	HandlerTimeouts  HandlerTimeoutsConfig
+	UseCasesTimeouts UseCasesTimeoutsConfig
+}
+
+type HandlerTimeoutsConfig struct {
+	UserRegister time.Duration
+}
+
+type UseCasesTimeoutsConfig struct {
+	UserRegister time.Duration
 }
 
 func LoadConfig() (*ServerConfig, error) {
@@ -97,6 +112,11 @@ func LoadConfig() (*ServerConfig, error) {
 			SessionIDLength:    helpers.GetEnvInt("SESSION_ID_LENGTH", envMap, sessionIDLenght),
 			EnablePersistence:  helpers.GetEnvBool("SESSION_ENABLE_PERSISTENCE", envMap, true),
 			LogSessions:        helpers.GetEnvBool("SESSION_LOG_SESSIONS", envMap, false),
+		},
+		Timeouts: TimeoutsConfig{
+			HandlerTimeouts: HandlerTimeoutsConfig{
+				UserRegister: helpers.GetEnvDuration("HANDLER_TIMEOUT_REGISTER", envMap, userRegisterTimeout),
+			},
 		},
 	}
 
