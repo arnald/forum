@@ -74,7 +74,7 @@ type HandlerTimeoutsConfig struct {
 	UserRegister time.Duration
 }
 
-type UseCasesTimeoutsConfig struct {
+type UseCasesTimeoutsConfig struct { // Not implemented yet, but can be used for future use cases
 	UserRegister time.Duration
 }
 

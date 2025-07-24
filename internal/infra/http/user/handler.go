@@ -44,6 +44,9 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx, cancel := context.WithTimeout(r.Context(), h.Config.Timeouts.HandlerTimeouts.UserRegister)
+	defer cancel()
+
 	var userToRegister RegisterUserReguestModel
 
 	err := json.NewDecoder(r.Body).Decode(&userToRegister)
@@ -55,9 +58,6 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 		)
 	}
 	defer r.Body.Close()
-
-	ctx, cancel := context.WithTimeout(r.Context(), h.Config.Timeouts.HandlerTimeouts.UserRegister)
-	defer cancel()
 
 	user, err := h.UserServices.UserServices.Queries.UserRegister.Handle(ctx, queries.UserRegisterRequest{
 		Name:     userToRegister.Username,
