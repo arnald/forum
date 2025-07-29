@@ -10,17 +10,17 @@ import (
 	"github.com/arnald/forum/internal/app"
 	"github.com/arnald/forum/internal/app/user/queries"
 	"github.com/arnald/forum/internal/config"
-	"github.com/arnald/forum/internal/infra/session"
+	"github.com/arnald/forum/internal/domain/user"
 	"github.com/arnald/forum/internal/pkg/helpers"
 )
 
 type Handler struct {
 	UserServices   app.Services
-	SessionManager *session.Manager
+	SessionManager user.SessionManager
 	Config         *config.ServerConfig
 }
 
-func NewHandler(config *config.ServerConfig, app app.Services, sm *session.Manager) *Handler {
+func NewHandler(config *config.ServerConfig, app app.Services, sm user.SessionManager) *Handler {
 	return &Handler{
 		UserServices:   app,
 		SessionManager: sm,
