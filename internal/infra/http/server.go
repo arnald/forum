@@ -13,7 +13,6 @@ import (
 	"github.com/arnald/forum/internal/infra/http/health"
 	userLogin "github.com/arnald/forum/internal/infra/http/user/login"
 	userRegister "github.com/arnald/forum/internal/infra/http/user/register"
-	"github.com/arnald/forum/internal/infra/middleware"
 	"github.com/arnald/forum/internal/infra/session"
 	"github.com/arnald/forum/internal/infra/storage/sqlite"
 )
@@ -30,8 +29,8 @@ type Server struct {
 	config         *config.ServerConfig
 	router         *http.ServeMux
 	sessionManager user.SessionManager
-	middleware     *middleware.Middleware
-	db             *sql.DB
+	// middleware     *middleware.Middleware
+	db *sql.DB
 }
 
 func NewServer(appServices app.Services) *Server {
@@ -42,7 +41,7 @@ func NewServer(appServices app.Services) *Server {
 	httpServer.loadConfiguration()
 	httpServer.loadDatabase()
 	httpServer.initSessionManager()
-	httpServer.initMiddleware(httpServer.sessionManager)
+	// httpServer.initMiddleware(httpServer.sessionManager)
 	httpServer.AddHTTPRoutes()
 	return httpServer
 }
@@ -97,6 +96,6 @@ func (server *Server) initSessionManager() {
 	server.sessionManager = session.NewSessionManager(server.db, server.config.SessionManager)
 }
 
-func (server *Server) initMiddleware(sessionManager user.SessionManager) {
-	server.middleware = middleware.NewMiddleware(sessionManager)
-}
+// func (server *Server) initMiddleware(sessionManager user.SessionManager) {
+// 	server.middleware = middleware.NewMiddleware(sessionManager)
+// }
