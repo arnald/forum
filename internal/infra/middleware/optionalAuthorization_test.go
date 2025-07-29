@@ -76,7 +76,7 @@ func runOptionalAuthorizationTest(tt optionalAuthorizationTestCase) func(t *test
 
 		middleware := NewOptionalAuthMiddleware(mockSessionManager)
 
-		req := httptest.NewRequest("GET", "/", nil)
+		req := httptest.NewRequest(http.MethodGet, "/", nil)
 		if tt.cookie != nil {
 			req.AddCookie(tt.cookie)
 		}
@@ -102,7 +102,6 @@ func runOptionalAuthorizationTest(tt optionalAuthorizationTestCase) func(t *test
 			t.Errorf("next handler called = %v, want %v", nextCalled, tt.wantNextCalled)
 		}
 	}
-
 }
 
 func TestNewOptionalAuthMiddleware(t *testing.T) {

@@ -8,17 +8,19 @@ import (
 
 func TestServices(t *testing.T) {
 	mockSessionManager := &testhelpers.MockSessionManager{}
+
 	middleware := NewMiddleware(mockSessionManager)
 
-	if middleware == nil {
-		t.Fatal("NewMiddleware returned nil")
+	var (
+		auth     = middleware.Authorization
+		optional = middleware.OptionalAuth
+	)
+
+	if auth == nil {
+		t.Error("Authorization middleware is nil")
 	}
 
-	if middleware.Authorization == nil {
-		t.Fatal("Authorization middleware is nil")
-	}
-
-	if middleware.OptionalAuth == nil {
-		t.Fatal("OptionalAuth middleware is nil")
+	if optional == nil {
+		t.Error("OptionalAuth middleware is nil")
 	}
 }

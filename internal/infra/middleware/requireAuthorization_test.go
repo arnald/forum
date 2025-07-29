@@ -80,7 +80,7 @@ func runRequireAuthorizationTest(tt requireAuthorizationTestCase) func(t *testin
 
 		middleware := NewRequireAuthMiddleware(mockSessionManager)
 
-		req := httptest.NewRequest("GET", "/", nil)
+		req := httptest.NewRequest(http.MethodGet, "/", nil)
 		if tt.cookie != nil {
 			req.AddCookie(tt.cookie)
 		}

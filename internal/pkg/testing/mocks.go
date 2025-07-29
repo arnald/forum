@@ -8,9 +8,7 @@ import (
 	"github.com/arnald/forum/internal/domain/user"
 )
 
-var (
-	ErrTest = errors.New("test error")
-)
+var ErrTest = errors.New("test error")
 
 type MockRepository struct {
 	UserRegisterFunc   func(ctx context.Context, user *user.User) error
@@ -74,7 +72,7 @@ func (m *MockSessionManager) GetSession(sessionID string) (*user.Session, error)
 	return nil, ErrTest
 }
 
-func (m *MockSessionManager) CreateSession(ctx context.Context, userID string) (*user.Session, error) {
+func (m *MockSessionManager) CreateSession(_ context.Context, userID string) (*user.Session, error) {
 	if m.CreateSessionFunc != nil {
 		return m.CreateSessionFunc(userID)
 	}
