@@ -20,9 +20,10 @@ func NewOptionalAuthMiddleware(sessionManager user.SessionManager) OptionalAuthM
 		sessionManager: sessionManager,
 	}
 }
+
 func (a optionalAuthMiddleware) OptionalAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		sessionID, err := r.Cookie("session_id")
+		sessionID, err := r.Cookie("session_token")
 		if err != nil {
 			next.ServeHTTP(w, r)
 			return

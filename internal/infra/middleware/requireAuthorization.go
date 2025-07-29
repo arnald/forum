@@ -30,7 +30,7 @@ func NewRequireAuthMiddleware(sessionManager user.SessionManager) RequireAuthMid
 
 func (a requireAuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		sessionID, err := r.Cookie("session_id")
+		sessionID, err := r.Cookie("session_token")
 		if err != nil {
 			helpers.RespondWithError(w,
 				http.StatusUnauthorized,
