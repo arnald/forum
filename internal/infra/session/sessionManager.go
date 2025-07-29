@@ -76,7 +76,7 @@ func (sm *Manager) GetSession(sessionID string) (*user.Session, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), contextTimeout)
 	defer cancel()
 
-	query := `SELECT token, user_id, expires_at, ip_address FROM sessions WHERE id = ?`
+	query := `SELECT token, user_id, expires_at FROM sessions WHERE token = ?`
 
 	stmt, err := sm.db.PrepareContext(ctx, query)
 	if err != nil {

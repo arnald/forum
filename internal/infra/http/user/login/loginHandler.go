@@ -44,6 +44,13 @@ func (h Handler) UserLogin(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), h.Config.Timeouts.HandlerTimeouts.UserRegister)
 	defer cancel()
 
+	if r.Context().Value("userID") != nil {
+		helpers.RespondWithError(w,
+			http.StatusBadRequest,
+			"User already logged in")
+		return
+	}
+
 	var userToLogin LoginUserReguestModel
 
 	err := json.NewDecoder(r.Body).Decode(&userToLogin)
