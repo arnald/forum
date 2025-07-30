@@ -3,7 +3,6 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"log"
 	"net/http"
 	"os"
@@ -12,7 +11,6 @@ import (
 	"github.com/arnald/forum/internal/app/user/queries"
 	"github.com/arnald/forum/internal/config"
 	"github.com/arnald/forum/internal/infra/session"
-	"github.com/arnald/forum/internal/infra/storage/sqlite"
 	"github.com/arnald/forum/internal/pkg/helpers"
 )
 
@@ -65,20 +63,12 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 		Email:    userToRegister.Email,
 	})
 	if err != nil {
-		switch {
-		case errors.Is(err, sqlite.ErrDuplicateEmail):
-			helpers.RespondWithError(
-				w,
-				http.StatusConflict,
-				"a user with this email address already exists",
-			)
-		default:
-			helpers.RespondWithError(
-				w,
-				http.StatusInternalServerError,
-				err.Error(),
-			)
-		}
+		helpers.RespondWithError(
+			w,
+			http.StatusInternalServerError,
+			err.Error(),
+		)
+
 		return
 	}
 
@@ -89,12 +79,9 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 			http.StatusInternalServerError,
 			err.Error(),
 		)
+
 		return
 	}
-
-	cookie := h.SessionManager.NewSessionCookie(newSession.Token)
-
-	http.SetCookie(w, cookie)
 
 	helpers.RespondWithJSON(
 		w,

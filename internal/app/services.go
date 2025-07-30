@@ -19,11 +19,13 @@ type Services struct {
 	UserServices UserServices
 }
 
-func NewServices(repo user.Repository, up uuid.Provider, en bcrypt.Provider) Services {
+func NewServices(repo user.Repository) Services {
+	uuidProvider := uuid.NewProvider()
+	encryption := bcrypt.NewProvider()
 	return Services{
 		UserServices: UserServices{
 			Queries: Queries{
-				queries.NewUserRegisterHandler(repo, up, en),
+				queries.NewUserRegisterHandler(repo, uuidProvider, encryption),
 			},
 		},
 	}

@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	ErrDuplicateEmail    = errors.New("duplicate email")
-	ErrDuplicateUsername = errors.New("duplicate username")
+	ErrDuplicateEmail    = errors.New("email already exists")
+	ErrDuplicateUsername = errors.New("username already exists")
 	ErrConstraint        = errors.New("sqlite constrain error")
 	ErrUnknownConstraint = errors.New("sqlite unknow constraint error")
 )

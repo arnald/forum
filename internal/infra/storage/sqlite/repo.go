@@ -7,6 +7,7 @@ import (
 	"log"
 
 	"github.com/arnald/forum/internal/domain/user"
+	"github.com/arnald/forum/internal/pkg/path"
 )
 
 type Repo struct {
@@ -14,7 +15,8 @@ type Repo struct {
 }
 
 func NewRepo() Repo {
-	db, err := sql.Open("sqlite3", "./data/forum.db")
+	resolver := path.NewResolver()
+	db, err := sql.Open("sqlite3", resolver.GetPath("db/data/forum.db"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -72,7 +74,7 @@ func (r Repo) CreateSession(session *user.Session) error {
 
 	_, err = stmt.ExecContext(
 		ctx,
-		session.Token,
+		session.AccessToken,
 		session.UserID,
 		session.Expiry.Format("2006-01-02 15:04:05"),
 	)

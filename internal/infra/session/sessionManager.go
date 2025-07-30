@@ -64,9 +64,9 @@ func (sm *Manager) CreateSession(ctx context.Context, userID string) (*user.Sess
 	}
 
 	session := &user.Session{
-		Token:  newSessionToken,
-		UserID: userID,
-		Expiry: expiry,
+		AccessToken: newSessionToken,
+		UserID:      userID,
+		Expiry:      expiry,
 	}
 
 	return session, nil
@@ -88,7 +88,7 @@ func (sm *Manager) GetSession(sessionID string) (*user.Session, error) {
 
 	var session user.Session
 
-	err = row.Scan(&session.Token, &session.UserID, &session.Expiry)
+	err = row.Scan(&session.AccessToken, &session.UserID, &session.Expiry)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrSessionNotFound
