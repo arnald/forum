@@ -13,6 +13,7 @@ var (
 	ErrDuplicateUsername = errors.New("username already exists")
 	ErrConstraint        = errors.New("sqlite constrain error")
 	ErrUnknownConstraint = errors.New("sqlite unknow constraint error")
+	ErrInvalidEmail      = errors.New("invalid email format")
 )
 
 func MapSQLiteError(err error) error {
@@ -26,8 +27,10 @@ func MapSQLiteError(err error) error {
 				return ErrDuplicateEmail
 			case strings.Contains(msg, "users.username"):
 				return ErrDuplicateUsername
+			case strings.Contains(msg, "email LIKE"):
+				return ErrInvalidEmail
 			default:
-				return fmt.Errorf("%w: , %w", ErrConstraint, sqliteErr)
+				return fmt.Errorf("%w: %w", ErrConstraint, sqliteErr)
 			}
 		}
 		return fmt.Errorf("%w: %w: %s ", ErrUnknownConstraint, sqliteErr.Code, sqliteErr.Error())

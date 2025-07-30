@@ -16,7 +16,7 @@ type Repo struct {
 
 func NewRepo() Repo {
 	resolver := path.NewResolver()
-	db, err := sql.Open("sqlite3", resolver.GetPath("db/data/forum.db"))
+	db, err := sql.Open("sqlite3", resolver.GetPath("/data/forum.db"))
 	if err != nil {
 		log.Fatal(err)
 	}

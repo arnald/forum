@@ -34,6 +34,12 @@ type RegisterUserReguestModel struct {
 	Email    string `json:"email"`
 }
 
+type RegisterUserSessionResponse struct {
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
+	UserID       string `json:"userId"`
+}
+
 func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		logger := log.New(os.Stdout, "ERROR: ", log.Ldate|log.Ltime)
@@ -79,14 +85,18 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 			http.StatusInternalServerError,
 			err.Error(),
 		)
-
 		return
 	}
 
+	sessionResponse := &RegisterUserSessionResponse{
+		AccessToken:  newSession.AccessToken,
+		RefreshToken: newSession.RefreshToken,
+		UserID:       newSession.UserID,
+	}
 	helpers.RespondWithJSON(
 		w,
 		http.StatusCreated,
 		nil,
-		newSession,
+		sessionResponse,
 	)
 }

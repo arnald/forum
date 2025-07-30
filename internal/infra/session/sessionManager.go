@@ -41,8 +41,8 @@ type tokenGenerator interface {
 
 func (sm *Manager) CreateSession(ctx context.Context, userID string) (*user.Session, error) {
 	query := `
-	INSERT INTO sessions (token, user_id, expires_at)
-	VALUES (?, ?, ?)`
+	INSERT INTO sessions (token, user_id, expires_at, refresh_token, refresh_token_expires_at)
+	VALUES (?, ?, ?, ?, ?)`
 
 	stmt, err := sm.db.PrepareContext(ctx, query)
 	if err != nil {
@@ -51,22 +51,30 @@ func (sm *Manager) CreateSession(ctx context.Context, userID string) (*user.Sess
 	defer stmt.Close()
 
 	newSessionToken := sm.tokenGenerator.NewUUID()
+	newrefreshToken := sm.tokenGenerator.NewUUID()
+
 	expiry := time.Now().Add(sm.sessionConfig.DefaultExpiry)
+	refreshExpiry := expiry.Add(sm.sessionConfig.RefreshTokenExpiry)
 
 	_, err = stmt.ExecContext(
 		ctx,
 		newSessionToken,
 		userID,
 		expiry.Format("2006-01-02 15:04:05"),
+
+		newrefreshToken,
+		refreshExpiry.Format("2006-01-02 15:04:05"),
 	)
 	if err != nil {
 		return nil, err
 	}
 
 	session := &user.Session{
-		AccessToken: newSessionToken,
-		UserID:      userID,
-		Expiry:      expiry,
+		AccessToken:        newSessionToken,
+		UserID:             userID,
+		Expiry:             expiry,
+		RefreshToken:       newrefreshToken,
+		RefreshTokenExpiry: refreshExpiry,
 	}
 
 	return session, nil
