@@ -2,6 +2,8 @@ package queries
 
 import (
 	"context"
+	"errors"
+	"strings"
 	"time"
 
 	"github.com/arnald/forum/internal/domain/user"
@@ -43,6 +45,10 @@ func (h userRegisterRequestHandler) Handle(ctx context.Context, req UserRegister
 		ID:        h.uuidiProvider.NewUUID(),
 	}
 
+	if err := validateEmail(user.Email); err != nil {
+		return nil, err
+	}
+
 	encryptedPass, err := h.encryptionProvider.Generate(user.Password)
 	if err != nil {
 		return nil, err
@@ -56,4 +62,17 @@ func (h userRegisterRequestHandler) Handle(ctx context.Context, req UserRegister
 	}
 
 	return user, err
+}
+
+// TODO: move to helpers
+func validateEmail(s string) error {
+	if s == "" {
+		return errors.New("empty email")
+	}
+
+	if strings.Contains(s, "@") {
+		return errors.New("invalid email")
+	}
+
+	return nil
 }
