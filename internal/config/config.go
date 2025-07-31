@@ -12,9 +12,16 @@ import (
 )
 
 const (
-	readTimeout  = 5
-	writeTimeout = 10
-	idleTimeout  = 15
+	readTimeout         = 5
+	writeTimeout        = 10
+	idleTimeout         = 15
+	configParts         = 2
+	defaultExpiry       = 86400
+	cleanupInternal     = 3600
+	maxSessionsPerUser  = 5
+	sessionIDLenght     = 32
+	userRegisterTimeout = 15
+	refreshTokenExpiry  = 30
 )
 
 var (
@@ -23,14 +30,16 @@ var (
 )
 
 type ServerConfig struct {
-	Host         string
-	Port         string
-	Environment  string
-	APIContext   string
-	Database     DatabaseConfig
-	ReadTimeout  time.Duration
-	WriteTimeout time.Duration
-	IdleTimeout  time.Duration
+	Host           string
+	Port           string
+	Environment    string
+	APIContext     string
+	Database       DatabaseConfig
+	SessionManager SessionManagerConfig
+	Timeouts       TimeoutsConfig
+	ReadTimeout    time.Duration
+	WriteTimeout   time.Duration
+	IdleTimeout    time.Duration
 }
 
 type DatabaseConfig struct {
@@ -40,6 +49,35 @@ type DatabaseConfig struct {
 	MigrateOnStart bool
 	SeedOnStart    bool
 	OpenConn       int
+}
+
+type SessionManagerConfig struct {
+	CookieName         string
+	CookiePath         string
+	CookieDomain       string
+	SameSite           string
+	DefaultExpiry      time.Duration
+	CleanupInterval    time.Duration
+	MaxSessionsPerUser int
+	SessionIDLength    int
+	SecureCookie       bool
+	HTTPOnlyCookie     bool
+	EnablePersistence  bool
+	LogSessions        bool
+	RefreshTokenExpiry time.Duration
+}
+
+type TimeoutsConfig struct {
+	HandlerTimeouts  HandlerTimeoutsConfig
+	UseCasesTimeouts UseCasesTimeoutsConfig
+}
+
+type HandlerTimeoutsConfig struct {
+	UserRegister time.Duration
+}
+
+type UseCasesTimeoutsConfig struct { // Not implemented yet, but can be used for future use cases
+	UserRegister time.Duration
 }
 
 func LoadConfig() (*ServerConfig, error) {
@@ -62,6 +100,26 @@ func LoadConfig() (*ServerConfig, error) {
 			SeedOnStart:    helpers.GetEnvBool("DB_SEED_ON_START", envMap, true),
 			Pragma:         helpers.GetEnv("DB_PRAGMA", envMap, "_foreign_keys=on&_journal_mode=WAL"),
 			OpenConn:       helpers.GetEnvInt("DB_OPEN_CONN", envMap, 1),
+		},
+		SessionManager: SessionManagerConfig{
+			DefaultExpiry:      helpers.GetEnvDuration("SESSION_DEFAULT_EXPIRY", envMap, defaultExpiry),
+			SecureCookie:       helpers.GetEnvBool("SESSION_SECURE_COOKIE", envMap, false),
+			CookieName:         helpers.GetEnv("SESSION_COOKIE_NAME", envMap, "session_id"),
+			CookiePath:         helpers.GetEnv("SESSION_COOKIE_PATH", envMap, "/"),
+			CookieDomain:       helpers.GetEnv("SESSION_COOKIE_DOMAIN", envMap, ""),
+			HTTPOnlyCookie:     helpers.GetEnvBool("SESSION_HTTPONLY_COOKIE", envMap, true),
+			SameSite:           helpers.GetEnv("SESSION_SAMESITE", envMap, "Lax"),
+			CleanupInterval:    helpers.GetEnvDuration("SESSION_CLEANUP_INTERVAL", envMap, cleanupInternal),
+			MaxSessionsPerUser: helpers.GetEnvInt("SESSION_MAX_SESSIONS_PER_USER", envMap, maxSessionsPerUser),
+			SessionIDLength:    helpers.GetEnvInt("SESSION_ID_LENGTH", envMap, sessionIDLenght),
+			EnablePersistence:  helpers.GetEnvBool("SESSION_ENABLE_PERSISTENCE", envMap, true),
+			LogSessions:        helpers.GetEnvBool("SESSION_LOG_SESSIONS", envMap, false),
+			RefreshTokenExpiry: helpers.GetEnvDuration("SESSION_REFRESH_TOKEN_EXPIRY", envMap, refreshTokenExpiry),
+		},
+		Timeouts: TimeoutsConfig{
+			HandlerTimeouts: HandlerTimeoutsConfig{
+				UserRegister: helpers.GetEnvDuration("HANDLER_TIMEOUT_REGISTER", envMap, userRegisterTimeout),
+			},
 		},
 	}
 

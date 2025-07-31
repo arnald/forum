@@ -11,7 +11,7 @@ import (
 func TestNewUUIDSuccess(t *testing.T) {
 	provider := u.NewProvider()
 	id := provider.NewUUID()
-	if id.String() == "" {
+	if id == "" {
 		t.Error("Expected non-nil UUI, got nil")
 	}
 }
@@ -21,7 +21,7 @@ func TestUUIDUniqueness(t *testing.T) {
 	id1 := provider.NewUUID()
 	id2 := provider.NewUUID()
 
-	if id1.String() == id2.String() {
+	if id1 == id2 {
 		t.Errorf("Expected different UUIDs, got duplicates: %s and %s", id1, id2)
 	}
 }
@@ -29,7 +29,7 @@ func TestUUIDUniqueness(t *testing.T) {
 func TestUUIDFormat(t *testing.T) {
 	provider := u.NewProvider()
 	id := provider.NewUUID()
-	_, err := uuid.Parse(id.String())
+	_, err := uuid.Parse(id)
 	if err != nil {
 		t.Errorf("UUID %s has invalid format: %v", id, err)
 	}

@@ -28,13 +28,9 @@ func InitializeDB(cfg config.ServerConfig) (*sql.DB, error) {
 		return nil, fmt.Errorf("failed to create db directory: %w", err)
 	}
 
-	db, err := sql.Open(cfg.Database.Driver, cfg.Database.Path+"?"+cfg.Database.Pragma)
+	db, result, err := OpenDB(cfg)
 	if err != nil {
-		return nil, err
-	}
-
-	if cfg.Database.Driver == "sqlite3" {
-		db.SetMaxOpenConns(cfg.Database.OpenConn)
+		return result, err
 	}
 
 	if cfg.Database.MigrateOnStart {
@@ -52,6 +48,18 @@ func InitializeDB(cfg config.ServerConfig) (*sql.DB, error) {
 	}
 
 	return db, nil
+}
+
+func OpenDB(cfg config.ServerConfig) (*sql.DB, *sql.DB, error) {
+	db, err := sql.Open(cfg.Database.Driver, cfg.Database.Path+"?"+cfg.Database.Pragma)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if cfg.Database.Driver == "sqlite3" {
+		db.SetMaxOpenConns(cfg.Database.OpenConn)
+	}
+	return db, nil, nil
 }
 
 func migrateDB(db *sql.DB) error {

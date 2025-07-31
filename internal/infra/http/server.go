@@ -1,14 +1,17 @@
 package http
 
 import (
+	"database/sql"
 	"errors"
 	"log"
 	"net/http"
 	"time"
 
+	"github.com/arnald/forum/internal/app"
 	"github.com/arnald/forum/internal/config"
 	"github.com/arnald/forum/internal/infra/http/health"
-	"github.com/arnald/forum/internal/infra/storage/sqlite"
+	handlers "github.com/arnald/forum/internal/infra/http/user"
+	"github.com/arnald/forum/internal/infra/session"
 )
 
 const (
@@ -19,18 +22,21 @@ const (
 )
 
 type Server struct {
-	// ctx context.Context
-	// appServices app.Services
-	config *config.ServerConfig
-	router *http.ServeMux
+	appServices    app.Services
+	config         *config.ServerConfig
+	router         *http.ServeMux
+	sessionManager *session.Manager
+	db             *sql.DB
 }
 
-func NewServer() *Server {
+func NewServer(cfg *config.ServerConfig, db *sql.DB, appServices app.Services) *Server {
 	httpServer := &Server{
-		router: http.NewServeMux(),
+		router:      http.NewServeMux(),
+		appServices: appServices,
+		config:      cfg,
+		db:          db,
 	}
-	httpServer.loadConfiguration()
-	httpServer.loadDatabase()
+	httpServer.initSessionManager()
 	httpServer.AddHTTPRoutes()
 	return httpServer
 }
@@ -38,6 +44,10 @@ func NewServer() *Server {
 func (server *Server) AddHTTPRoutes() {
 	// server.router.HandleFunc(apiContext+"/users", user.NewHandler(server.appServices.UserServices).GetAllUsers)
 	server.router.HandleFunc(apiContext+"/health", health.NewHandler().HealthCheck)
+	server.router.HandleFunc(
+		apiContext+"/register",
+		handlers.NewHandler(server.config, server.appServices, server.sessionManager).UserRegister, // Inject session manager
+	)
 }
 
 func (server *Server) ListenAndServe() {
@@ -56,18 +66,6 @@ func (server *Server) ListenAndServe() {
 	}
 }
 
-func (server *Server) loadConfiguration() {
-	cfg, err := config.LoadConfig()
-	if err != nil {
-		log.Fatalf("Configuration error: %v", err)
-	}
-
-	server.config = cfg
-}
-
-func (server *Server) loadDatabase() {
-	_, err := sqlite.InitializeDB(*server.config)
-	if err != nil {
-		log.Fatalf("Database error: %v", err)
-	}
+func (server *Server) initSessionManager() {
+	server.sessionManager = session.NewSessionManager(server.db, server.config.SessionManager)
 }
