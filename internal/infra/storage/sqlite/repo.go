@@ -4,24 +4,16 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 
 	"github.com/arnald/forum/internal/domain/user"
-	"github.com/arnald/forum/internal/pkg/path"
 )
 
 type Repo struct {
 	DB *sql.DB
 }
 
-func NewRepo() Repo {
-	resolver := path.NewResolver()
-	db, err := sql.Open("sqlite3", resolver.GetPath("/data/forum.db"))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return Repo{
+func NewRepo(db *sql.DB) *Repo {
+	return &Repo{
 		DB: db,
 	}
 }

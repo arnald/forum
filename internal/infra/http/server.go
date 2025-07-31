@@ -12,7 +12,6 @@ import (
 	"github.com/arnald/forum/internal/infra/http/health"
 	handlers "github.com/arnald/forum/internal/infra/http/user"
 	"github.com/arnald/forum/internal/infra/session"
-	"github.com/arnald/forum/internal/infra/storage/sqlite"
 )
 
 const (
@@ -30,13 +29,13 @@ type Server struct {
 	db             *sql.DB
 }
 
-func NewServer(appServices app.Services) *Server {
+func NewServer(cfg *config.ServerConfig, db *sql.DB, appServices app.Services) *Server {
 	httpServer := &Server{
 		router:      http.NewServeMux(),
 		appServices: appServices,
+		config:      cfg,
+		db:          db,
 	}
-	httpServer.loadConfiguration()
-	httpServer.loadDatabase()
 	httpServer.initSessionManager()
 	httpServer.AddHTTPRoutes()
 	return httpServer
@@ -65,23 +64,6 @@ func (server *Server) ListenAndServe() {
 	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatalf("Server failed: %v", err)
 	}
-}
-
-func (server *Server) loadConfiguration() {
-	cfg, err := config.LoadConfig()
-	if err != nil {
-		log.Fatalf("Configuration error: %v", err)
-	}
-
-	server.config = cfg
-}
-
-func (server *Server) loadDatabase() {
-	db, err := sqlite.InitializeDB(*server.config)
-	if err != nil {
-		log.Fatalf("Database error: %v", err)
-	}
-	server.db = db
 }
 
 func (server *Server) initSessionManager() {
