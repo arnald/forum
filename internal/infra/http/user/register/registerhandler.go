@@ -1,4 +1,4 @@
-package handlers
+package userregister
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 	"github.com/arnald/forum/internal/app"
 	"github.com/arnald/forum/internal/app/user/queries"
 	"github.com/arnald/forum/internal/config"
+	"github.com/arnald/forum/internal/domain/user"
 	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/infra/session"
 	"github.com/arnald/forum/internal/pkg/helpers"
@@ -21,7 +22,7 @@ type RegisterUserResponse struct {
 
 type Handler struct {
 	UserServices   app.Services
-	SessionManager *session.Manager
+	SessionManager user.SessionManager
 	Config         *config.ServerConfig
 	Logger         logger.Logger
 }
@@ -105,16 +106,26 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userRegistered := RegisterUserResponse{
-		UserID:  user.ID,
-		Message: "Account was successfully created!",
+	newSession, err := h.SessionManager.CreateSession(ctx, user.ID)
+	if err != nil {
+		helpers.RespondWithError(
+			w,
+			http.StatusInternalServerError,
+			err.Error(),
+		)
+		return
 	}
 
+	sessionResponse := &RegisterUserSessionResponse{
+		AccessToken:  newSession.AccessToken,
+		RefreshToken: newSession.RefreshToken,
+		UserID:       newSession.UserID,
+	}
 	helpers.RespondWithJSON(
 		w,
 		http.StatusCreated,
 		nil,
-		userRegistered,
+		sessionResponse,
 	)
 	h.Logger.PrintInfo(
 		userRegistered.Message,

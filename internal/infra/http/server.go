@@ -8,9 +8,10 @@ import (
 
 	"github.com/arnald/forum/internal/app"
 	"github.com/arnald/forum/internal/config"
+	"github.com/arnald/forum/internal/domain/user"
 	"github.com/arnald/forum/internal/infra/http/health"
-	handlers "github.com/arnald/forum/internal/infra/http/user"
-	"github.com/arnald/forum/internal/infra/logger"
+	userLogin "github.com/arnald/forum/internal/infra/http/user/login"
+	userRegister "github.com/arnald/forum/internal/infra/http/user/register"
 	"github.com/arnald/forum/internal/infra/session"
 )
 
@@ -25,7 +26,7 @@ type Server struct {
 	appServices    app.Services
 	config         *config.ServerConfig
 	router         *http.ServeMux
-	sessionManager *session.Manager
+	sessionManager user.SessionManager
 	db             *sql.DB
 	logger         logger.Logger
 }
@@ -47,8 +48,16 @@ func (server *Server) AddHTTPRoutes() {
 	// server.router.HandleFunc(apiContext+"/users", user.NewHandler(server.appServices.UserServices).GetAllUsers)
 	server.router.HandleFunc(apiContext+"/health", health.NewHandler(server.logger).HealthCheck)
 	server.router.HandleFunc(
+		apiContext+"/login",
+		userLogin.NewHandler(server.config, server.appServices, server.sessionManager).UserLogin,
+	)
+	server.router.HandleFunc(
+		apiContext+"/login/username",
+		userLogin.NewHandler(server.config, server.appServices, server.sessionManager).UserLoginUsername,
+	)
+	server.router.HandleFunc(
 		apiContext+"/register",
-		handlers.NewHandler(server.config, server.appServices, server.sessionManager, server.logger).UserRegister, // Inject session manager
+		userRegister.NewHandler(server.config, server.appServices, server.sessionManager).UserRegister,
 	)
 }
 
