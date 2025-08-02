@@ -9,8 +9,9 @@ import (
 )
 
 type mockRepository struct {
-	userRegisterFunc  func(ctx context.Context, user *user.User) error
-	createSessionFunc func(session *user.Session) error
+	userRegisterFunc   func(ctx context.Context, user *user.User) error
+	createSessionFunc  func(session *user.Session) error
+	getUserByEmailFunc func(ctx context.Context, email string) (*user.User, error)
 }
 
 func (m *mockRepository) UserRegister(ctx context.Context, user *user.User) error {
@@ -22,6 +23,13 @@ func (m *mockRepository) CreateSession(session *user.Session) error {
 		return m.createSessionFunc(session)
 	}
 	return nil
+}
+
+func (m *mockRepository) GetUserByEmail(ctx context.Context, email string) (*user.User, error) {
+	if m.getUserByEmailFunc != nil {
+		return m.getUserByEmailFunc(ctx, email)
+	}
+	return nil, nil
 }
 
 func (m *mockRepository) GetAll(ctx context.Context) ([]user.User, error) {
@@ -38,18 +46,18 @@ func (m *mockUUIDProvider) NewUUID() string {
 
 type mockEncryptionProvider struct {
 	generateFunc func(plaintextPassword string) (string, error)
-	matchesFunc  func(hashedPassword string, plaintextPassword []byte) (bool, error)
+	matchesFunc  func(hashedPassword string, plaintextPassword string) error
 }
 
 func (m *mockEncryptionProvider) Generate(plaintextPassword string) (string, error) {
 	return m.generateFunc(plaintextPassword)
 }
 
-func (m *mockEncryptionProvider) Matches(hashedPassword string, plaintextPassword []byte) (bool, error) {
+func (m *mockEncryptionProvider) Matches(hashedPassword string, plaintextPassword string) error {
 	if m.matchesFunc != nil {
 		return m.matchesFunc(hashedPassword, plaintextPassword)
 	}
-	return false, nil
+	return nil
 }
 
 func TestUserRegisterHandler_Handle(t *testing.T) {

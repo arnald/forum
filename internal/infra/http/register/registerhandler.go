@@ -1,4 +1,4 @@
-package handlers
+package userRegister
 
 import (
 	"context"

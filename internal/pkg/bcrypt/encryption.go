@@ -10,7 +10,7 @@ const encryptionCost = 12
 
 type Provider interface {
 	Generate(plaintextPassword string) (string, error)
-	Matches(plaintextPassword string, encryptedPass []byte) (bool, error)
+	Matches(plaintextPassword string, encryptedPass string) error
 }
 
 func NewProvider() Provider {
@@ -28,16 +28,20 @@ func (p *encryptionProvider) Generate(plaintextPassword string) (string, error) 
 	return string(hash), nil
 }
 
-func (p *encryptionProvider) Matches(plaintextPassword string, encryptedPass []byte) (bool, error) {
-	err := bcrypt.CompareHashAndPassword(encryptedPass, []byte(plaintextPassword))
+func (p *encryptionProvider) Matches(encryptedPass string, passwordToCheck string) error {
+	hashedPassword, err := p.Generate(passwordToCheck)
+	if err != nil {
+		return err
+	}
+	err = bcrypt.CompareHashAndPassword([]byte(encryptedPass), []byte(hashedPassword))
 	if err != nil {
 		switch {
 		case errors.Is(err, bcrypt.ErrMismatchedHashAndPassword):
-			return false, nil
+			return nil
 		default:
-			return false, err
+			return err
 		}
 	}
 
-	return true, nil
+	return nil
 }
