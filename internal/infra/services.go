@@ -15,9 +15,9 @@ type Services struct {
 	Server         *http.Server
 }
 
-func NewInfraProviders(DB *sql.DB) Services {
+func NewInfraProviders(db *sql.DB) Services {
 	return Services{
-		UserRepository: sqlite.NewRepo(DB),
+		UserRepository: sqlite.NewRepo(db),
 	}
 }
 

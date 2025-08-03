@@ -11,16 +11,15 @@ import (
 
 func main() {
 	// 1. Load configuration first
-	cfg, error := config.LoadConfig()
-	if error != nil {
-		log.Fatalf("Configuration error: %v", error)
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		log.Fatalf("Configuration error: %v", err)
 	}
 
 	// 2. Initialize DB connection
-	db, error := sqlite.InitializeDB(*cfg)
-	if error != nil {
-		log.Fatalf("Database error: %v", error)
-
+	db, err := sqlite.InitializeDB(*cfg)
+	if err != nil {
+		log.Fatalf("Database error: %v", err)
 	}
 	defer db.Close()
 

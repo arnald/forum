@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/arnald/forum/internal/domain/user"
+	"github.com/arnald/forum/internal/pkg/helpers"
 )
 
 type mockRepository struct {
@@ -121,6 +122,21 @@ func newUserRegisterTestCases() []userRegisterTestCase {
 				repo.userRegisterFunc = func(ctx context.Context, u *user.User) error { return testErr }
 			},
 			wantErr:  testErr,
+			wantUser: nil,
+		},
+		{
+			name: "email validation fails",
+			request: UserRegisterRequest{
+				Name:     "testuser",
+				Password: "password123",
+				Email:    "invalid-email",
+			},
+			setupMocks: func(repo *mockRepository, uuid *mockUUIDProvider, enc *mockEncryptionProvider) {
+				uuid.newUUIDFunc = func() string { return "test-uuid" }
+				enc.generateFunc = func(pass string) (string, error) { return "hashed_password", nil }
+				repo.userRegisterFunc = func(ctx context.Context, u *user.User) error { return nil }
+			},
+			wantErr:  helpers.ErrInvalidEmailFormat,
 			wantUser: nil,
 		},
 	}
