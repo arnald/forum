@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -51,17 +51,45 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), h.Config.Timeouts.HandlerTimeouts.UserRegister)
 	defer cancel()
 
+	// decBody := json.NewDecoder(r.Body)
+	// decBody.DisallowUnknownFields()
 	var userToRegister RegisterUserReguestModel
 
-	err := json.NewDecoder(r.Body).Decode(&userToRegister)
+	// err := decBody.Decode(&userToRegister)
+	userAny, err := helpers.ParseBodyRequest(r, &userToRegister)
 	if err != nil {
 		helpers.RespondWithError(
 			w,
-			http.StatusInternalServerError,
-			"unable to decode json request",
+			http.StatusBadRequest,
+			fmt.Sprintf("invalid request: %s", err.Error()),
 		)
+
+		logger := log.New(os.Stdout, "ERROR: ", log.Ldate|log.Ltime)
+		logger.Printf("Invalid request:  %v\n", err.Error())
+
+		return
 	}
 	defer r.Body.Close()
+
+	userRegister, ok := userAny.(*RegisterUserReguestModel)
+	if !ok {
+		helpers.RespondWithError(
+			w,
+			http.StatusBadRequest,
+			"email, username and password are required",
+		)
+		return
+	}
+
+	err = helpers.UserRegisterIsValid(userRegister.Username, userRegister.Password, userRegister.Email)
+	if err != nil {
+		helpers.RespondWithError(
+			w,
+			http.StatusBadRequest,
+			err.Error(),
+		)
+		return
+	}
 
 	user, err := h.UserServices.UserServices.Queries.UserRegister.Handle(ctx, queries.UserRegisterRequest{
 		Name:     userToRegister.Username,
