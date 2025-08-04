@@ -2,7 +2,9 @@ package logger
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
+	"os"
 	"runtime/debug"
 	"sync"
 	"time"
@@ -31,6 +33,8 @@ func (l Level) String() string {
 		return "ERROR"
 	case LevelFatal:
 		return "FATAL"
+	case LevelOff:
+		return "OFF"
 	default:
 		return ""
 	}
@@ -42,7 +46,7 @@ type logger struct {
 	mu       sync.Mutex
 }
 
-func New(out io.Writer, minLevel Level) *logger {
+func New(out io.Writer, minLevel Level) Logger {
 	return &logger{
 		out:      out,
 		minLevel: minLevel,
@@ -50,15 +54,29 @@ func New(out io.Writer, minLevel Level) *logger {
 }
 
 func (l *logger) PrintInfo(message string, properties map[string]string) {
-	l.print(LevelInfo, message, properties)
+	_, err := l.print(LevelInfo, message, properties)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to write info log: %v\n", err)
+	}
 }
 
 func (l *logger) PrintError(err error, properties map[string]string) {
-	l.print(LevelError, err.Error(), properties)
+	_, printErr := l.print(LevelError, err.Error(), properties)
+	if printErr != nil {
+		fmt.Fprintf(os.Stderr, "failed to write error log: %v\n", printErr)
+	}
 }
 
 func (l *logger) PrintFatal(err error, properties map[string]string) {
-	l.print(LevelFatal, err.Error(), properties)
+	_, printErr := l.print(LevelFatal, err.Error(), properties)
+	if printErr != nil {
+		fmt.Fprintf(os.Stderr, "failed to write fatal log: %v\n", printErr)
+	}
+	os.Exit(1)
+}
+
+func (l *logger) Write(message []byte) (n int, err error) {
+	return l.print(LevelError, string(message), nil)
 }
 
 func (l *logger) print(level Level, message string, properties map[string]string) (int, error) {
@@ -94,8 +112,4 @@ func (l *logger) print(level Level, message string, properties map[string]string
 	defer l.mu.Unlock()
 
 	return l.out.Write(append(line, '\n'))
-}
-
-func (l *logger) Write(message []byte) (n int, err error) {
-	return l.print(LevelError, string(message), nil)
 }

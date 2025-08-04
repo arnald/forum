@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"errors"
 	"log"
 	"net/http"
 	"os"
@@ -52,7 +51,7 @@ type RegisterUserSessionResponse struct {
 
 func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		h.Logger.PrintError(errors.New("invalid request method"), nil)
+		h.Logger.PrintError(logger.ErrInvalidRequestMethod, nil)
 		helpers.RespondWithError(w, http.StatusMethodNotAllowed, "Invalid request method")
 		return
 	}
