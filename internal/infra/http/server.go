@@ -3,7 +3,6 @@ package http
 import (
 	"database/sql"
 	"errors"
-	"log"
 	"net/http"
 	"time"
 
@@ -46,7 +45,7 @@ func NewServer(cfg *config.ServerConfig, db *sql.DB, logger logger.Logger, appSe
 
 func (server *Server) AddHTTPRoutes() {
 	// server.router.HandleFunc(apiContext+"/users", user.NewHandler(server.appServices.UserServices).GetAllUsers)
-	server.router.HandleFunc(apiContext+"/health", health.NewHandler().HealthCheck)
+	server.router.HandleFunc(apiContext+"/health", health.NewHandler(server.logger).HealthCheck)
 	server.router.HandleFunc(
 		apiContext+"/register",
 		handlers.NewHandler(server.config, server.appServices, server.sessionManager, server.logger).UserRegister, // Inject session manager
@@ -61,11 +60,14 @@ func (server *Server) ListenAndServe() {
 		WriteTimeout: server.config.WriteTimeout,
 		IdleTimeout:  server.config.IdleTimeout,
 	}
-
-	log.Printf("Server started port: %s (%s environment)", server.config.Port, server.config.Environment)
+	server.logger.PrintInfo("Starting server", map[string]string{
+		"host":        server.config.Host,
+		"port":        server.config.Port,
+		"environment": server.config.Environment,
+	})
 	err := srv.ListenAndServe()
 	if err != nil && !errors.Is(err, http.ErrServerClosed) {
-		log.Fatalf("Server failed: %v", err)
+		server.logger.PrintFatal(err, nil)
 	}
 }
 

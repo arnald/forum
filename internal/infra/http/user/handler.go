@@ -2,9 +2,7 @@ package handlers
 
 import (
 	"context"
-	"log"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/arnald/forum/internal/app"
@@ -69,8 +67,7 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 			"invalid request: "+err.Error(),
 		)
 
-		logger := log.New(os.Stdout, "ERROR: ", log.Ldate|log.Ltime)
-		logger.Printf("Invalid request:  %v\n", err.Error())
+		h.Logger.PrintError(err, nil)
 
 		return
 	}
@@ -87,9 +84,7 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 			v.ToStringErrors(),
 		)
 
-		logger := log.New(os.Stdout, "ERROR: ", log.Ldate|log.Ltime)
-		logger.Println("Invalid request: " + v.ToStringErrors())
-
+		h.Logger.PrintError(logger.ErrValidationFailed, v.Errors)
 		return
 	}
 
@@ -105,8 +100,8 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 			err.Error(),
 		)
 
-		logger := log.New(os.Stdout, "ERROR: ", log.Ldate|log.Ltime)
-		logger.Println(err.Error())
+		h.Logger.PrintError(err, nil)
+
 		return
 	}
 
@@ -121,6 +116,12 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 		nil,
 		userRegistered,
 	)
-	logger := log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime)
-	logger.Println("user with id: " + user.ID + "and username: " + userToRegister.Username + " and email " + userToRegister.Email + "was successfully created!")
+	h.Logger.PrintInfo(
+		userRegistered.Message,
+		map[string]string{
+			"userId": user.ID,
+			"email":  user.Email,
+			"name":   user.Username,
+		},
+	)
 }

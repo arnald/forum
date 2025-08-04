@@ -1,7 +1,6 @@
 package logger
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -84,32 +83,25 @@ func (l *logger) print(level Level, message string, properties map[string]string
 		return 0, nil
 	}
 
-	aux := struct {
-		Level      string            `json:"level"`
-		Time       string            `json:"time"`
-		Message    string            `json:"message"`
-		Properties map[string]string `json:"properties,omitempty"`
-		Trace      string            `json:"trace,omitempty"`
-	}{
-		Level:      level.String(),
-		Time:       time.Now().UTC().Format(time.RFC3339),
-		Message:    message,
-		Properties: properties,
+	timestamp := time.Now().UTC().Format("2006/01/02 15:04:05")
+
+	logMsg := fmt.Sprintf("%-6s - [%s] - %s", timestamp, level.String(), message)
+
+	if len(properties) > 0 {
+		logMsg += " - "
+		for key, value := range properties {
+			logMsg += fmt.Sprintf("%s: %s; ", key, value)
+		}
 	}
 
 	if level > LevelError {
-		aux.Trace = string(debug.Stack())
+		logMsg += "\nStack trace:\n" + string(debug.Stack())
 	}
 
-	var line []byte
-
-	line, err := json.Marshal(aux)
-	if err != nil {
-		line = []byte(LevelError.String() + ":unable to marshal log message:" + err.Error())
-	}
+	logMsg += "\n"
 
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
-	return l.out.Write(append(line, '\n'))
+	return l.out.Write([]byte(logMsg))
 }
