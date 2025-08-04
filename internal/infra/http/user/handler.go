@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/arnald/forum/internal/app"
 	"github.com/arnald/forum/internal/app/user/queries"
@@ -13,6 +14,11 @@ import (
 	"github.com/arnald/forum/internal/pkg/helpers"
 	"github.com/arnald/forum/internal/pkg/validator"
 )
+
+type RegisterUserResponse struct {
+	UserID  string `json:"userdId"`
+	Message string `json:"message"`
+}
 
 type Handler struct {
 	UserServices   app.Services
@@ -73,39 +79,22 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 	validator.ValidateUserRegistration(v, userAny)
 
 	if !v.Valid() {
-		helpers.RespondWithJSON(
+		helpers.RespondWithError(
 			w,
 			http.StatusBadRequest,
-			nil,
-			v.Errors,
+			v.ToStringErrors(),
 		)
+
+		logger := log.New(os.Stdout, "ERROR: ", log.Ldate|log.Ltime)
+		logger.Println("Invalid request: " + v.ToStringErrors())
+
 		return
 	}
-
-	// userRegister, ok := userAny.(*RegisterUserReguestModel)
-	// if !ok {
-	// 	helpers.RespondWithError(
-	// 		w,
-	// 		http.StatusBadRequest,
-	// 		"email, username and password are required",
-	// 	)
-	// 	return
-	// }
-
-	// err = helpers.UserRegisterIsValid(userToRegister.Username, userToRegister.Password, userToRegister.Email)
-	// if err != nil {
-	// 	helpers.RespondWithError(
-	// 		w,
-	// 		http.StatusBadRequest,
-	// 		err.Error(),
-	// 	)
-	// 	return
-	// }
 
 	user, err := h.UserServices.UserServices.Queries.UserRegister.Handle(ctx, queries.UserRegisterRequest{
 		Name:     userToRegister.Username,
 		Password: userToRegister.Password,
-		Email:    userToRegister.Email,
+		Email:    strings.ToLower(userToRegister.Email),
 	})
 	if err != nil {
 		helpers.RespondWithError(
@@ -117,25 +106,15 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newSession, err := h.SessionManager.CreateSession(ctx, user.ID)
-	if err != nil {
-		helpers.RespondWithError(
-			w,
-			http.StatusInternalServerError,
-			err.Error(),
-		)
-		return
+	userRegistered := RegisterUserResponse{
+		UserID:  user.ID,
+		Message: "Account was successfully created!",
 	}
 
-	sessionResponse := &RegisterUserSessionResponse{
-		AccessToken:  newSession.AccessToken,
-		RefreshToken: newSession.RefreshToken,
-		UserID:       newSession.UserID,
-	}
 	helpers.RespondWithJSON(
 		w,
 		http.StatusCreated,
 		nil,
-		sessionResponse,
+		userRegistered,
 	)
 }

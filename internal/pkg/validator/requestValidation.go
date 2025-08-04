@@ -7,11 +7,11 @@ const (
 	MaxPasswordLength = 72
 )
 
-func ValidateUserRegistration(v *Validator, data interface{}) {
+func ValidateUserRegistration(v *Validator, data any) {
 	rules := []ValidationRule{
 		{
 			Field: "Username",
-			Rules: []func(interface{}) (bool, string){
+			Rules: []func(any) (bool, string){
 				required,
 				minLength(MinUsernameLength),
 				maxLength(MaxUsernameLength),
@@ -19,14 +19,14 @@ func ValidateUserRegistration(v *Validator, data interface{}) {
 		},
 		{
 			Field: "Email",
-			Rules: []func(interface{}) (bool, string){
+			Rules: []func(any) (bool, string){
 				required,
 				validEmail,
 			},
 		},
 		{
 			Field: "Password",
-			Rules: []func(interface{}) (bool, string){
+			Rules: []func(any) (bool, string){
 				required,
 				minLength(MinPasswordLength),
 				maxLength(MaxPasswordLength),

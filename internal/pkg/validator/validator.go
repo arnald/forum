@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"slices"
+	"strings"
 )
 
 const (
@@ -20,7 +22,7 @@ type Validator struct {
 
 type ValidationRule struct {
 	Field string
-	Rules []func(interface{}) (bool, string)
+	Rules []func(any) (bool, string)
 }
 
 func New() *Validator {
@@ -48,12 +50,7 @@ func (v *Validator) Check(ok bool, key, message string) {
 
 // For future checks.
 func In(value string, list ...string) bool {
-	for i := range list {
-		if value == list[i] {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(list, value)
 }
 
 func Matches(value string, rx *regexp.Regexp) bool {
@@ -70,7 +67,7 @@ func Unique(values []string) bool {
 	return len(values) == len(uniqueValues)
 }
 
-func ValidateStruct(v *Validator, data interface{}, rules []ValidationRule) {
+func ValidateStruct(v *Validator, data any, rules []ValidationRule) {
 	val := reflect.ValueOf(data).Elem()
 
 	for _, rule := range rules {
@@ -86,7 +83,7 @@ func ValidateStruct(v *Validator, data interface{}, rules []ValidationRule) {
 	}
 }
 
-func required(value interface{}) (bool, string) {
+func required(value any) (bool, string) {
 	str, ok := value.(string)
 	if !ok {
 		return false, InvalidType
@@ -94,8 +91,8 @@ func required(value interface{}) (bool, string) {
 	return str != "", "must be provided"
 }
 
-func minLength(minimumLenght int) func(interface{}) (bool, string) {
-	return func(value interface{}) (bool, string) {
+func minLength(minimumLenght int) func(any) (bool, string) {
+	return func(value any) (bool, string) {
 		str, ok := value.(string)
 		if !ok {
 			return false, InvalidType
@@ -104,8 +101,8 @@ func minLength(minimumLenght int) func(interface{}) (bool, string) {
 	}
 }
 
-func maxLength(maximumLenght int) func(interface{}) (bool, string) {
-	return func(value interface{}) (bool, string) {
+func maxLength(maximumLenght int) func(any) (bool, string) {
+	return func(value any) (bool, string) {
 		str, ok := value.(string)
 		if !ok {
 			return false, InvalidType
@@ -114,10 +111,18 @@ func maxLength(maximumLenght int) func(interface{}) (bool, string) {
 	}
 }
 
-func validEmail(value interface{}) (bool, string) {
+func validEmail(value any) (bool, string) {
 	str, ok := value.(string)
 	if !ok {
 		return false, InvalidType
 	}
 	return Matches(str, EmailRX), InvalidEmail
+}
+
+func (v *Validator) ToStringErrors() string {
+	strError := ""
+	for key, value := range v.Errors {
+		strError += key + ": " + value + " "
+	}
+	return strings.TrimSpace(strError)
 }
