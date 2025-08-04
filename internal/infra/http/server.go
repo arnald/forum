@@ -11,6 +11,7 @@ import (
 	"github.com/arnald/forum/internal/config"
 	"github.com/arnald/forum/internal/infra/http/health"
 	handlers "github.com/arnald/forum/internal/infra/http/user"
+	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/infra/session"
 )
 
@@ -27,14 +28,16 @@ type Server struct {
 	router         *http.ServeMux
 	sessionManager *session.Manager
 	db             *sql.DB
+	logger         logger.Logger
 }
 
-func NewServer(cfg *config.ServerConfig, db *sql.DB, appServices app.Services) *Server {
+func NewServer(cfg *config.ServerConfig, db *sql.DB, logger logger.Logger, appServices app.Services) *Server {
 	httpServer := &Server{
 		router:      http.NewServeMux(),
 		appServices: appServices,
 		config:      cfg,
 		db:          db,
+		logger:      logger,
 	}
 	httpServer.initSessionManager()
 	httpServer.AddHTTPRoutes()
@@ -46,7 +49,7 @@ func (server *Server) AddHTTPRoutes() {
 	server.router.HandleFunc(apiContext+"/health", health.NewHandler().HealthCheck)
 	server.router.HandleFunc(
 		apiContext+"/register",
-		handlers.NewHandler(server.config, server.appServices, server.sessionManager).UserRegister, // Inject session manager
+		handlers.NewHandler(server.config, server.appServices, server.sessionManager, server.logger).UserRegister, // Inject session manager
 	)
 }
 

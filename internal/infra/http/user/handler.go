@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"errors"
 	"log"
 	"net/http"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"github.com/arnald/forum/internal/app"
 	"github.com/arnald/forum/internal/app/user/queries"
 	"github.com/arnald/forum/internal/config"
+	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/infra/session"
 	"github.com/arnald/forum/internal/pkg/helpers"
 	"github.com/arnald/forum/internal/pkg/validator"
@@ -24,13 +26,15 @@ type Handler struct {
 	UserServices   app.Services
 	SessionManager *session.Manager
 	Config         *config.ServerConfig
+	Logger         logger.Logger
 }
 
-func NewHandler(config *config.ServerConfig, app app.Services, sm *session.Manager) *Handler {
+func NewHandler(config *config.ServerConfig, app app.Services, sm *session.Manager, logger logger.Logger) *Handler {
 	return &Handler{
 		UserServices:   app,
 		SessionManager: sm,
 		Config:         config,
+		Logger:         logger,
 	}
 }
 
@@ -48,8 +52,7 @@ type RegisterUserSessionResponse struct {
 
 func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		logger := log.New(os.Stdout, "ERROR: ", log.Ldate|log.Ltime)
-		logger.Printf("Invalid request method %v\n", r.Method)
+		h.Logger.PrintError(errors.New("invalid request method"), nil)
 		helpers.RespondWithError(w, http.StatusMethodNotAllowed, "Invalid request method")
 		return
 	}
