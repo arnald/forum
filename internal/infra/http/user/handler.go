@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -12,6 +11,7 @@ import (
 	"github.com/arnald/forum/internal/config"
 	"github.com/arnald/forum/internal/infra/session"
 	"github.com/arnald/forum/internal/pkg/helpers"
+	"github.com/arnald/forum/internal/pkg/validator"
 )
 
 type Handler struct {
@@ -51,17 +51,14 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), h.Config.Timeouts.HandlerTimeouts.UserRegister)
 	defer cancel()
 
-	// decBody := json.NewDecoder(r.Body)
-	// decBody.DisallowUnknownFields()
 	var userToRegister RegisterUserReguestModel
 
-	// err := decBody.Decode(&userToRegister)
 	userAny, err := helpers.ParseBodyRequest(r, &userToRegister)
 	if err != nil {
 		helpers.RespondWithError(
 			w,
 			http.StatusBadRequest,
-			fmt.Sprintf("invalid request: %s", err.Error()),
+			"invalid request: "+err.Error(),
 		)
 
 		logger := log.New(os.Stdout, "ERROR: ", log.Ldate|log.Ltime)
@@ -71,25 +68,39 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	userRegister, ok := userAny.(*RegisterUserReguestModel)
-	if !ok {
-		helpers.RespondWithError(
+	v := validator.New()
+
+	validator.ValidateUserRegistration(v, userAny)
+
+	if !v.Valid() {
+		helpers.RespondWithJSON(
 			w,
 			http.StatusBadRequest,
-			"email, username and password are required",
+			nil,
+			v.Errors,
 		)
 		return
 	}
 
-	err = helpers.UserRegisterIsValid(userRegister.Username, userRegister.Password, userRegister.Email)
-	if err != nil {
-		helpers.RespondWithError(
-			w,
-			http.StatusBadRequest,
-			err.Error(),
-		)
-		return
-	}
+	// userRegister, ok := userAny.(*RegisterUserReguestModel)
+	// if !ok {
+	// 	helpers.RespondWithError(
+	// 		w,
+	// 		http.StatusBadRequest,
+	// 		"email, username and password are required",
+	// 	)
+	// 	return
+	// }
+
+	// err = helpers.UserRegisterIsValid(userToRegister.Username, userToRegister.Password, userToRegister.Email)
+	// if err != nil {
+	// 	helpers.RespondWithError(
+	// 		w,
+	// 		http.StatusBadRequest,
+	// 		err.Error(),
+	// 	)
+	// 	return
+	// }
 
 	user, err := h.UserServices.UserServices.Queries.UserRegister.Handle(ctx, queries.UserRegisterRequest{
 		Name:     userToRegister.Username,
