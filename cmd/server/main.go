@@ -2,10 +2,12 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/arnald/forum/internal/app"
 	"github.com/arnald/forum/internal/config"
 	"github.com/arnald/forum/internal/infra"
+	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/infra/storage/sqlite"
 )
 
@@ -25,8 +27,9 @@ func main() {
 
 	// 3. Create repository with injected DB
 	userRepo := sqlite.NewRepo(db)
+	logger := logger.New(os.Stdout, logger.LevelInfo)
 	infraProviders := infra.NewInfraProviders(userRepo.DB)
 	appServices := app.NewServices(infraProviders.UserRepository)
-	infraHTTPServer := infra.NewHTTPServer(cfg, db, appServices)
+	infraHTTPServer := infra.NewHTTPServer(cfg, db, logger, appServices)
 	infraHTTPServer.ListenAndServe()
 }
