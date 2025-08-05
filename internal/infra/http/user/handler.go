@@ -2,14 +2,13 @@ package handlers
 
 import (
 	"context"
-	"log"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/arnald/forum/internal/app"
 	"github.com/arnald/forum/internal/app/user/queries"
 	"github.com/arnald/forum/internal/config"
+	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/infra/session"
 	"github.com/arnald/forum/internal/pkg/helpers"
 	"github.com/arnald/forum/internal/pkg/validator"
@@ -24,13 +23,15 @@ type Handler struct {
 	UserServices   app.Services
 	SessionManager *session.Manager
 	Config         *config.ServerConfig
+	Logger         logger.Logger
 }
 
-func NewHandler(config *config.ServerConfig, app app.Services, sm *session.Manager) *Handler {
+func NewHandler(config *config.ServerConfig, app app.Services, sm *session.Manager, logger logger.Logger) *Handler {
 	return &Handler{
 		UserServices:   app,
 		SessionManager: sm,
 		Config:         config,
+		Logger:         logger,
 	}
 }
 
@@ -48,8 +49,7 @@ type RegisterUserSessionResponse struct {
 
 func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		logger := log.New(os.Stdout, "ERROR: ", log.Ldate|log.Ltime)
-		logger.Printf("Invalid request method %v\n", r.Method)
+		h.Logger.PrintError(logger.ErrInvalidRequestMethod, nil)
 		helpers.RespondWithError(w, http.StatusMethodNotAllowed, "Invalid request method")
 		return
 	}
@@ -67,8 +67,7 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 			"invalid request: "+err.Error(),
 		)
 
-		logger := log.New(os.Stdout, "ERROR: ", log.Ldate|log.Ltime)
-		logger.Printf("Invalid request:  %v\n", err.Error())
+		h.Logger.PrintError(err, nil)
 
 		return
 	}
@@ -85,9 +84,7 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 			v.ToStringErrors(),
 		)
 
-		logger := log.New(os.Stdout, "ERROR: ", log.Ldate|log.Ltime)
-		logger.Println("Invalid request: " + v.ToStringErrors())
-
+		h.Logger.PrintError(logger.ErrValidationFailed, v.Errors)
 		return
 	}
 
@@ -103,6 +100,8 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 			err.Error(),
 		)
 
+		h.Logger.PrintError(err, nil)
+
 		return
 	}
 
@@ -116,5 +115,13 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 		http.StatusCreated,
 		nil,
 		userRegistered,
+	)
+	h.Logger.PrintInfo(
+		userRegistered.Message,
+		map[string]string{
+			"userId": user.ID,
+			"email":  user.Email,
+			"name":   user.Username,
+		},
 	)
 }
