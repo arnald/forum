@@ -63,13 +63,18 @@
                   type="text"
                   name="username"
                   id="username"
-                  class="form-input {{ if .Username }}input-error{{ end }}"
+                  value="{{ .Username }}"
+                  class="form-input {{ if .UsernameError }}input-error{{ end }}"
                   placeholder="Enter your username"
-                  {{if
-                  .Username}}autofocus{{end}}
+                  {{
+                  if
+                  .UsernameError
+                  }}autofocus{{
+                  end
+                  }}
                 />
-                {{ if .Username }}
-                <span class="error-message">{{ .Username }}</span>
+                {{ if .UsernameError }}
+                <span class="error-message">{{ .UsernameError }}</span>
                 {{ end }}
               </div>
               <div class="input-box">
@@ -78,13 +83,18 @@
                   type="email"
                   name="email"
                   id="email"
-                  class="form-input {{ if .Email }}input-error{{ end }}"
+                  value="{{ .Email }}"
+                  class="form-input {{ if .EmailError }}input-error{{ end }}"
                   placeholder="Enter your email"
-                  {{if
-                  .Email}}autofocus{{end}}
+                  {{
+                  if
+                  .EmailError
+                  }}autofocus{{
+                  end
+                  }}
                 />
-                {{ if .Email }}
-                <span class="error-message">{{ .Email }}</span>
+                {{ if .EmailError }}
+                <span class="error-message">{{ .EmailError }}</span>
                 {{ end }}
               </div>
               <div class="input-box">

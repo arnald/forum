@@ -56,10 +56,18 @@ type BasePageData struct {
 // TemplateData is an empty interface that marks types that can be passed to templates
 type TemplateData interface{}
 
-type FormErrors struct {
-	Username string `json:"username,omitempty"`
-	Email    string `json:"email,omitempty"`
-	Password string `json:"password,omitempty"`
+type LoginFormErrors struct {
+	Identifier      string `json:"-"` // the actual value user typed
+	Password        string `json:"password,omitempty"`
+	IdentifierError string `json:"identifier,omitempty"`
+}
+
+type RegisterFormErrors struct {
+	Username      string `json:"-"`
+	Email         string `json:"-"`
+	Password      string `json:"password,omitempty"`
+	UsernameError string `json:"username,omitempty"`
+	EmailError    string `json:"email,omitempty"`
 }
 
 // Validation helpers
@@ -76,6 +84,9 @@ func validateEmail(email string) string {
 func validateUsername(username string) string {
 	if username == "" {
 		return "Username is required."
+	}
+	if len(username) < 3 {
+		return "Username must be at least 3 characters"
 	}
 	return ""
 }
@@ -218,7 +229,15 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 		tmpl.ExecuteTemplate(w, "base", data)
 	*/
 
-	tmpl, err := template.ParseGlob(filepath.Join(basePath, "frontend/html/**/*.html"))
+	// tmpl, err := template.ParseGlob(filepath.Join(basePath, "frontend/html/**/*.html"))
+	tmpl, err := template.ParseFiles(
+		"frontend/html/layouts/base.html",
+		"frontend/html/pages/home.html", // render homepage for actual content
+		"frontend/html/partials/navbar.html",
+		"frontend/html/partials/category_details.html",
+		"frontend/html/partials/categories.html",
+		"frontend/html/partials/footer.html",
+	)
 	if err != nil {
 		log.Println("Error loading home.html:", err)
 		notFoundHandler(w, r, "Failed to load page", http.StatusInternalServerError)
@@ -238,7 +257,7 @@ func RegisterPage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	renderTemplate(w, "register", nil)
+	renderTemplate(w, "register", RegisterFormErrors{})
 }
 
 // Login Handler GET
@@ -247,7 +266,7 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	renderTemplate(w, "login", nil)
+	renderTemplate(w, "login", LoginFormErrors{})
 }
 
 // Login Handler POST
@@ -263,16 +282,23 @@ func LoginPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	email := r.FormValue("email")
+	identifier := r.FormValue("identifier")
 	password := r.FormValue("password")
 
-	data := FormErrors{}
+	data := LoginFormErrors{
+		Identifier: identifier, //preserve the value
+	}
 
-	data.Email = validateEmail(email)
+	if identifier == "" {
+		data.IdentifierError = "Username or Email is required."
+	} else if !isValidEmail(identifier) && len(identifier) < 3 {
+		// Could be an invalid email *or* too-short username
+		data.IdentifierError = "Invalid username or email."
+	}
 	data.Password = validatePassword(password)
 
 	// If errors, re-render login page with errors
-	if data.Email != "" || data.Password != "" {
+	if data.IdentifierError != "" || data.Password != "" {
 		renderTemplate(w, "login", data)
 		return
 	}
@@ -304,14 +330,17 @@ func RegisterPost(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
 	password := r.FormValue("password")
 
-	data := FormErrors{}
+	data := RegisterFormErrors{
+		Username: username,
+		Email:    email,
+	}
 
-	data.Username = validateUsername(username)
-	data.Email = validateEmail(email)
+	data.UsernameError = validateUsername(username)
+	data.EmailError = validateEmail(email)
 	data.Password = validatePassword(password)
 
 	// If errors, re-render register page with errors
-	if data.Username != "" || data.Email != "" || data.Password != "" {
+	if data.UsernameError != "" || data.EmailError != "" || data.Password != "" {
 		renderTemplate(w, "register", data)
 		return
 	}

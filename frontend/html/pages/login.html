@@ -58,18 +58,19 @@
           <form class="signup" method="post" action="/login">
             <div class="input-wrapper">
               <div class="input-box">
-                <label for="email">Email address</label>
+                <label for="identifier">Username / Email</label>
                 <input
-                  type="email"
-                  name="email"
-                  id="email"
-                  class="form-input {{ if .Email }}input-error{{ end }}"
-                  placeholder="Enter your email"
+                  type="text"
+                  name="identifier"
+                  id="identifier"
+                  value="{{ .Identifier }}"
+                  class="form-input {{ if .IdentifierError }}input-error{{ end }}"
+                  placeholder="Enter username or email"
                   {{if
-                  .Email}}autofocus{{end}}
+                  .IdentifierError}}autofocus{{end}}
                 />
-                {{ if .Email }}
-                <span class="error-message">{{ .Email }}</span>
+                {{ if .IdentifierError }}
+                <span class="error-message">{{ .IdentifierError }}</span>
                 {{ end }}
               </div>
               <div class="input-box">

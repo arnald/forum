@@ -47,6 +47,41 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
+/*--- Reset button removes preserved values ---*/
+document.addEventListener("DOMContentLoaded", function () {
+  const resetButtons = document.querySelectorAll(".btn-reset-form");
+
+  resetButtons.forEach((button) => {
+    button.addEventListener("click", function (e) {
+      e.preventDefault();
+
+      const form = this.closest("form");
+
+      const inputs = form.querySelectorAll(
+        'input[type="text"], input[type="email"]'
+      );
+      inputs.forEach((input) => {
+        input.value = "";
+        input.classList.remove("input-error");
+      });
+
+      const passwordInput = form.querySelector('input[type="password"]');
+      if (passwordInput) {
+        passwordInput.value = "";
+        passwordInput.classList.remove("input-error");
+      }
+
+      const errorMessages = form.querySelectorAll(".error-message");
+      errorMessages.forEach((msg) => (msg.textContent = ""));
+
+      // Focus on first field
+      if (inputs.length > 0) {
+        inputs[0].focus();
+      }
+    });
+  });
+});
+
 // ==== Signin ==== //
 /*--- Remove errors after new input ---*/
 document.addEventListener("DOMContentLoaded", () => {
