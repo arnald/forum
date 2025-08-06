@@ -44,7 +44,7 @@ func (h *userLoginEmailRequestHandler) Handle(ctx context.Context, req UserLogin
 
 	err = h.encryptionProvider.Matches(user.Password, req.Password)
 	if err != nil {
-		return nil, err
+		return nil, ErrPasswordMismatch
 	}
 
 	return user, nil
