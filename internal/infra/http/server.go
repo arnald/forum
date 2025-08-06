@@ -12,6 +12,7 @@ import (
 	"github.com/arnald/forum/internal/infra/http/health"
 	userLogin "github.com/arnald/forum/internal/infra/http/user/login"
 	userRegister "github.com/arnald/forum/internal/infra/http/user/register"
+	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/infra/session"
 )
 
@@ -56,8 +57,12 @@ func (server *Server) AddHTTPRoutes() {
 		userLogin.NewHandler(server.config, server.appServices, server.sessionManager).UserLoginUsername,
 	)
 	server.router.HandleFunc(
+		apiContext+"/login/email",
+		userLogin.NewHandler(server.config, server.appServices, server.sessionManager).UserLoginEmail,
+	)
+	server.router.HandleFunc(
 		apiContext+"/register",
-		userRegister.NewHandler(server.config, server.appServices, server.sessionManager).UserRegister,
+		userRegister.NewHandler(server.config, server.appServices, server.sessionManager, server.logger).UserRegister,
 	)
 }
 

@@ -10,52 +10,6 @@ import (
 	testhelpers "github.com/arnald/forum/internal/pkg/testing"
 )
 
-type mockRepository struct {
-	userRegisterFunc   func(ctx context.Context, user *user.User) error
-	getUserByEmailFunc func(ctx context.Context, email string) (*user.User, error)
-}
-
-func (m *mockRepository) UserRegister(ctx context.Context, user *user.User) error {
-	return m.userRegisterFunc(ctx, user)
-}
-
-func (m *mockRepository) GetUserByEmail(ctx context.Context, email string) (*user.User, error) {
-	if m.getUserByEmailFunc != nil {
-		return m.getUserByEmailFunc(ctx, email)
-	}
-	return nil, errors.New("not implemented")
-}
-
-func (m *mockRepository) GetAll(ctx context.Context) ([]user.User, error) {
-	return nil, nil
-}
-
-type mockUUIDProvider struct {
-	newUUIDFunc func() string
-}
-
-func (m *mockUUIDProvider) NewUUID() string {
-	return m.newUUIDFunc()
-}
-
-type mockEncryptionProvider struct {
-	generateFunc func(plaintextPassword string) (string, error)
-	matchesFunc  func(hashedPassword string, plaintextPassword string) error
-}
-
-func (m *mockEncryptionProvider) Generate(plaintextPassword string) (string, error) {
-	return m.generateFunc(plaintextPassword)
-}
-
-func (m *mockEncryptionProvider) Matches(hashedPassword string, plaintextPassword string) error {
-	if m.matchesFunc != nil {
-		return m.matchesFunc(hashedPassword, plaintextPassword)
-	}
-	return nil
-}
-	mocks "github.com/arnald/forum/internal/pkg/testing"
-)
-
 func TestUserRegisterHandler_Handle(t *testing.T) {
 	t.Run("group: user registration", func(t *testing.T) {
 		testCases := newUserRegisterTestCases()

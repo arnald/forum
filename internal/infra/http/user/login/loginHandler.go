@@ -8,9 +8,6 @@ import (
 	"os"
 
 	"github.com/arnald/forum/internal/app/user/queries"
-	"github.com/arnald/forum/internal/config"
-	"github.com/arnald/forum/internal/domain/user"
-	"github.com/arnald/forum/internal/infra/session"
 	"github.com/arnald/forum/internal/pkg/helpers"
 )
 

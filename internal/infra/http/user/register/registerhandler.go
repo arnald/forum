@@ -10,7 +10,6 @@ import (
 	"github.com/arnald/forum/internal/config"
 	"github.com/arnald/forum/internal/domain/user"
 	"github.com/arnald/forum/internal/infra/logger"
-	"github.com/arnald/forum/internal/infra/session"
 	"github.com/arnald/forum/internal/pkg/helpers"
 	"github.com/arnald/forum/internal/pkg/validator"
 )
@@ -27,7 +26,7 @@ type Handler struct {
 	Logger         logger.Logger
 }
 
-func NewHandler(config *config.ServerConfig, app app.Services, sm *session.Manager, logger logger.Logger) *Handler {
+func NewHandler(config *config.ServerConfig, app app.Services, sm user.SessionManager, logger logger.Logger) *Handler {
 	return &Handler{
 		UserServices:   app,
 		SessionManager: sm,
@@ -128,7 +127,7 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 		sessionResponse,
 	)
 	h.Logger.PrintInfo(
-		userRegistered.Message,
+		"User registered successfully",
 		map[string]string{
 			"userId": user.ID,
 			"email":  user.Email,

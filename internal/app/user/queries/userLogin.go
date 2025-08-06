@@ -3,7 +3,6 @@ package queries
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/arnald/forum/internal/domain/user"
 	"github.com/arnald/forum/internal/pkg/bcrypt"
