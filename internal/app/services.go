@@ -9,7 +9,6 @@ import (
 
 type Queries struct {
 	UserRegister      queries.UserRegisterRequestHandler
-	UserLogin         queries.UserLoginRequestHandler
 	UserLoginEmail    queries.UserLoginEmailRequestHandler
 	UserLoginUsername queries.UserLoginUsernameRequestHandler
 }
@@ -29,7 +28,6 @@ func NewServices(repo user.Repository) Services {
 		UserServices: UserServices{
 			Queries: Queries{
 				queries.NewUserRegisterHandler(repo, uuidProvider, encryption),
-				queries.NewUserLoginHandler(repo, encryption),
 				queries.NewUserLoginEmailHandler(repo, encryption),
 				queries.NewUserLoginUsernameHandler(repo, encryption),
 			},

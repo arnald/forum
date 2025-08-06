@@ -3,13 +3,10 @@ package queries
 
 import (
 	"context"
-	"errors"
 
 	"github.com/arnald/forum/internal/domain/user"
 	"github.com/arnald/forum/internal/pkg/bcrypt"
 )
-
-var ErrEmptyUsername = errors.New("username must not be empty")
 
 type UserLoginUsernameRequest struct {
 	Username string
@@ -33,10 +30,6 @@ func NewUserLoginUsernameHandler(repo user.Repository, encryptionProvider bcrypt
 }
 
 func (h *userLoginUsernameRequestHandler) Handle(ctx context.Context, req UserLoginUsernameRequest) (*user.User, error) {
-	if req.Username == "" || req.Password == "" {
-		return nil, ErrEmptyLoginCreds
-	}
-
 	user, err := h.repo.GetUserByUsername(ctx, req.Username)
 	if err != nil {
 		return nil, err

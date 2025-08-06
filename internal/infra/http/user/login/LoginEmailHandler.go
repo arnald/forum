@@ -3,11 +3,10 @@ package userlogin
 
 import (
 	"context"
-	"log"
 	"net/http"
-	"os"
 
 	"github.com/arnald/forum/internal/app/user/queries"
+	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/pkg/helpers"
 	"github.com/arnald/forum/internal/pkg/validator"
 )
@@ -19,8 +18,7 @@ type LoginUserEmailRequestModel struct {
 
 func (h Handler) UserLoginEmail(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		logger := log.New(os.Stdout, "ERROR: ", log.Ldate|log.Ltime)
-		logger.Printf("Invalid request method %v\n", r.Method)
+		h.Logger.PrintError(logger.ErrInvalidRequestMethod, nil)
 		helpers.RespondWithError(w, http.StatusMethodNotAllowed, "Invalid request method")
 		return
 	}
@@ -38,8 +36,7 @@ func (h Handler) UserLoginEmail(w http.ResponseWriter, r *http.Request) {
 			"invalid request: "+err.Error(),
 		)
 
-		logger := log.New(os.Stdout, "ERROR: ", log.Ldate|log.Ltime)
-		logger.Printf("Invalid request:  %v\n", err.Error())
+		h.Logger.PrintError(err, nil)
 
 		return
 	}
@@ -56,8 +53,7 @@ func (h Handler) UserLoginEmail(w http.ResponseWriter, r *http.Request) {
 			v.ToStringErrors(),
 		)
 
-		logger := log.New(os.Stdout, "ERROR: ", log.Ldate|log.Ltime)
-		logger.Println("Invalid request: " + v.ToStringErrors())
+		h.Logger.PrintError(logger.ErrValidationFailed, v.Errors)
 
 		return
 	}
@@ -67,17 +63,26 @@ func (h Handler) UserLoginEmail(w http.ResponseWriter, r *http.Request) {
 		Password: userToLogin.Password,
 	})
 	if err != nil {
-		logger := log.New(os.Stdout, "ERROR: ", log.Ldate|log.Ltime)
-		logger.Printf("Error logging in user: %v\n", err)
-		helpers.RespondWithError(w, http.StatusInternalServerError, "error logging in user")
+		helpers.RespondWithError(w,
+			http.StatusInternalServerError,
+			"error logging in user",
+		)
+
+		h.Logger.PrintError(err, nil)
+
 		return
 	}
 
 	newSession, err := h.SessionManager.CreateSession(ctx, user.ID)
 	if err != nil {
-		logger := log.New(os.Stdout, "ERROR: ", log.Ldate|log.Ltime)
-		logger.Printf("Error creating session: %v\n", err)
-		helpers.RespondWithError(w, http.StatusInternalServerError, "error creating session")
+		helpers.RespondWithError(
+			w,
+			http.StatusInternalServerError,
+			"error creating session",
+		)
+
+		h.Logger.PrintError(err, nil)
+
 		return
 	}
 

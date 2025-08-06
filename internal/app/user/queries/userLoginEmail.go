@@ -3,13 +3,10 @@ package queries
 
 import (
 	"context"
-	"errors"
 
 	"github.com/arnald/forum/internal/domain/user"
 	"github.com/arnald/forum/internal/pkg/bcrypt"
 )
-
-var ErrEmptyEmail = errors.New("email must not be empty")
 
 type UserLoginEmailRequest struct {
 	Email    string
@@ -33,10 +30,6 @@ func NewUserLoginEmailHandler(repo user.Repository, encryptionProvider bcrypt.Pr
 }
 
 func (h *userLoginEmailRequestHandler) Handle(ctx context.Context, req UserLoginEmailRequest) (*user.User, error) {
-	if req.Email == "" || req.Password == "" {
-		return nil, ErrEmptyLoginCreds
-	}
-
 	user, err := h.repo.GetUserByEmail(ctx, req.Email)
 	if err != nil {
 		return nil, err

@@ -10,10 +10,10 @@ import (
 var ErrTest = errors.New("test error")
 
 type MockRepository struct {
-	UserRegisterFunc        func(ctx context.Context, user *user.User) error
-	GetUserByEmailFunc      func(ctx context.Context, email string) (*user.User, error)
-	GetAllFunc              func(ctx context.Context) ([]user.User, error)
-	GetUserByIdentifierFunc func(ctx context.Context, identifier string) (*user.User, error)
+	UserRegisterFunc      func(ctx context.Context, user *user.User) error
+	GetUserByEmailFunc    func(ctx context.Context, email string) (*user.User, error)
+	GetUserByUsernameFunc func(ctx context.Context, username string) (*user.User, error)
+	GetAllFunc            func(ctx context.Context) ([]user.User, error)
 }
 
 func (m *MockRepository) UserRegister(ctx context.Context, user *user.User) error {
@@ -28,15 +28,8 @@ func (m *MockRepository) GetUserByEmail(ctx context.Context, email string) (*use
 }
 
 func (m *MockRepository) GetUserByUsername(ctx context.Context, username string) (*user.User, error) {
-	if m.GetUserByIdentifierFunc != nil {
-		return m.GetUserByIdentifierFunc(ctx, username)
-	}
-	return nil, ErrTest
-}
-
-func (m *MockRepository) GetUserByIdentifier(ctx context.Context, identifier string) (*user.User, error) {
-	if m.GetUserByIdentifierFunc != nil {
-		return m.GetUserByIdentifierFunc(ctx, identifier)
+	if m.GetUserByUsernameFunc != nil {
+		return m.GetUserByUsernameFunc(ctx, username)
 	}
 	return nil, ErrTest
 }

@@ -49,16 +49,12 @@ func (server *Server) AddHTTPRoutes() {
 	// server.router.HandleFunc(apiContext+"/users", user.NewHandler(server.appServices.UserServices).GetAllUsers)
 	server.router.HandleFunc(apiContext+"/health", health.NewHandler(server.logger).HealthCheck)
 	server.router.HandleFunc(
-		apiContext+"/login",
-		userLogin.NewHandler(server.config, server.appServices, server.sessionManager).UserLogin,
-	)
-	server.router.HandleFunc(
 		apiContext+"/login/username",
-		userLogin.NewHandler(server.config, server.appServices, server.sessionManager).UserLoginUsername,
+		userLogin.NewHandler(server.config, server.appServices, server.sessionManager, server.logger).UserLoginUsername,
 	)
 	server.router.HandleFunc(
 		apiContext+"/login/email",
-		userLogin.NewHandler(server.config, server.appServices, server.sessionManager).UserLoginEmail,
+		userLogin.NewHandler(server.config, server.appServices, server.sessionManager, server.logger).UserLoginEmail,
 	)
 	server.router.HandleFunc(
 		apiContext+"/register",
