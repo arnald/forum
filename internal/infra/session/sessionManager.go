@@ -27,7 +27,7 @@ type Manager struct {
 	sessionConfig  config.SessionManagerConfig
 }
 
-func NewSessionManager(db *sql.DB, sessionConfig config.SessionManagerConfig) *Manager {
+func NewSessionManager(db *sql.DB, sessionConfig config.SessionManagerConfig) user.SessionManager {
 	return &Manager{
 		db:             db,
 		sessionConfig:  sessionConfig,
