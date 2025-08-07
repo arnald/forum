@@ -23,12 +23,22 @@
             </div>
           </div>
         </div>
+        <!--variable to access category inside Topics-->
+        {{ $category := $.Category }}
+        <!--  -->
         {{ range .Category.Topics }}
         <div class="topic-row">
           <div class="topic-content-wrapper">
             <div class="topic-text">
               <div class="topic-title">
                 <a href="/topic/{{ .ID }}">{{ .Title }}</a>
+                <div class="color-category">
+                  <span
+                    class="category-color"
+                    style="background-color: #{{ $category.Color }}"
+                  ></span>
+                  <span class="category-name">{{ $category.Name }}</span>
+                </div>
               </div>
             </div>
 
@@ -36,10 +46,8 @@
               <span class="topic-author">
                 <img src="/static/images/user-avatar.png" alt="Post Author" />
               </span>
-              <span class="topic-views"
-                ><a href="/topic/{{ .ID }}">1.2k</a></span
-              >
-              <span class="topic-replies">4</span>
+              <span class="topic-views"><a href="/topic/{{ .ID }}">15</a></span>
+              <span class="topic-replies">1.2k</span>
               <span class="topic-date"
                 ><a href="/topic/{{ .ID }}">Feb 2023</a></span
               >

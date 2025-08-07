@@ -1,4 +1,4 @@
-:root {
+/* :root {
   --primary-color: #068f56;
   --primary-color-light: #07c073;
   --secondary-color: #5f3dc4;
@@ -9,11 +9,11 @@
   --grey-color: #555;
   --grey-color-light: #ccc;
   --grey-color-dark: #444;
-}
+} */
 /* ----- Category Page ----- */
 
 .category-container {
-  height: 100vh;
+  min-height: 100vh;
 }
 /* Header */
 .category-header {
@@ -53,8 +53,10 @@
   column-gap: 4rem;
   justify-content: space-around;
 }
+/* Topic Row */
 .topic-content-wrapper {
   display: flex;
+  align-items: center;
   padding: 1rem;
   border-bottom: 1px solid var(--dark-background);
 }
@@ -78,6 +80,16 @@
 }
 .topic-title a:hover {
   color: var(--primary-color-light);
+}
+.color-category {
+  display: flex;
+  align-items: center;
+  column-gap: 0.5rem;
+}
+.category-color {
+  /* display: inline-block; */
+  width: 10px;
+  height: 10px;
 }
 .topic-meta {
   width: 55%;
