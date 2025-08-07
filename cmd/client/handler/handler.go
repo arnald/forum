@@ -4,17 +4,28 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"net/mail"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
-	"unicode"
+
+	"github.com/arnald/forum/cmd/helpers/validation"
 )
 
 const (
 	notFoundMessage = "Oops! The page you're looking for has vanished into the digital void."
 )
+
+// Post represents a created post (file-backed prototype).
+// type Post struct {
+// 	ID           int       `json:"id"`
+// 	Title        string    `json:"title"`
+// 	Body         string    `json:"body"`
+// 	CategorySlug string    `json:"category_slug"`
+// 	Author       string    `json:"author"`
+// 	CreatedAt    time.Time `json:"created_at"`
+// // }
 
 type Topic struct {
 	Title string `json:"title"`
@@ -70,95 +81,13 @@ type RegisterFormErrors struct {
 	EmailError    string `json:"email,omitempty"`
 }
 
-// Validation helpers
-func validateEmail(email string) string {
-	if email == "" {
-		return "Email is required."
-	}
-	if !isValidEmail(email) {
-		return "Invalid email format."
-	}
-	return ""
-}
-
-func validateUsername(username string) string {
-	if username == "" {
-		return "Username is required."
-	}
-	if len(username) < 3 {
-		return "Username must be at least 3 characters"
-	}
-	return ""
-}
-
-func isValidEmail(email string) bool {
-	_, err := mail.ParseAddress(email)
-	return err == nil
-}
-
-func hasLower(s string) bool {
-	for _, c := range s {
-		if unicode.IsLower(c) {
-			return true
-		}
-	}
-	return false
-}
-
-func hasUpper(s string) bool {
-	for _, c := range s {
-		if unicode.IsUpper(c) {
-			return true
-		}
-	}
-	return false
-}
-
-func hasDigit(s string) bool {
-	for _, c := range s {
-		if unicode.IsDigit(c) {
-			return true
-		}
-	}
-	return false
-}
-
-func hasSpecial(s string) bool {
-	for _, c := range s {
-		if !unicode.IsLetter(c) && !unicode.IsDigit(c) && !unicode.IsSpace(c) {
-			return true
-		}
-	}
-	return false
-}
-
-func validatePassword(pw string) string {
-	if pw == "" {
-		return "Password is required."
-	}
-	if len(pw) < 8 {
-		return "Password must be 8+ chars"
-	}
-
-	var missing []string
-	if !hasLower(pw) {
-		missing = append(missing, "lowercase letter")
-	}
-	if !hasUpper(pw) {
-		missing = append(missing, "uppercase letter")
-	}
-	if !hasDigit(pw) {
-		missing = append(missing, "number")
-	}
-	if !hasSpecial(pw) {
-		missing = append(missing, "special character")
-	}
-
-	if len(missing) > 0 {
-		return "Missing: " + strings.Join(missing, ", ")
-	}
-
-	return "" // empty string means no error
+// Create-post form errors
+type PostFormErrors struct {
+	Title       string `json:"title,omitempty"`
+	Description string `json:"description,omitempty"`
+	Categories  string `json:"categories,omitempty"`
+	Image       string `json:"image,omitempty"`
+	Link        string `json:"link,omitempty"`
 }
 
 // Helper for rendering different templates (login/register)
@@ -269,6 +198,56 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, "login", LoginFormErrors{})
 }
 
+// CreatePostPage renders the standalone create_post.html page
+func CreatePostPage(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	basePath, err := os.Getwd()
+	if err != nil {
+		log.Println("Error getting working directory:", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	jsonPath := filepath.Join(basePath, "cmd", "client", "data", "categories.json")
+	jsonPath = filepath.Clean(jsonPath)
+
+	file, err := os.Open(jsonPath)
+	if err != nil {
+		log.Println("Error opening categories.json:", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+	defer file.Close()
+
+	var catData CategoryData
+	if err := json.NewDecoder(file).Decode(&catData); err != nil {
+		log.Println("Error decoding categories.json:", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	// View model passed to template: categories + blank form + errors
+	view := struct {
+		Categories []Category
+		Form       struct {
+			Title       string
+			Description string
+			Link        string
+			Selected    []string
+		}
+		Errors PostFormErrors
+	}{
+		Categories: catData.Data.Categories,
+	}
+
+	// render pages/create_post.html
+	renderTemplate(w, "create_post", view)
+}
+
 // Login Handler POST
 func LoginPost(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -282,8 +261,8 @@ func LoginPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	identifier := r.FormValue("identifier")
-	password := r.FormValue("password")
+	identifier := strings.TrimSpace(r.FormValue("identifier"))
+	password := strings.TrimSpace(r.FormValue("password"))
 
 	data := LoginFormErrors{
 		Identifier: identifier, //preserve the value
@@ -291,11 +270,11 @@ func LoginPost(w http.ResponseWriter, r *http.Request) {
 
 	if identifier == "" {
 		data.IdentifierError = "Username or Email is required."
-	} else if !isValidEmail(identifier) && len(identifier) < 3 {
+	} else if !validation.IsValidEmail(identifier) && len(identifier) < 3 {
 		// Could be an invalid email *or* too-short username
 		data.IdentifierError = "Invalid username or email."
 	}
-	data.Password = validatePassword(password)
+	data.Password = validation.ValidatePassword(password)
 
 	// If errors, re-render login page with errors
 	if data.IdentifierError != "" || data.Password != "" {
@@ -326,18 +305,18 @@ func RegisterPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	username := r.FormValue("username")
-	email := r.FormValue("email")
-	password := r.FormValue("password")
+	username := strings.TrimSpace(r.FormValue("username"))
+	email := strings.TrimSpace(r.FormValue("email"))
+	password := strings.TrimSpace(r.FormValue("password"))
 
 	data := RegisterFormErrors{
 		Username: username,
 		Email:    email,
 	}
 
-	data.UsernameError = validateUsername(username)
-	data.EmailError = validateEmail(email)
-	data.Password = validatePassword(password)
+	data.UsernameError = validation.ValidateUsername(username)
+	data.EmailError = validation.ValidateEmail(email)
+	data.Password = validation.ValidatePassword(password)
 
 	// If errors, re-render register page with errors
 	if data.UsernameError != "" || data.EmailError != "" || data.Password != "" {
@@ -348,6 +327,123 @@ func RegisterPost(w http.ResponseWriter, r *http.Request) {
 	// TODO: Register user in database
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
+
+func CreatePostPost(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Parse multipart form (adjust maxMemory as needed; 10MB here)
+	const maxMemory = 10 << 20 // 10 MB
+	err := r.ParseMultipartForm(maxMemory)
+	if err != nil {
+		log.Println("Error parsing multipart form:", err)
+		http.Error(w, "Invalid form data", http.StatusBadRequest)
+		return
+	}
+
+	// Get values
+	// checkbox values are in r.MultipartForm.Value["categories"]
+	var selected []string
+	if r.MultipartForm != nil && r.MultipartForm.Value != nil {
+		if vals, ok := r.MultipartForm.Value["categories"]; ok {
+			selected = vals
+		}
+	}
+	// fallback: also try single value
+	if len(selected) == 0 {
+		if v := r.FormValue("category"); v != "" {
+			selected = []string{v}
+		}
+	}
+
+	title := strings.TrimSpace(r.FormValue("title"))
+	desc := strings.TrimSpace(r.FormValue("description"))
+	link := strings.TrimSpace(r.FormValue("link"))
+
+	// Validate
+	errors := PostFormErrors{}
+	if title == "" {
+		errors.Title = "Title is required."
+	}
+	if desc == "" {
+		errors.Description = "Description is required."
+	}
+	if len(selected) == 0 {
+		errors.Categories = "Please select at least one category."
+	}
+	// Optional: validate link using net/url or allow empty
+	if link != "" {
+		if _, err := url.ParseRequestURI(link); err != nil {
+			errors.Link = "Invalid URL format."
+		}
+	}
+
+	// If validation errors -> re-render the form with previous values & errors
+	if errors.Title != "" || errors.Description != "" || errors.Categories != "" || errors.Image != "" || errors.Link != "" {
+		// reload categories
+		basePath, err := os.Getwd()
+		if err != nil {
+			log.Println("Error getting working directory:", err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+		jsonPath := filepath.Join(basePath, "cmd", "client", "data", "categories.json")
+		jsonPath = filepath.Clean(jsonPath)
+
+		f, err := os.Open(jsonPath)
+		if err != nil {
+			log.Println("Error opening categories.json:", err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+		defer f.Close()
+
+		var catData CategoryData
+		if err := json.NewDecoder(f).Decode(&catData); err != nil {
+			log.Println("Error decoding categories.json:", err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		view := struct {
+			Categories []Category
+			Form       struct {
+				Title       string
+				Description string
+				Link        string
+				Selected    []string
+			}
+			Errors PostFormErrors
+		}{
+			Categories: catData.Data.Categories,
+			Errors:     errors,
+		}
+		view.Form.Title = title
+		view.Form.Description = desc
+		view.Form.Link = link
+		view.Form.Selected = selected
+
+		renderTemplate(w, "create_post", view)
+		return
+	}
+
+	// TODO: persist the post (DB/API) and store file if provided.
+	// For now: redirect to first selected category if present, otherwise to "/"
+	firstCategory := ""
+	if len(selected) > 0 {
+		firstCategory = strings.TrimSpace(selected[0])
+	}
+
+	if firstCategory != "" {
+		http.Redirect(w, r, "/category/"+firstCategory, http.StatusSeeOther)
+		return
+	}
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+// CreatePostPost handles submitted create post form and redirects to / or to the first chosen category
 
 func notFoundHandler(w http.ResponseWriter, _ *http.Request, errorMessage string, httpStatus int) {
 	basePath, err := os.Getwd()

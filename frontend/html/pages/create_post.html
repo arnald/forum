@@ -1,0 +1,173 @@
+{{ define "create_post" }}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Create Post</title>
+    <!-- Icon -->
+    <link
+      rel="icon"
+      type="image/png"
+      href="/static/images/icons/logo-icon.png"
+    />
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="/static/css/base.css" />
+    <link rel="stylesheet" href="/static/css/create_post.css" />
+  </head>
+  <body>
+    <main class="create-post-container">
+      <form
+        class="form"
+        id="createPostForm"
+        method="post"
+        action="/posts/create"
+        enctype="multipart/form-data"
+        novalidate
+      >
+        <div class="form-wrapper">
+          <h2 class="post-title">Create Post</h2>
+
+          <!-- Multi-choice dropdown -->
+          <div class="field">
+            <label class="label" for="category-select">Select a category</label>
+
+            <!-- Custom multi-select control -->
+            <div
+              class="multi-select"
+              id="categorySelect"
+              tabindex="0"
+              aria-haspopup="listbox"
+              aria-expanded="false"
+              aria-multiselectable="true"
+              aria-describedby="category-select"
+            >
+              <div class="multi-selected" id="multiSelected">
+                <span class="placeholder">Category select</span>
+                <div class="chips" id="chips">
+                  <!-- <span class="chip">chip1</span> -->
+                  <!-- <span class="chip">chip2</span> -->
+                </div>
+                <button class="chev" aria-hidden="true">▾</button>
+              </div>
+
+              <ul
+                class="options"
+                id="multiOptions"
+                role="listbox"
+                aria-multiselectable="true"
+                tabindex="-1"
+              >
+                {{ range .Categories }}
+                <li class="option">
+                  <label>
+                    <input
+                      type="checkbox"
+                      name="categories"
+                      value="{{ .Slug }}"
+                    />
+                    <span class="option-label">{{ .Name }}</span>
+                  </label>
+                </li>
+                {{ end }}
+              </ul>
+            </div>
+
+            <div class="field-error" id="error-categories"></div>
+          </div>
+
+          <!-- Title -->
+          <div class="field">
+            <label class="label" for="title">Title</label>
+            <input
+              class="input"
+              id="title"
+              name="title"
+              type="text"
+              placeholder="Title"
+              required
+            />
+            <div class="field-error" id="error-title"></div>
+          </div>
+
+          <!-- Text -->
+          <div class="field">
+            <label class="label" for="description">Text</label>
+            <textarea
+              class="input textarea"
+              id="description"
+              name="description"
+              type="text"
+              rows="5"
+              placeholder="Enter description..."
+              required
+            >
+            </textarea>
+            <div class="field-error" id="error-description"></div>
+          </div>
+
+          <!-- File -->
+          <div class="field">
+            <label class="label" for="image-upload"
+              >Attach an image or video (optional)</label
+            >
+            <div class="upload-box" id="uploadBox">
+              <input
+                class="input"
+                id="image-upload"
+                name="image-upload"
+                type="file"
+                accept="image/jpeg,image/png,image/gif"
+                hidden
+              />
+              <div class="upload-placeholder">
+                <img
+                  src="/static/images/icons/upload.png"
+                  alt="Upload Icon"
+                  class="upload-icon"
+                />
+                <p class="upload-text">Upload Image</p>
+              </div>
+              <img
+                id="imagePreview"
+                class="upload-preview"
+                style="display: none"
+              />
+            </div>
+
+            <div class="field-error" id="error-image"></div>
+          </div>
+
+          <!-- Optional link -->
+          <div class="field">
+            <label for="link" class="label">Share a link (optional)</label>
+            <input
+              id="link"
+              name="link"
+              type="url"
+              class="input"
+              placeholder="https://www.athens.com"
+            />
+          </div>
+
+          <div class="actions">
+            <button type="reset" class="btn btn-reset">Reset</button>
+            <button type="submit" class="btn btn-submit">Post</button>
+          </div>
+        </div>
+      </form>
+    </main>
+    <div class="home-link-container">
+      <a href="/" class="home-link">Go to Homepage</a>
+    </div>
+    <script src="/static/js/create_post.js"></script>
+  </body>
+</html>
+{{ end }}

@@ -57,7 +57,6 @@ func setupRoutes() *http.ServeMux {
 		}
 
 	})
-	// router.HandleFunc("/register", handler.RegisterPage)
 	// Login page
 	router.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
@@ -69,7 +68,18 @@ func setupRoutes() *http.ServeMux {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
 	})
-	// router.HandleFunc("/login", handler.LoginPage)
+
+	// Create post page (GET/POST)
+	router.HandleFunc("/post/create", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			handler.CreatePostPage(w, r)
+		case http.MethodPost:
+			handler.CreatePostPost(w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
 
 	return router
 }
