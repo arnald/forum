@@ -81,5 +81,7 @@ func setupRoutes() *http.ServeMux {
 		}
 	})
 
+	router.HandleFunc("/category/", handler.CategoryPage)
+
 	return router
 }

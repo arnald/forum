@@ -1,0 +1,59 @@
+{{ define "content" }}
+<div class="main-container">
+  <div class="category-container">
+    <div class="category-content">
+      <div class="category-header">
+        <div class="category-icon">
+          <img src="{{ .Category.Logo.URL }}" alt="{{ .Category.Name }} Icon" />
+        </div>
+        <p class="single-category-description">{{ .Category.Description }}</p>
+      </div>
+
+      {{ template "category_details" . }}
+
+      <div class="topic-list">
+        <div class="topic-row">
+          <div class="head-wrapper">
+            <span class="topic-title-head">TOPIC</span>
+            <div class="other-heads">
+              <span class="topic-poster-head">POSTER</span>
+              <span class="topic-replies-head">REPLIES</span>
+              <span class="topic-replies-head">VIEWS</span>
+              <span class="topic-replies-head">ACTIVITY</span>
+            </div>
+          </div>
+        </div>
+        {{ range .Category.Topics }}
+        <div class="topic-row">
+          <div class="topic-content-wrapper">
+            <div class="topic-text">
+              <div class="topic-title">
+                <a href="/topic/{{ .ID }}">{{ .Title }}</a>
+              </div>
+            </div>
+
+            <div class="topic-meta">
+              <span class="topic-author">
+                <img src="/static/images/user-avatar.png" alt="Post Author" />
+              </span>
+              <span class="topic-views"
+                ><a href="/topic/{{ .ID }}">1.2k</a></span
+              >
+              <span class="topic-replies">4</span>
+              <span class="topic-date"
+                ><a href="/topic/{{ .ID }}">Feb 2023</a></span
+              >
+            </div>
+          </div>
+        </div>
+        {{ else }}
+        <p>No topics in this category yet.</p>
+        {{ end }}
+      </div>
+      <div class="out-of-topics">
+        <p>There are no more {{.Category.Name}} topics.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{{ end }}

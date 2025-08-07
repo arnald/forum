@@ -55,8 +55,16 @@ type CategoryData struct {
 	} `json:"data"`
 }
 
+// Data for Homepage
 type HomePageData struct {
 	Categories []Category
+	ActivePage string
+}
+
+// Data for Single Category
+type CategoryPageData struct {
+	Categories []Category // for category_details partial
+	Category   Category   // the current category
 	ActivePage string
 }
 
@@ -155,12 +163,6 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Set active page based on URL
-	// activePage := "home"
-	// if r.URL.Path == "/categories" || r.URL.Path == "/" {
-	// 	activePage = "categories"
-	// }
-
 	pageData := HomePageData{
 		Categories: data.Data.Categories,
 		ActivePage: r.URL.Path,
@@ -193,6 +195,75 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println("Error executing template:", err)
 		http.Error(w, "Failed to render page", http.StatusInternalServerError)
+	}
+}
+
+// Single Category Handler
+func CategoryPage(w http.ResponseWriter, r *http.Request) {
+	slug := strings.TrimPrefix(r.URL.Path, "/category/")
+	if slug == "" {
+		notFoundHandler(w, r, "Category not found", http.StatusNotFound)
+		return
+	}
+
+	basePath, _ := os.Getwd()
+	jsonPath := filepath.Join(basePath, "cmd", "client", "data", "categories.json")
+	jsonPath = filepath.Clean(jsonPath)
+
+	file, err := os.Open(jsonPath)
+	if err != nil {
+		http.Error(w, "Failed to load data", http.StatusInternalServerError)
+		return
+	}
+	defer file.Close()
+
+	var catData CategoryData
+	err = json.NewDecoder(file).Decode(&catData)
+	if err != nil {
+		http.Error(w, "Invalid data format", http.StatusInternalServerError)
+		return
+
+	}
+
+	// Find the selected category by slug
+	var selected Category
+	found := false
+	for _, cat := range catData.Data.Categories {
+		if cat.Slug == slug {
+			selected = cat
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		notFoundHandler(w, r, "Category not found", http.StatusNotFound)
+		return
+	}
+
+	pageData := CategoryPageData{
+		Categories: catData.Data.Categories,
+		Category:   selected,
+		ActivePage: "category",
+	}
+
+	tmpl, err := template.ParseFiles(
+		"frontend/html/layouts/base.html",
+		"frontend/html/pages/category.html", // you'll make this
+		"frontend/html/partials/navbar.html",
+		"frontend/html/partials/category_details.html",
+		"frontend/html/partials/footer.html",
+	)
+	if err != nil {
+		http.Error(w, "Template error", http.StatusInternalServerError)
+		log.Println("Template error:", err)
+		return
+	}
+
+	err = tmpl.ExecuteTemplate(w, "base", pageData)
+	if err != nil {
+		http.Error(w, "Render error", http.StatusInternalServerError)
+		log.Println("Render error:", err)
 	}
 }
 
