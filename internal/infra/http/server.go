@@ -29,8 +29,8 @@ type Server struct {
 	router         *http.ServeMux
 	sessionManager user.SessionManager
 	// middleware     *middleware.Middleware
-	db             *sql.DB
-	logger         logger.Logger
+	db     *sql.DB
+	logger logger.Logger
 }
 
 func NewServer(cfg *config.ServerConfig, db *sql.DB, logger logger.Logger, appServices app.Services) *Server {
@@ -57,10 +57,6 @@ func (server *Server) AddHTTPRoutes() {
 	server.router.HandleFunc(
 		apiContext+"/login/email",
 		userLogin.NewHandler(server.config, server.appServices, server.sessionManager, server.logger).UserLoginEmail,
-	)
-	server.router.HandleFunc(
-		apiContext+"/login",
-		http.HandlerFunc(userLogin.NewHandler(server.config, server.appServices, server.sessionManager).UserLogin),
 	)
 	server.router.HandleFunc(
 		apiContext+"/register",

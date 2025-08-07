@@ -3,6 +3,7 @@ package testhelpers
 import (
 	"context"
 	"errors"
+	"net/http"
 
 	"github.com/arnald/forum/internal/domain/user"
 )

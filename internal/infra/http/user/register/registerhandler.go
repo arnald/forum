@@ -9,11 +9,7 @@ import (
 	"github.com/arnald/forum/internal/app/user/queries"
 	"github.com/arnald/forum/internal/config"
 	"github.com/arnald/forum/internal/domain/user"
-<<<<<<< HEAD
-	"github.com/arnald/forum/internal/infra/storage/sqlite"
-=======
 	"github.com/arnald/forum/internal/infra/logger"
->>>>>>> feature/UserLogin
 	"github.com/arnald/forum/internal/pkg/helpers"
 	"github.com/arnald/forum/internal/pkg/validator"
 )
