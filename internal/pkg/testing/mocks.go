@@ -67,10 +67,11 @@ func (m *MockEncryptionProvider) Matches(hashedPassword string, plaintextPasswor
 }
 
 type MockSessionManager struct {
-	GetSessionFunc       func(sessionID string) (*user.Session, error)
-	CreateSessionFunc    func(userID string) (*user.Session, error)
-	DeleteSessionFunc    func(sessionID string) error
-	NewSessionCookieFunc func(token string) *http.Cookie
+	GetSessionFunc         func(sessionID string) (*user.Session, error)
+	CreateSessionFunc      func(userID string) (*user.Session, error)
+	DeleteSessionFunc      func(sessionID string) error
+	NewSessionCookieFunc   func(token string) *http.Cookie
+	GetUserFromSessionFunc func(sessionID string) (*user.User, error)
 }
 
 func (m *MockSessionManager) GetSession(sessionID string) (*user.Session, error) {
@@ -80,11 +81,29 @@ func (m *MockSessionManager) GetSession(sessionID string) (*user.Session, error)
 	return nil, ErrTest
 }
 
+func (m *MockSessionManager) GetUserFromSession(sessionID string) (*user.User, error) {
+	if m.GetUserFromSessionFunc != nil {
+		return m.GetUserFromSessionFunc(sessionID)
+	}
+	return nil, ErrTest
+}
+
 func (m *MockSessionManager) CreateSession(_ context.Context, userID string) (*user.Session, error) {
 	if m.CreateSessionFunc != nil {
 		return m.CreateSessionFunc(userID)
 	}
 	return nil, ErrTest
+}
+
+func (m *MockSessionManager) ValidateSession(sessionID string) error {
+	if m.GetSessionFunc != nil {
+		_, err := m.GetSessionFunc(sessionID)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+	return ErrTest
 }
 
 func (m *MockSessionManager) DeleteSession(sessionID string) error {

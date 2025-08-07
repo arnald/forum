@@ -12,7 +12,7 @@ type optionalAuthMiddleware struct {
 }
 
 type OptionalAuthMiddleware interface {
-	OptionalAuth(next http.Handler) http.Handler
+	OptionalAuth(next http.HandlerFunc) http.HandlerFunc
 }
 
 func NewOptionalAuthMiddleware(sessionManager user.SessionManager) OptionalAuthMiddleware {
@@ -21,7 +21,7 @@ func NewOptionalAuthMiddleware(sessionManager user.SessionManager) OptionalAuthM
 	}
 }
 
-func (a optionalAuthMiddleware) OptionalAuth(next http.Handler) http.Handler {
+func (a optionalAuthMiddleware) OptionalAuth(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sessionID, err := r.Cookie("session_token")
 		if err != nil {

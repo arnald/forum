@@ -111,6 +111,51 @@ func (sm *Manager) GetSession(sessionID string) (*user.Session, error) {
 	return &session, nil
 }
 
+func (sm *Manager) GetUserFromSession(sessionID string) (*user.User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), contextTimeout)
+	defer cancel()
+
+	query := `
+    SELECT 
+        u.id,
+        u.email,
+        u.username,
+        u.created_at,
+        u.avatar_url,
+        u.password_hash
+    FROM users u
+    INNER JOIN sessions s ON s.user_id = u.id
+    WHERE s.token = ? AND s.expires_at > CURRENT_TIMESTAMP
+	`
+
+	stmt, err := sm.db.PrepareContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("prepare failed: %w", err)
+	}
+	defer stmt.Close()
+
+	row := stmt.QueryRowContext(ctx, sessionID)
+
+	var User user.User
+
+	err = row.Scan(
+		&User.ID,
+		&User.Email,
+		&User.Username,
+		&User.CreatedAt,
+		&User.AvatarURL,
+		&User.Password,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrUserNotFound
+		}
+		return nil, err
+	}
+
+	return &User, nil
+}
+
 func (sm *Manager) DeleteSession(sessionID string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), contextTimeout)
 	defer cancel()
@@ -138,6 +183,39 @@ func (sm *Manager) NewSessionCookie(token string) *http.Cookie {
 		SameSite: parseSameSite(sm.sessionConfig.SameSite),
 		MaxAge:   int(sm.sessionConfig.DefaultExpiry.Seconds()),
 	}
+}
+
+func (sm *Manager) ValidateSession(sessionID string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), contextTimeout)
+	defer cancel()
+
+	query := `
+        SELECT expires_at 
+        FROM sessions 
+        WHERE token = ?
+    `
+
+	stmt, err := sm.db.PrepareContext(ctx, query)
+	if err != nil {
+		return fmt.Errorf("prepare failed: %w", err)
+	}
+	defer stmt.Close()
+
+	var expiresAt time.Time
+	err = stmt.QueryRowContext(ctx, sessionID).Scan(&expiresAt)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return ErrSessionNotFound
+		}
+		return fmt.Errorf("scanning session failed: %w", err)
+	}
+
+	if expiresAt.Before(time.Now()) {
+		_ = sm.DeleteSession(sessionID)
+		return ErrSessionExpired
+	}
+
+	return nil
 }
 
 func parseSameSite(s string) http.SameSite {
