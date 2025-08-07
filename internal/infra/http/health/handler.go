@@ -1,25 +1,27 @@
 package health
 
 import (
-	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/arnald/forum/internal/app/health/queries"
+	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/pkg/helpers"
 )
 
-type Handler struct{}
+type Handler struct {
+	Logger logger.Logger
+}
 
-func NewHandler() *Handler {
-	return &Handler{}
+func NewHandler(logger logger.Logger) *Handler {
+	return &Handler{
+		Logger: logger,
+	}
 }
 
 func (h Handler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		logger := log.New(os.Stdout, "ERROR: ", log.Ldate|log.Ltime)
-		logger.Printf("Invalid request method %v\n", r.Method)
+		h.Logger.PrintError(logger.ErrInvalidRequestMethod, nil)
 		helpers.RespondWithError(w, http.StatusMethodNotAllowed, "Invalid request method")
 
 		return

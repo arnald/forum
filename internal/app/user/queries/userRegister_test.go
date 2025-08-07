@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/arnald/forum/internal/domain/user"
+	"github.com/arnald/forum/internal/pkg/helpers"
 	testhelpers "github.com/arnald/forum/internal/pkg/testing"
 )
 
@@ -76,6 +77,21 @@ func newUserRegisterTestCases() []userRegisterTestCase {
 				repo.UserRegisterFunc = func(ctx context.Context, u *user.User) error { return testhelpers.ErrTest }
 			},
 			wantErr:  testhelpers.ErrTest,
+			wantUser: nil,
+		},
+		{
+			name: "email validation fails",
+			request: UserRegisterRequest{
+				Name:     "testuser",
+				Password: "password123",
+				Email:    "invalid-email",
+			},
+			setupMocks: func(repo *testhelpers.MockRepository, uuid *testhelpers.MockUUIDProvider, enc *testhelpers.MockEncryptionProvider) {
+				uuid.NewUUIDFunc = func() string { return "test-uuid" }
+				enc.GenerateFunc = func(pass string) (string, error) { return "hashed_password", nil }
+				repo.UserRegisterFunc = func(ctx context.Context, u *user.User) error { return testhelpers.ErrTest }
+			},
+			wantErr:  helpers.ErrInvalidEmailFormat,
 			wantUser: nil,
 		},
 	}

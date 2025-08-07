@@ -3,7 +3,6 @@ package http
 import (
 	"database/sql"
 	"errors"
-	"log"
 	"net/http"
 	"time"
 
@@ -13,8 +12,8 @@ import (
 	"github.com/arnald/forum/internal/infra/http/health"
 	userLogin "github.com/arnald/forum/internal/infra/http/user/login"
 	userRegister "github.com/arnald/forum/internal/infra/http/user/register"
+	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/infra/session"
-	"github.com/arnald/forum/internal/infra/storage/sqlite"
 )
 
 const (
@@ -30,16 +29,18 @@ type Server struct {
 	router         *http.ServeMux
 	sessionManager user.SessionManager
 	// middleware     *middleware.Middleware
-	db *sql.DB
+	db             *sql.DB
+	logger         logger.Logger
 }
 
-func NewServer(appServices app.Services) *Server {
+func NewServer(cfg *config.ServerConfig, db *sql.DB, logger logger.Logger, appServices app.Services) *Server {
 	httpServer := &Server{
 		router:      http.NewServeMux(),
 		appServices: appServices,
+		config:      cfg,
+		db:          db,
+		logger:      logger,
 	}
-	httpServer.loadConfiguration()
-	httpServer.loadDatabase()
 	httpServer.initSessionManager()
 	// httpServer.initMiddleware(httpServer.sessionManager)
 	httpServer.AddHTTPRoutes()
@@ -48,14 +49,22 @@ func NewServer(appServices app.Services) *Server {
 
 func (server *Server) AddHTTPRoutes() {
 	// server.router.HandleFunc(apiContext+"/users", user.NewHandler(server.appServices.UserServices).GetAllUsers)
-	server.router.HandleFunc(apiContext+"/health", health.NewHandler().HealthCheck)
+	server.router.HandleFunc(apiContext+"/health", health.NewHandler(server.logger).HealthCheck)
+	server.router.HandleFunc(
+		apiContext+"/login/username",
+		userLogin.NewHandler(server.config, server.appServices, server.sessionManager, server.logger).UserLoginUsername,
+	)
+	server.router.HandleFunc(
+		apiContext+"/login/email",
+		userLogin.NewHandler(server.config, server.appServices, server.sessionManager, server.logger).UserLoginEmail,
+	)
 	server.router.HandleFunc(
 		apiContext+"/login",
 		http.HandlerFunc(userLogin.NewHandler(server.config, server.appServices, server.sessionManager).UserLogin),
 	)
 	server.router.HandleFunc(
 		apiContext+"/register",
-		userRegister.NewHandler(server.config, server.appServices, server.sessionManager).UserRegister,
+		userRegister.NewHandler(server.config, server.appServices, server.sessionManager, server.logger).UserRegister,
 	)
 }
 
@@ -67,29 +76,15 @@ func (server *Server) ListenAndServe() {
 		WriteTimeout: server.config.WriteTimeout,
 		IdleTimeout:  server.config.IdleTimeout,
 	}
-
-	log.Printf("Server started port: %s (%s environment)", server.config.Port, server.config.Environment)
+	server.logger.PrintInfo("Starting server", map[string]string{
+		"host":        server.config.Host,
+		"port":        server.config.Port,
+		"environment": server.config.Environment,
+	})
 	err := srv.ListenAndServe()
 	if err != nil && !errors.Is(err, http.ErrServerClosed) {
-		log.Fatalf("Server failed: %v", err)
+		server.logger.PrintFatal(err, nil)
 	}
-}
-
-func (server *Server) loadConfiguration() {
-	cfg, err := config.LoadConfig()
-	if err != nil {
-		log.Fatalf("Configuration error: %v", err)
-	}
-
-	server.config = cfg
-}
-
-func (server *Server) loadDatabase() {
-	db, err := sqlite.InitializeDB(*server.config)
-	if err != nil {
-		log.Fatalf("Database error: %v", err)
-	}
-	server.db = db
 }
 
 func (server *Server) initSessionManager() {

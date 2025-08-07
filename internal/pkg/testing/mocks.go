@@ -3,7 +3,6 @@ package testhelpers
 import (
 	"context"
 	"errors"
-	"net/http"
 
 	"github.com/arnald/forum/internal/domain/user"
 )
@@ -11,9 +10,10 @@ import (
 var ErrTest = errors.New("test error")
 
 type MockRepository struct {
-	UserRegisterFunc   func(ctx context.Context, user *user.User) error
-	GetUserByEmailFunc func(ctx context.Context, email string) (*user.User, error)
-	GetAllFunc         func(ctx context.Context) ([]user.User, error)
+	UserRegisterFunc      func(ctx context.Context, user *user.User) error
+	GetUserByEmailFunc    func(ctx context.Context, email string) (*user.User, error)
+	GetUserByUsernameFunc func(ctx context.Context, username string) (*user.User, error)
+	GetAllFunc            func(ctx context.Context) ([]user.User, error)
 }
 
 func (m *MockRepository) UserRegister(ctx context.Context, user *user.User) error {
@@ -23,6 +23,13 @@ func (m *MockRepository) UserRegister(ctx context.Context, user *user.User) erro
 func (m *MockRepository) GetUserByEmail(ctx context.Context, email string) (*user.User, error) {
 	if m.GetUserByEmailFunc != nil {
 		return m.GetUserByEmailFunc(ctx, email)
+	}
+	return nil, ErrTest
+}
+
+func (m *MockRepository) GetUserByUsername(ctx context.Context, username string) (*user.User, error) {
+	if m.GetUserByUsernameFunc != nil {
+		return m.GetUserByUsernameFunc(ctx, username)
 	}
 	return nil, ErrTest
 }

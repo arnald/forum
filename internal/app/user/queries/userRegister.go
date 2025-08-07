@@ -6,6 +6,7 @@ import (
 
 	"github.com/arnald/forum/internal/domain/user"
 	"github.com/arnald/forum/internal/pkg/bcrypt"
+	"github.com/arnald/forum/internal/pkg/helpers"
 	"github.com/arnald/forum/internal/pkg/uuid"
 )
 
@@ -41,6 +42,11 @@ func (h userRegisterRequestHandler) Handle(ctx context.Context, req UserRegister
 		Username:  req.Name,
 		Email:     req.Email,
 		ID:        h.uuidiProvider.NewUUID(),
+	}
+
+	err := helpers.ValidateEmail(user.Email)
+	if err != nil {
+		return nil, err
 	}
 
 	encryptedPass, err := h.encryptionProvider.Generate(user.Password)

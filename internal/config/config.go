@@ -21,6 +21,7 @@ const (
 	maxSessionsPerUser  = 5
 	sessionIDLenght     = 32
 	userRegisterTimeout = 15
+	refreshTokenExpiry  = 30
 	userLoginTimeout    = 15
 )
 
@@ -64,6 +65,7 @@ type SessionManagerConfig struct {
 	HTTPOnlyCookie     bool
 	EnablePersistence  bool
 	LogSessions        bool
+	RefreshTokenExpiry time.Duration
 }
 
 type TimeoutsConfig struct {
@@ -114,6 +116,7 @@ func LoadConfig() (*ServerConfig, error) {
 			SessionIDLength:    helpers.GetEnvInt("SESSION_ID_LENGTH", envMap, sessionIDLenght),
 			EnablePersistence:  helpers.GetEnvBool("SESSION_ENABLE_PERSISTENCE", envMap, true),
 			LogSessions:        helpers.GetEnvBool("SESSION_LOG_SESSIONS", envMap, false),
+			RefreshTokenExpiry: helpers.GetEnvDuration("SESSION_REFRESH_TOKEN_EXPIRY", envMap, refreshTokenExpiry),
 		},
 		Timeouts: TimeoutsConfig{
 			HandlerTimeouts: HandlerTimeoutsConfig{

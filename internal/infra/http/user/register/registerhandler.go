@@ -2,31 +2,40 @@ package userregister
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
-	"log"
 	"net/http"
-	"os"
+	"strings"
 
 	"github.com/arnald/forum/internal/app"
 	"github.com/arnald/forum/internal/app/user/queries"
 	"github.com/arnald/forum/internal/config"
 	"github.com/arnald/forum/internal/domain/user"
+<<<<<<< HEAD
 	"github.com/arnald/forum/internal/infra/storage/sqlite"
+=======
+	"github.com/arnald/forum/internal/infra/logger"
+>>>>>>> feature/UserLogin
 	"github.com/arnald/forum/internal/pkg/helpers"
+	"github.com/arnald/forum/internal/pkg/validator"
 )
+
+type RegisterUserResponse struct {
+	UserID  string `json:"userdId"`
+	Message string `json:"message"`
+}
 
 type Handler struct {
 	UserServices   app.Services
 	SessionManager user.SessionManager
 	Config         *config.ServerConfig
+	Logger         logger.Logger
 }
 
-func NewHandler(config *config.ServerConfig, app app.Services, sm user.SessionManager) *Handler {
+func NewHandler(config *config.ServerConfig, app app.Services, sm user.SessionManager, logger logger.Logger) *Handler {
 	return &Handler{
 		UserServices:   app,
 		SessionManager: sm,
 		Config:         config,
+		Logger:         logger,
 	}
 }
 
@@ -36,10 +45,15 @@ type RegisterUserReguestModel struct {
 	Email    string `json:"email"`
 }
 
+type RegisterUserSessionResponse struct {
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
+	UserID       string `json:"userId"`
+}
+
 func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		logger := log.New(os.Stdout, "ERROR: ", log.Ldate|log.Ltime)
-		logger.Printf("Invalid request method %v\n", r.Method)
+		h.Logger.PrintError(logger.ErrInvalidRequestMethod, nil)
 		helpers.RespondWithError(w, http.StatusMethodNotAllowed, "Invalid request method")
 		return
 	}
@@ -49,36 +63,49 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 
 	var userToRegister RegisterUserReguestModel
 
-	err := json.NewDecoder(r.Body).Decode(&userToRegister)
+	userAny, err := helpers.ParseBodyRequest(r, &userToRegister)
 	if err != nil {
 		helpers.RespondWithError(
 			w,
-			http.StatusInternalServerError,
-			"unable to decode json request",
+			http.StatusBadRequest,
+			"invalid request: "+err.Error(),
 		)
+
+		h.Logger.PrintError(err, nil)
+
+		return
 	}
 	defer r.Body.Close()
+
+	v := validator.New()
+
+	validator.ValidateUserRegistration(v, userAny)
+
+	if !v.Valid() {
+		helpers.RespondWithError(
+			w,
+			http.StatusBadRequest,
+			v.ToStringErrors(),
+		)
+
+		h.Logger.PrintError(logger.ErrValidationFailed, v.Errors)
+		return
+	}
 
 	user, err := h.UserServices.UserServices.Queries.UserRegister.Handle(ctx, queries.UserRegisterRequest{
 		Name:     userToRegister.Username,
 		Password: userToRegister.Password,
-		Email:    userToRegister.Email,
+		Email:    strings.ToLower(userToRegister.Email),
 	})
 	if err != nil {
-		switch {
-		case errors.Is(err, sqlite.ErrDuplicateEmail):
-			helpers.RespondWithError(
-				w,
-				http.StatusConflict,
-				"a user with this email address already exists",
-			)
-		default:
-			helpers.RespondWithError(
-				w,
-				http.StatusInternalServerError,
-				err.Error(),
-			)
-		}
+		helpers.RespondWithError(
+			w,
+			http.StatusInternalServerError,
+			err.Error(),
+		)
+
+		h.Logger.PrintError(err, nil)
+
 		return
 	}
 
@@ -92,14 +119,23 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cookie := h.SessionManager.NewSessionCookie(newSession.Token)
-
-	http.SetCookie(w, cookie)
-
+	sessionResponse := &RegisterUserSessionResponse{
+		AccessToken:  newSession.AccessToken,
+		RefreshToken: newSession.RefreshToken,
+		UserID:       newSession.UserID,
+	}
 	helpers.RespondWithJSON(
 		w,
 		http.StatusCreated,
 		nil,
-		newSession,
+		sessionResponse,
+	)
+	h.Logger.PrintInfo(
+		"User registered successfully",
+		map[string]string{
+			"userId": user.ID,
+			"email":  user.Email,
+			"name":   user.Username,
+		},
 	)
 }
