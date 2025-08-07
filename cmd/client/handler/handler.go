@@ -55,6 +55,11 @@ type CategoryData struct {
 	} `json:"data"`
 }
 
+type HomePageData struct {
+	Categories []Category
+	ActivePage string
+}
+
 /*
 type BasePageData struct {
 	Categories []Category
@@ -117,9 +122,9 @@ func renderTemplate(w http.ResponseWriter, templateName string, data interface{}
 
 // HomePage Handler
 func HomePage(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
+	// handle / and /categories
+	if r.URL.Path != "/" && r.URL.Path != "/categories" {
 		notFoundHandler(w, r, notFoundMessage, http.StatusNotFound)
-
 		return
 	}
 
@@ -150,6 +155,17 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Set active page based on URL
+	// activePage := "home"
+	// if r.URL.Path == "/categories" || r.URL.Path == "/" {
+	// 	activePage = "categories"
+	// }
+
+	pageData := HomePageData{
+		Categories: data.Data.Categories,
+		ActivePage: r.URL.Path,
+	}
+
 	/*
 		data := BasePageData{
 			Categories: data.Data.Categories,
@@ -173,7 +189,7 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
-	err = tmpl.ExecuteTemplate(w, "base", data.Data.Categories)
+	err = tmpl.ExecuteTemplate(w, "base", pageData)
 	if err != nil {
 		log.Println("Error executing template:", err)
 		http.Error(w, "Failed to render page", http.StatusInternalServerError)

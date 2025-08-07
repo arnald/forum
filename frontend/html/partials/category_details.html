@@ -4,7 +4,7 @@
   <details class="category-details">
     <summary>Categories</summary>
     <div class="details-content">
-      {{ range . }}
+      {{ range .Categories }}
       <a href="/category/{{ .Slug }}" class="details-category-link">
         <div class="details-text-box">
           <span
@@ -18,8 +18,20 @@
       {{ end }}
     </div>
   </details>
-  <a href="/categories" class="nav-categories-btn active">Categories</a>
-  <a href="/latest_posts" class="nav-categories-btn">Latest</a>
-  <a href="/top_posts" class="nav-categories-btn">Top</a>
+  <a
+    href="/categories"
+    class="nav-categories-btn {{if eq .ActivePage "categories"}}active{{end}}"
+    >Categories</a
+  >
+  <a
+    href="/latest_posts"
+    class="nav-categories-btn {{if eq .ActivePage "latest"}}active{{end}}"
+    >Latest</a
+  >
+  <a
+    href="/top_posts"
+    class="nav-categories-btn {{if eq .ActivePage "top"}}active{{end}}"
+    >Top</a
+  >
 </div>
 {{ end }}

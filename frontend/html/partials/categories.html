@@ -1,7 +1,7 @@
 {{ define "categories" }}
 <!-- Categories -->
 <div class="categories-container">
-  {{ range . }}
+  {{ range .Categories }}
   <div class="category">
     <div class="category-wrapper">
       <div class="category-img-box">
@@ -25,11 +25,9 @@
       </div>
     </div>
     <div class="category-posts">
-      {{ range $index, $topic := .Topics }}
-      <!-- Only show first 3 topics -->
-      {{ if lt $index 3 }}
+      {{ range $index, $topic := .Topics }} {{ if lt $index 3 }}
       <div class="category-post">
-        <a href="/topic/{{ .ID }}" class="topic-link">
+        <a href="/topic/{{ $topic.ID }}" class="topic-link">
           <span class="category-post-title">
             <span class="left-arrow">&#10147;</span> {{ $topic.Title }}
           </span>
@@ -41,4 +39,4 @@
   </div>
   {{ end }}
 </div>
-{{end}}
+{{ end }}
