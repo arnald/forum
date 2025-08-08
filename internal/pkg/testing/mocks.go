@@ -67,11 +67,12 @@ func (m *MockEncryptionProvider) Matches(hashedPassword string, plaintextPasswor
 }
 
 type MockSessionManager struct {
-	GetSessionFunc         func(sessionID string) (*user.Session, error)
-	CreateSessionFunc      func(userID string) (*user.Session, error)
-	DeleteSessionFunc      func(sessionID string) error
-	NewSessionCookieFunc   func(token string) *http.Cookie
-	GetUserFromSessionFunc func(sessionID string) (*user.User, error)
+	GetSessionFunc                  func(sessionID string) (*user.Session, error)
+	CreateSessionFunc               func(userID string) (*user.Session, error)
+	DeleteSessionFunc               func(sessionID string) error
+	NewSessionCookieFunc            func(token string) *http.Cookie
+	GetUserFromSessionFunc          func(sessionID string) (*user.User, error)
+	GetSessionFromSessionTokensFunc func(sessionToken, refreshToken string) (*user.Session, error)
 }
 
 func (m *MockSessionManager) GetSession(sessionID string) (*user.Session, error) {
@@ -123,4 +124,11 @@ func (m *MockSessionManager) NewSessionCookie(token string) *http.Cookie {
 		Path:     "/",
 		HttpOnly: true,
 	}
+}
+
+func (m *MockSessionManager) GetSessionFromSessionTokens(sessionToken, refreshToken string) (*user.Session, error) {
+	if m.GetSessionFromSessionTokensFunc != nil {
+		return m.GetSessionFromSessionTokens(sessionToken, refreshToken)
+	}
+	return nil, ErrTest
 }

@@ -2,11 +2,9 @@ package middleware
 
 import (
 	"context"
-	"errors"
 	"net/http"
 
 	"github.com/arnald/forum/internal/domain/user"
-	"github.com/arnald/forum/internal/infra/session"
 	"github.com/arnald/forum/internal/pkg/helpers"
 )
 
@@ -32,46 +30,41 @@ func NewRequireAuthMiddleware(sessionManager user.SessionManager) RequireAuthMid
 
 func (a requireAuthMiddleware) RequireAuth(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		sessionID, err := r.Cookie("session_token")
+		sessionToken, refreshToken := GetTokensFromRequest(r)
+
+		session, err := a.sessionManager.GetSessionFromSessionTokens(sessionToken, refreshToken)
 		if err != nil {
+			helpers.RespondWithJSON(
+				w,
+				http.StatusUnauthorized,
+				nil,
+				"Unauthorized: Invalid session")
+			return
+		}
+
+		sessionExpired, refreshTokenExpired := CheckTokenExpiration(session)
+		switch {
+		case sessionExpired && refreshTokenExpired:
 			helpers.RespondWithError(w,
 				http.StatusUnauthorized,
-				"Unauthorized: No session cookie found")
+				"Unauthorized: Session and refresh token expired")
+			return
+		case sessionExpired && !refreshTokenExpired:
+			_ = a.sessionManager.DeleteSession(session.AccessToken)
+			session, _ = a.sessionManager.CreateSession(r.Context(), session.UserID)
+		case !sessionExpired && refreshTokenExpired:
+			helpers.RespondWithError(w,
+				http.StatusUnauthorized,
+				"Unauthorized: Refresh token expired")
 			return
 		}
 
-		err = a.sessionManager.ValidateSession(sessionID.Value)
+		user, err := a.sessionManager.GetUserFromSession(session.AccessToken)
 		if err != nil {
-			switch {
-			case errors.Is(err, session.ErrSessionNotFound):
-				helpers.RespondWithError(w,
-					http.StatusUnauthorized,
-					"Unauthorized: Session not found")
-			case errors.Is(err, session.ErrSessionExpired):
-				helpers.RespondWithError(w,
-					http.StatusUnauthorized,
-					"Unauthorized: Session expired")
-			default:
-				helpers.RespondWithError(w,
-					http.StatusInternalServerError,
-					"Internal Server Error: Unable to validate session")
-			}
-			return
-		}
-
-		user, err := a.sessionManager.GetUserFromSession(sessionID.Value)
-		if err != nil {
-			switch {
-			case errors.Is(err, session.ErrUserNotFound):
-				helpers.RespondWithError(w,
-					http.StatusUnauthorized,
-					"Unauthorized: User not found")
-			default:
-				helpers.RespondWithError(w,
-					http.StatusInternalServerError,
-					"Internal Server Error: Unable to retrieve user from session")
-			}
-			return
+			helpers.RespondWithError(
+				w,
+				http.StatusUnauthorized,
+				"Unauthorized: User not found")
 		}
 
 		ctx := context.WithValue(r.Context(), userIDKey, user)

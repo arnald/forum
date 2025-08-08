@@ -111,6 +111,37 @@ func (sm *Manager) GetSession(sessionID string) (*user.Session, error) {
 	return &session, nil
 }
 
+func (sm *Manager) GetSessionFromSessionTokens(sessionToken, refreshToken string) (*user.Session, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), contextTimeout)
+	defer cancel()
+
+	query := `
+	SELECT token, user_id, expires_at, refresh_token, refresh_token_expires_at
+	FROM sessions
+	WHERE token = ? AND refresh_token = ?`
+
+	stmt, err := sm.db.PrepareContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("prepare failed: %w", err)
+	}
+	defer stmt.Close()
+
+	row := stmt.QueryRowContext(ctx, sessionToken, refreshToken)
+
+	var session user.Session
+
+	err = row.Scan(&session.AccessToken, &session.UserID, &session.Expiry,
+		&session.RefreshToken, &session.RefreshTokenExpiry)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrSessionNotFound
+		}
+		return nil, err
+	}
+
+	return &session, nil
+}
+
 func (sm *Manager) GetUserFromSession(sessionID string) (*user.User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), contextTimeout)
 	defer cancel()
@@ -125,7 +156,7 @@ func (sm *Manager) GetUserFromSession(sessionID string) (*user.User, error) {
         u.password_hash
     FROM users u
     INNER JOIN sessions s ON s.user_id = u.id
-    WHERE s.token = ? AND s.expires_at > CURRENT_TIMESTAMP
+    WHERE s.token = ?
 	`
 
 	stmt, err := sm.db.PrepareContext(ctx, query)
@@ -160,7 +191,7 @@ func (sm *Manager) DeleteSession(sessionID string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), contextTimeout)
 	defer cancel()
 
-	query := `DELETE FROM sessions WHERE id = ?`
+	query := `DELETE FROM sessions WHERE token = ?`
 
 	stmt, err := sm.db.PrepareContext(ctx, query)
 	if err != nil {

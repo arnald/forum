@@ -48,7 +48,7 @@ func NewServer(cfg *config.ServerConfig, db *sql.DB, logger logger.Logger, appSe
 	return httpServer
 }
 
-// FOR MIDDLEWARE CHAINING
+// FOR MIDDLEWARE CHAINING.
 func middlewareChain(handler http.HandlerFunc, middlewares ...func(http.HandlerFunc) http.HandlerFunc) http.HandlerFunc {
 	for _, m := range middlewares {
 		handler = m(handler)
@@ -58,8 +58,10 @@ func middlewareChain(handler http.HandlerFunc, middlewares ...func(http.HandlerF
 
 func (server *Server) AddHTTPRoutes() {
 	server.router.HandleFunc(apiContext+"/health",
-		health.NewHandler(server.logger).HealthCheck,
-	)
+		middlewareChain(
+			health.NewHandler(server.logger).HealthCheck,
+			server.middleware.Authorization.RequireAuth,
+		))
 
 	server.router.HandleFunc(apiContext+"/login/email",
 		userLogin.NewHandler(server.config, server.appServices, server.sessionManager, server.logger).UserLoginEmail,

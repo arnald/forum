@@ -23,11 +23,6 @@ func (h Handler) UserLoginUsername(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//TODO : FIND WHERE TO IMPLEMENT A COMMON KEY FOR USER CONTEXT
-	if _, err := helpers.GetUserFromContext(r.Context(), "user"); err == nil {
-		h.Logger.PrintInfo("Request made by authenticated user", nil)
-	}
-
 	ctx, cancel := context.WithTimeout(r.Context(), h.Config.Timeouts.HandlerTimeouts.UserRegister)
 	defer cancel()
 
