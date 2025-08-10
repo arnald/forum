@@ -23,18 +23,31 @@ func NewOptionalAuthMiddleware(sessionManager user.SessionManager) OptionalAuthM
 
 func (a optionalAuthMiddleware) OptionalAuth(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		sessionID, err := r.Cookie("session_token")
-		if err != nil {
+		sessionToken, refreshToken := GetTokensFromRequest(r)
+		if sessionToken == "" && refreshToken == "" {
 			next.ServeHTTP(w, r)
 			return
 		}
-		session, err := a.sessionManager.GetSession(sessionID.Value)
+
+		session, err := a.sessionManager.GetSessionFromSessionTokens(sessionToken, refreshToken)
 		if err != nil || session == nil {
 			next.ServeHTTP(w, r)
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), userIDKey, session.UserID)
+		sessionExpired, refreshTokenExpired := CheckTokenExpiration(session)
+		if sessionExpired && !refreshTokenExpired {
+			_ = a.sessionManager.DeleteSession(session.AccessToken)
+			session, _ = a.sessionManager.CreateSession(r.Context(), session.UserID)
+		}
+
+		user, err := a.sessionManager.GetUserFromSession(session.AccessToken)
+		if err != nil || user == nil {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), userIDKey, user.ID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
