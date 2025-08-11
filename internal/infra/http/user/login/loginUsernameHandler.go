@@ -1,4 +1,3 @@
-//nolint:dupl
 package userlogin
 
 import (
@@ -14,6 +13,13 @@ import (
 type LoginUserUsernameRequestModel struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
+}
+
+type LoginResponse struct {
+	UserID       string `json:"userId"`
+	Username     string `json:"username"`
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
 }
 
 func (h Handler) UserLoginUsername(w http.ResponseWriter, r *http.Request) {
@@ -84,10 +90,25 @@ func (h Handler) UserLoginUsername(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	loginResponse := LoginResponse{
+		UserID:       user.ID,
+		Username:     user.Username,
+		AccessToken:  newSession.AccessToken,
+		RefreshToken: newSession.RefreshToken,
+	}
+
 	helpers.RespondWithJSON(
 		w,
 		http.StatusOK,
 		nil,
-		newSession,
+		loginResponse,
+	)
+
+	h.Logger.PrintInfo(
+		"User login successfully",
+		map[string]string{
+			"userId": user.ID,
+			"name":   user.Username,
+		},
 	)
 }

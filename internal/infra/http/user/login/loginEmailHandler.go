@@ -1,4 +1,3 @@
-//nolint:dupl
 package userlogin
 
 import (
@@ -65,7 +64,7 @@ func (h Handler) UserLoginEmail(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		helpers.RespondWithError(w,
 			http.StatusInternalServerError,
-			"error logging in user",
+			err.Error(),
 		)
 
 		h.Logger.PrintError(err, nil)
@@ -86,10 +85,25 @@ func (h Handler) UserLoginEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	loginResponse := LoginResponse{
+		UserID:       user.ID,
+		Username:     user.Username,
+		AccessToken:  newSession.AccessToken,
+		RefreshToken: newSession.RefreshToken,
+	}
+
 	helpers.RespondWithJSON(
 		w,
 		http.StatusOK,
 		nil,
-		newSession,
+		loginResponse,
+	)
+
+	h.Logger.PrintInfo(
+		"User login successfully",
+		map[string]string{
+			"userId": user.ID,
+			"name":   user.Username,
+		},
 	)
 }

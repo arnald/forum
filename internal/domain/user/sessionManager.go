@@ -13,4 +13,5 @@ type SessionManager interface {
 	GetSessionFromSessionTokens(sessionToken, refreshToken string) (*Session, error)
 	ValidateSession(sessionID string) error
 	NewSessionCookie(token string) *http.Cookie
+	DeleteSessionWhenNewCreated(ctx context.Context, sessionID string, userID string) error
 }

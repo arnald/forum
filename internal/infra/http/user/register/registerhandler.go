@@ -14,6 +14,12 @@ import (
 	"github.com/arnald/forum/internal/pkg/validator"
 )
 
+type RegisterUserReguestModel struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Email    string `json:"email"`
+}
+
 type RegisterUserResponse struct {
 	UserID  string `json:"userdId"`
 	Message string `json:"message"`
@@ -33,18 +39,6 @@ func NewHandler(config *config.ServerConfig, app app.Services, sm user.SessionMa
 		Config:         config,
 		Logger:         logger,
 	}
-}
-
-type RegisterUserReguestModel struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Email    string `json:"email"`
-}
-
-type RegisterUserSessionResponse struct {
-	AccessToken  string `json:"accessToken"`
-	RefreshToken string `json:"refreshToken"`
-	UserID       string `json:"userId"`
 }
 
 func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
@@ -105,27 +99,18 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newSession, err := h.SessionManager.CreateSession(ctx, user.ID)
-	if err != nil {
-		helpers.RespondWithError(
-			w,
-			http.StatusInternalServerError,
-			err.Error(),
-		)
-		return
+	userResponse := RegisterUserResponse{
+		UserID:  user.ID,
+		Message: "user registered successfully",
 	}
 
-	sessionResponse := &RegisterUserSessionResponse{
-		AccessToken:  newSession.AccessToken,
-		RefreshToken: newSession.RefreshToken,
-		UserID:       newSession.UserID,
-	}
 	helpers.RespondWithJSON(
 		w,
 		http.StatusCreated,
 		nil,
-		sessionResponse,
+		userResponse,
 	)
+
 	h.Logger.PrintInfo(
 		"User registered successfully",
 		map[string]string{

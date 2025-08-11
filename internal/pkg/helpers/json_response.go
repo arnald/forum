@@ -29,7 +29,7 @@ func RespondWithJSON(w http.ResponseWriter, code int, info *Info, payload any) {
 
 	// Case 1: Error responses (>=400) - send raw payload
 	switch {
-	case code >= http.StatusBadRequest || info == nil:
+	case code >= http.StatusBadRequest && info == nil:
 		jsonData, err = json.Marshal(payload)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
