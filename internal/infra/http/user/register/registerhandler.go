@@ -1,4 +1,4 @@
-package handlers
+package userregister
 
 import (
 	"context"
@@ -8,11 +8,17 @@ import (
 	"github.com/arnald/forum/internal/app"
 	"github.com/arnald/forum/internal/app/user/queries"
 	"github.com/arnald/forum/internal/config"
+	"github.com/arnald/forum/internal/domain/user"
 	"github.com/arnald/forum/internal/infra/logger"
-	"github.com/arnald/forum/internal/infra/session"
 	"github.com/arnald/forum/internal/pkg/helpers"
 	"github.com/arnald/forum/internal/pkg/validator"
 )
+
+type RegisterUserReguestModel struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Email    string `json:"email"`
+}
 
 type RegisterUserResponse struct {
 	UserID  string `json:"userdId"`
@@ -21,30 +27,18 @@ type RegisterUserResponse struct {
 
 type Handler struct {
 	UserServices   app.Services
-	SessionManager *session.Manager
+	SessionManager user.SessionManager
 	Config         *config.ServerConfig
 	Logger         logger.Logger
 }
 
-func NewHandler(config *config.ServerConfig, app app.Services, sm *session.Manager, logger logger.Logger) *Handler {
+func NewHandler(config *config.ServerConfig, app app.Services, sm user.SessionManager, logger logger.Logger) *Handler {
 	return &Handler{
 		UserServices:   app,
 		SessionManager: sm,
 		Config:         config,
 		Logger:         logger,
 	}
-}
-
-type RegisterUserReguestModel struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Email    string `json:"email"`
-}
-
-type RegisterUserSessionResponse struct {
-	AccessToken  string `json:"accessToken"`
-	RefreshToken string `json:"refreshToken"`
-	UserID       string `json:"userId"`
 }
 
 func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
@@ -105,19 +99,20 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userRegistered := RegisterUserResponse{
+	userResponse := RegisterUserResponse{
 		UserID:  user.ID,
-		Message: "Account was successfully created!",
+		Message: "user registered successfully",
 	}
 
 	helpers.RespondWithJSON(
 		w,
 		http.StatusCreated,
 		nil,
-		userRegistered,
+		userResponse,
 	)
+
 	h.Logger.PrintInfo(
-		userRegistered.Message,
+		"User registered successfully",
 		map[string]string{
 			"userId": user.ID,
 			"email":  user.Email,

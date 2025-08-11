@@ -22,6 +22,7 @@ const (
 	sessionIDLenght     = 32
 	userRegisterTimeout = 15
 	refreshTokenExpiry  = 30
+	userLoginTimeout    = 15
 )
 
 var (
@@ -74,6 +75,7 @@ type TimeoutsConfig struct {
 
 type HandlerTimeoutsConfig struct {
 	UserRegister time.Duration
+	UserLogin    time.Duration
 }
 
 type UseCasesTimeoutsConfig struct { // Not implemented yet, but can be used for future use cases
@@ -119,6 +121,7 @@ func LoadConfig() (*ServerConfig, error) {
 		Timeouts: TimeoutsConfig{
 			HandlerTimeouts: HandlerTimeoutsConfig{
 				UserRegister: helpers.GetEnvDuration("HANDLER_TIMEOUT_REGISTER", envMap, userRegisterTimeout),
+				UserLogin:    helpers.GetEnvDuration("HANDLER_TIMEOUT_LOGIN", envMap, userLoginTimeout),
 			},
 		},
 	}

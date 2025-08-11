@@ -1,0 +1,134 @@
+{
+	"info": {
+		"name": "New Collection",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Forum",
+			"description": "",
+			"sort": 2,
+			"item": [
+				{
+					"name": "Health Check",
+					"description": "",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"disabled": false,
+								"description": ""
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/api/v1/health",
+							"query": [],
+							"variable": [],
+							"protocol": "http",
+							"host": [
+								"localhost:8080"
+							]
+						}
+					},
+					"sort": 5
+				},
+				{
+					"name": "Register",
+					"description": "",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/api/v1/register",
+							"query": [],
+							"variable": [],
+							"host": [
+								"{{url}}/api/v1/register"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\":\"arnald\",\n    \"email\":\"arnald94@gmail.com\",\n    \"password\":\"12345678\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"sort": 6
+				},
+				{
+					"name": "Login by Username",
+					"description": "",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{url}}api/v1/login/username",
+							"query": [],
+							"variable": [],
+							"host": [
+								"{{url}}api/v1/login/username"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\":\"kobe bryant\",\n    \"password\":\"legendsareforever24\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"sort": 7
+				},
+				{
+					"name": "Login by Email",
+					"description": "",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/api/v1/login/email",
+							"query": [],
+							"variable": [],
+							"host": [
+								"{{url}}/api/v1/login/email"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\":\"kobe24@gmail.com\",\n    \"password\":\"legendsareforever24\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"sort": 8
+				}
+			]
+		}
+	],
+	"variable": [],
+	"event": [],
+	"auth": {}
+}

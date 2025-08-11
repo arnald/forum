@@ -27,7 +27,7 @@ type Manager struct {
 	sessionConfig  config.SessionManagerConfig
 }
 
-func NewSessionManager(db *sql.DB, sessionConfig config.SessionManagerConfig) *Manager {
+func NewSessionManager(db *sql.DB, sessionConfig config.SessionManagerConfig) user.SessionManager {
 	return &Manager{
 		db:             db,
 		sessionConfig:  sessionConfig,
@@ -60,11 +60,16 @@ func (sm *Manager) CreateSession(ctx context.Context, userID string) (*user.Sess
 		ctx,
 		newSessionToken,
 		userID,
-		expiry.Format("2006-01-02 15:04:05"),
+		expiry.Format(time.RFC3339),
 
 		newrefreshToken,
-		refreshExpiry.Format("2006-01-02 15:04:05"),
+		refreshExpiry.Format(time.RFC3339),
 	)
+	if err != nil {
+		return nil, err
+	}
+
+	err = sm.DeleteSessionWhenNewCreated(ctx, newSessionToken, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -124,6 +129,19 @@ func (sm *Manager) DeleteSession(sessionID string) error {
 	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx, sessionID)
+	return err
+}
+
+func (sm *Manager) DeleteSessionWhenNewCreated(ctx context.Context, sessionID string, userID string) error {
+	query := `DELETE FROM sessions WHERE user_id = ? AND token != ?`
+
+	stmt, err := sm.db.PrepareContext(ctx, query)
+	if err != nil {
+		return fmt.Errorf("prepare failed: %w", err)
+	}
+	defer stmt.Close()
+
+	_, err = stmt.ExecContext(ctx, userID, sessionID)
 	return err
 }
 
