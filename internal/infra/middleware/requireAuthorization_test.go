@@ -1,9 +1,11 @@
+//nolint:gocognit // TODO: refactor this test
 package middleware
 
 import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/arnald/forum/internal/domain/user"
 	testhelpers "github.com/arnald/forum/internal/pkg/testing"
@@ -20,7 +22,8 @@ func TestRequireAuthMiddleware(t *testing.T) {
 
 type requireAuthorizationTestCase struct {
 	name             string
-	cookie           *http.Cookie
+	accessToken      *http.Cookie
+	refreshToken     *http.Cookie
 	setupMockSession func(*testhelpers.MockSessionManager)
 	wantUserID       string
 	wantNextCalled   bool
@@ -30,8 +33,9 @@ type requireAuthorizationTestCase struct {
 func newRequireAuthorizationTestCases() []requireAuthorizationTestCase {
 	return []requireAuthorizationTestCase{
 		{
-			name:   "no cookie present",
-			cookie: nil,
+			name:         "no cookie present",
+			accessToken:  nil,
+			refreshToken: nil,
 			setupMockSession: func(sm *testhelpers.MockSessionManager) {
 			},
 			wantUserID:     "",
@@ -40,15 +44,35 @@ func newRequireAuthorizationTestCases() []requireAuthorizationTestCase {
 		},
 		{
 			name: "valid session",
-			cookie: &http.Cookie{
+			accessToken: &http.Cookie{
 				Name:  "session_token",
 				Value: "valid-session",
 			},
+			refreshToken: &http.Cookie{
+				Name:  "refresh_token",
+				Value: "valid-refresh",
+			},
 			setupMockSession: func(sm *testhelpers.MockSessionManager) {
-				sm.GetSessionFunc = func(sessionID string) (*user.Session, error) {
-					return &user.Session{
-						UserID: "test-user-id",
-					}, nil
+				sm.GetSessionFromSessionTokensFunc = func(sessionToken, refreshToken string) (*user.Session, error) {
+					if sessionToken == "valid-session" && refreshToken == "valid-refresh" {
+						return &user.Session{
+							UserID:             "test-user-id",
+							AccessToken:        "valid-session",
+							RefreshToken:       "valid-refresh",
+							Expiry:             time.Now().Add(1 * time.Hour),
+							RefreshTokenExpiry: time.Now().Add(1 * time.Hour),
+						}, nil
+					}
+					return nil, testhelpers.ErrTest
+				}
+				sm.GetUserFromSessionFunc = func(sessionID string) (*user.User, error) {
+					if sessionID == "valid-session" {
+						return &user.User{
+							ID:       "test-user-id",
+							Username: "Test User",
+						}, nil
+					}
+					return nil, testhelpers.ErrTest
 				}
 			},
 			wantUserID:     "test-user-id",
@@ -57,12 +81,183 @@ func newRequireAuthorizationTestCases() []requireAuthorizationTestCase {
 		},
 		{
 			name: "invalid session",
-			cookie: &http.Cookie{
+			accessToken: &http.Cookie{
 				Name:  "session_token",
 				Value: "invalid-session",
 			},
+			refreshToken: &http.Cookie{
+				Name:  "refresh_token",
+				Value: "invalid-refresh",
+			},
 			setupMockSession: func(sm *testhelpers.MockSessionManager) {
-				sm.GetSessionFunc = func(sessionID string) (*user.Session, error) {
+				sm.GetSessionFromSessionTokensFunc = func(sessionToken, refreshToken string) (*user.Session, error) {
+					if sessionToken == "invalid-session" && refreshToken == "invalid-refresh" {
+						return nil, testhelpers.ErrTest
+					}
+					return nil, testhelpers.ErrTest
+				}
+			},
+			wantUserID:     "",
+			wantNextCalled: false,
+			wantStatusCode: http.StatusUnauthorized,
+		},
+		{
+			name: "session expired, refresh token valid",
+			accessToken: &http.Cookie{
+				Name:  "session_token",
+				Value: "invalid-session",
+			},
+			refreshToken: &http.Cookie{
+				Name:  "refresh_token",
+				Value: "valid-refresh",
+			},
+			setupMockSession: func(sm *testhelpers.MockSessionManager) {
+				sm.GetSessionFromSessionTokensFunc = func(sessionToken, refreshToken string) (*user.Session, error) {
+					if sessionToken == "invalid-session" && refreshToken == "valid-refresh" {
+						return &user.Session{
+							UserID:             "test-user-id",
+							AccessToken:        "invalid-session",
+							RefreshToken:       "valid-refresh",
+							Expiry:             time.Now().Add(-1 * time.Hour),
+							RefreshTokenExpiry: time.Now().Add(1 * time.Hour),
+						}, nil
+					}
+					return nil, testhelpers.ErrTest
+				}
+				sm.DeleteSessionFunc = func(sessionID string) error {
+					return nil
+				}
+				sm.CreateSessionFunc = func(userID string) (*user.Session, error) {
+					return &user.Session{
+						UserID:             userID,
+						AccessToken:        "new-access-token",
+						RefreshToken:       "new-refresh-token",
+						Expiry:             time.Now().Add(1 * time.Hour),
+						RefreshTokenExpiry: time.Now().Add(1 * time.Hour),
+					}, nil
+				}
+				sm.GetUserFromSessionFunc = func(sessionID string) (*user.User, error) {
+					if sessionID == "new-access-token" {
+						return &user.User{
+							ID:       "test-user-id",
+							Username: "Test User",
+						}, nil
+					}
+					return nil, testhelpers.ErrTest
+				}
+			},
+			wantUserID:     "test-user-id",
+			wantNextCalled: true,
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name: "valid session, expired refresh token",
+			accessToken: &http.Cookie{
+				Name:  "session_token",
+				Value: "valid-session",
+			},
+			refreshToken: &http.Cookie{
+				Name:  "refresh_token",
+				Value: "expired-refresh",
+			},
+			setupMockSession: func(sm *testhelpers.MockSessionManager) {
+				sm.GetSessionFromSessionTokensFunc = func(sessionToken, refreshToken string) (*user.Session, error) {
+					if sessionToken == "valid-session" && refreshToken == "expired-refresh" {
+						return &user.Session{
+							UserID:             "test-user-id",
+							AccessToken:        "valid-session",
+							RefreshToken:       "expired-refresh",
+							Expiry:             time.Now().Add(1 * time.Hour),
+							RefreshTokenExpiry: time.Now().Add(-1 * time.Hour),
+						}, nil
+					}
+					return nil, testhelpers.ErrTest
+				}
+			},
+			wantUserID:     "",
+			wantNextCalled: false,
+			wantStatusCode: http.StatusUnauthorized,
+		},
+		{
+			name: "valid session, expired refresh token",
+			accessToken: &http.Cookie{
+				Name:  "session_token",
+				Value: "valid-session",
+			},
+			refreshToken: &http.Cookie{
+				Name:  "refresh_token",
+				Value: "expired-refresh",
+			},
+			setupMockSession: func(sm *testhelpers.MockSessionManager) {
+				sm.GetSessionFromSessionTokensFunc = func(sessionToken, refreshToken string) (*user.Session, error) {
+					if sessionToken == "valid-session" && refreshToken == "expired-refresh" {
+						return &user.Session{
+							UserID:             "test-user-id",
+							AccessToken:        "valid-session",
+							RefreshToken:       "expired-refresh",
+							Expiry:             time.Now().Add(1 * time.Hour),
+							RefreshTokenExpiry: time.Now().Add(-1 * time.Hour),
+						}, nil
+					}
+					return nil, testhelpers.ErrTest
+				}
+			},
+			wantUserID:     "",
+			wantNextCalled: false,
+			wantStatusCode: http.StatusUnauthorized,
+		},
+		{
+			name: "session and refresh token expired",
+			accessToken: &http.Cookie{
+				Name:  "session_token",
+				Value: "expired-session",
+			},
+			refreshToken: &http.Cookie{
+				Name:  "refresh_token",
+				Value: "expired-refresh",
+			},
+			setupMockSession: func(sm *testhelpers.MockSessionManager) {
+				sm.GetSessionFromSessionTokensFunc = func(sessionToken, refreshToken string) (*user.Session, error) {
+					if sessionToken == "expired-session" && refreshToken == "expired-refresh" {
+						return &user.Session{
+							UserID:             "test-user-id",
+							AccessToken:        "expired-session",
+							RefreshToken:       "expired-refresh",
+							Expiry:             time.Now().Add(-1 * time.Hour),
+							RefreshTokenExpiry: time.Now().Add(-1 * time.Hour),
+						}, nil
+					}
+					return nil, testhelpers.ErrTest
+				}
+			},
+			wantUserID:     "",
+			wantNextCalled: false,
+			wantStatusCode: http.StatusUnauthorized,
+		},
+		{
+			name: "user not found",
+			accessToken: &http.Cookie{
+				Name:  "session_token",
+				Value: "valid-session",
+			},
+			refreshToken: &http.Cookie{
+				Name:  "refresh_token",
+				Value: "valid-refresh",
+			},
+			setupMockSession: func(sm *testhelpers.MockSessionManager) {
+				sm.GetSessionFromSessionTokensFunc = func(sessionToken, refreshToken string) (*user.Session, error) {
+					if sessionToken == "valid-session" && refreshToken == "valid-refresh" {
+						return &user.Session{
+							UserID:             "non-existent-user",
+							AccessToken:        "valid-session",
+							RefreshToken:       "valid-refresh",
+							Expiry:             time.Now().Add(1 * time.Hour),
+							RefreshTokenExpiry: time.Now().Add(1 * time.Hour),
+						}, nil
+					}
+					return nil, testhelpers.ErrTest
+				}
+				sm.GetUserFromSessionFunc = func(sessionID string) (*user.User, error) {
 					return nil, testhelpers.ErrTest
 				}
 			},
@@ -81,8 +276,11 @@ func runRequireAuthorizationTest(tt requireAuthorizationTestCase) func(t *testin
 		middleware := NewRequireAuthMiddleware(mockSessionManager)
 
 		req := httptest.NewRequest(http.MethodGet, "/", nil)
-		if tt.cookie != nil {
-			req.AddCookie(tt.cookie)
+		if tt.accessToken != nil {
+			req.AddCookie(tt.accessToken)
+		}
+		if tt.refreshToken != nil {
+			req.AddCookie(tt.refreshToken)
 		}
 
 		rr := httptest.NewRecorder()
@@ -90,9 +288,9 @@ func runRequireAuthorizationTest(tt requireAuthorizationTestCase) func(t *testin
 		nextCalled := false
 		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			nextCalled = true
-			if userID, ok := r.Context().Value(userIDKey).(string); ok {
-				if userID != tt.wantUserID {
-					t.Errorf("expected user ID %s, got %s", tt.wantUserID, userID)
+			if user, ok := r.Context().Value(userIDKey).(*user.User); ok {
+				if user.ID != tt.wantUserID {
+					t.Errorf("expected user ID %s, got %s", tt.wantUserID, user.ID)
 				}
 			} else if tt.wantUserID != "" {
 				t.Error("expected user ID to be set in context")

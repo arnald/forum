@@ -65,6 +65,7 @@ func (a requireAuthMiddleware) RequireAuth(next http.HandlerFunc) http.HandlerFu
 				w,
 				http.StatusUnauthorized,
 				"Unauthorized: User not found")
+			return
 		}
 
 		ctx := context.WithValue(r.Context(), userIDKey, user)

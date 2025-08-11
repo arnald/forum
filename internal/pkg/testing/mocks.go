@@ -128,7 +128,7 @@ func (m *MockSessionManager) NewSessionCookie(token string) *http.Cookie {
 
 func (m *MockSessionManager) GetSessionFromSessionTokens(sessionToken, refreshToken string) (*user.Session, error) {
 	if m.GetSessionFromSessionTokensFunc != nil {
-		return m.GetSessionFromSessionTokens(sessionToken, refreshToken)
+		return m.GetSessionFromSessionTokensFunc(sessionToken, refreshToken)
 	}
 	return nil, ErrTest
 }

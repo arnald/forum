@@ -39,6 +39,10 @@ func (a optionalAuthMiddleware) OptionalAuth(next http.HandlerFunc) http.Handler
 		if sessionExpired && !refreshTokenExpired {
 			_ = a.sessionManager.DeleteSession(session.AccessToken)
 			session, _ = a.sessionManager.CreateSession(r.Context(), session.UserID)
+		} else if sessionExpired && refreshTokenExpired {
+			_ = a.sessionManager.DeleteSession(session.AccessToken)
+			next.ServeHTTP(w, r)
+			return
 		}
 
 		user, err := a.sessionManager.GetUserFromSession(session.AccessToken)
@@ -47,7 +51,7 @@ func (a optionalAuthMiddleware) OptionalAuth(next http.HandlerFunc) http.Handler
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), userIDKey, user.ID)
+		ctx := context.WithValue(r.Context(), userIDKey, user)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
