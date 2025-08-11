@@ -131,6 +131,7 @@ func (sm *Manager) DeleteSession(sessionID string) error {
 	_, err = stmt.ExecContext(ctx, sessionID)
 	return err
 }
+
 func (sm *Manager) DeleteSessionWhenNewCreated(sessionID string, userID string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), contextTimeout)
 	defer cancel()
