@@ -81,7 +81,7 @@ func (r Repo) GetUserByIdentifier(ctx context.Context, identifier string) (*user
 
 func (r Repo) GetUserByEmail(ctx context.Context, email string) (*user.User, error) {
 	query := `
-	SELECT id, username, email, password_hash, created_at, avatar_url
+	SELECT id, username, password_hash
 	FROM users
 	WHERE email = ?
 	`
@@ -89,10 +89,7 @@ func (r Repo) GetUserByEmail(ctx context.Context, email string) (*user.User, err
 	err := r.DB.QueryRowContext(ctx, query, email).Scan(
 		&user.ID,
 		&user.Username,
-		&user.Email,
 		&user.Password,
-		&user.CreatedAt,
-		&user.AvatarURL,
 	)
 
 	if errors.Is(err, sql.ErrNoRows) {

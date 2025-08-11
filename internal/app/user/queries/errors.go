@@ -2,4 +2,4 @@ package queries
 
 import "errors"
 
-var ErrPasswordMismatch = errors.New("password does not match")
+var ErrPasswordMismatch = errors.New("password is not correct")

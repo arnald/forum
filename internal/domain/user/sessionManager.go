@@ -10,4 +10,5 @@ type SessionManager interface {
 	GetSession(sessionID string) (*Session, error)
 	DeleteSession(sessionID string) error
 	NewSessionCookie(token string) *http.Cookie
+	DeleteSessionWhenNewCreated(sessionID string, userID string) error
 }
