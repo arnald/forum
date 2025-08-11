@@ -69,7 +69,7 @@ func (sm *Manager) CreateSession(ctx context.Context, userID string) (*user.Sess
 		return nil, err
 	}
 
-	err = sm.DeleteSessionWhenNewCreated(newSessionToken, userID)
+	err = sm.DeleteSessionWhenNewCreated(ctx, newSessionToken, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -132,10 +132,7 @@ func (sm *Manager) DeleteSession(sessionID string) error {
 	return err
 }
 
-func (sm *Manager) DeleteSessionWhenNewCreated(sessionID string, userID string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), contextTimeout)
-	defer cancel()
-
+func (sm *Manager) DeleteSessionWhenNewCreated(ctx context.Context, sessionID string, userID string) error {
 	query := `DELETE FROM sessions WHERE user_id = ? AND token != ?`
 
 	stmt, err := sm.db.PrepareContext(ctx, query)
