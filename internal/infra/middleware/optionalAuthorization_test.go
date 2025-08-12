@@ -228,7 +228,7 @@ func runOptionalAuthorizationTest(tt optionalAuthorizationTestCase) func(t *test
 		nextCalled := false
 		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			nextCalled = true
-			if user, ok := r.Context().Value(userIDKey).(*user.User); ok {
+			if user, ok := r.Context().Value(UserIDKey).(*user.User); ok {
 				if user.ID != tt.wantUserID {
 					t.Errorf("expected user ID %s, got %s", tt.wantUserID, user.ID)
 				}

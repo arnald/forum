@@ -16,6 +16,7 @@ type MockRepository struct {
 	GetUserByEmailFunc    func(ctx context.Context, email string) (*user.User, error)
 	GetUserByUsernameFunc func(ctx context.Context, username string) (*user.User, error)
 	GetAllFunc            func(ctx context.Context) ([]user.User, error)
+	CreateTopicFunc       func(ctx context.Context, topic *user.Topic) error
 }
 
 func (m *MockRepository) UserRegister(ctx context.Context, user *user.User) error {
@@ -41,6 +42,13 @@ func (m *MockRepository) GetAll(ctx context.Context) ([]user.User, error) {
 		return m.GetAllFunc(ctx)
 	}
 	return nil, ErrTest
+}
+
+func (m *MockRepository) CreateTopic(ctx context.Context, topic *user.Topic) error {
+	if m.CreateTopicFunc != nil {
+		return m.CreateTopicFunc(ctx, topic)
+	}
+	return ErrTest
 }
 
 type MockUUIDProvider struct {
