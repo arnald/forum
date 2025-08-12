@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/arnald/forum/internal/app/topics/commands"
 	"github.com/arnald/forum/internal/app/user/queries"
 	"github.com/arnald/forum/internal/domain/user"
 	"github.com/arnald/forum/internal/pkg/bcrypt"
@@ -13,8 +14,13 @@ type Queries struct {
 	UserLoginUsername queries.UserLoginUsernameRequestHandler
 }
 
+type Commands struct {
+	CreateTopic commands.CreateTopicRequestHandler
+}
+
 type UserServices struct {
-	Queries Queries
+	Queries  Queries
+	Commands Commands
 }
 
 type Services struct {
@@ -30,6 +36,9 @@ func NewServices(repo user.Repository) Services {
 				queries.NewUserRegisterHandler(repo, uuidProvider, encryption),
 				queries.NewUserLoginEmailHandler(repo, encryption),
 				queries.NewUserLoginUsernameHandler(repo, encryption),
+			},
+			Commands: Commands{
+				commands.NewCreateTopicRequestHandler(repo),
 			},
 		},
 	}

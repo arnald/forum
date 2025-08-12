@@ -129,3 +129,30 @@ func (r Repo) GetUserByUsername(ctx context.Context, username string) (*user.Use
 
 	return &user, nil
 }
+
+func (r Repo) CreateTopic(ctx context.Context, topic *user.Topic) error {
+	query := `
+	INSERT INTO topics (user_id, title, content, image_path)
+	VALUES (?, ?, ?, ?)`
+
+	stmt, err := r.DB.PrepareContext(ctx, query)
+	if err != nil {
+		return fmt.Errorf("prepare failed: %w", err)
+	}
+	defer stmt.Close()
+
+	_, err = stmt.ExecContext(
+		ctx,
+		topic.UserID,
+		topic.Title,
+		topic.Content,
+		topic.ImagePath,
+	)
+
+	mapErr := MapSQLiteError(err)
+	if mapErr != nil {
+		return mapErr
+	}
+
+	return nil
+}

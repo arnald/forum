@@ -11,7 +11,7 @@ import (
 type Key string
 
 const (
-	userIDKey Key = "user"
+	UserIDKey Key = "user"
 )
 
 type requireAuthMiddleware struct {
@@ -68,7 +68,7 @@ func (a requireAuthMiddleware) RequireAuth(next http.HandlerFunc) http.HandlerFu
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), userIDKey, user)
+		ctx := context.WithValue(r.Context(), UserIDKey, user)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
