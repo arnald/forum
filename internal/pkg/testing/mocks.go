@@ -73,6 +73,7 @@ type MockSessionManager struct {
 	NewSessionCookieFunc            func(token string) *http.Cookie
 	GetUserFromSessionFunc          func(sessionID string) (*user.User, error)
 	GetSessionFromSessionTokensFunc func(sessionToken, refreshToken string) (*user.Session, error)
+	DeleteSessionWhenNewCreatedFunc func(ctx context.Context, sessionID string, userID string) error
 }
 
 func (m *MockSessionManager) GetSession(sessionID string) (*user.Session, error) {
@@ -131,4 +132,11 @@ func (m *MockSessionManager) GetSessionFromSessionTokens(sessionToken, refreshTo
 		return m.GetSessionFromSessionTokensFunc(sessionToken, refreshToken)
 	}
 	return nil, ErrTest
+}
+
+func (m *MockSessionManager) DeleteSessionWhenNewCreated(ctx context.Context, sessionID string, userID string) error {
+	if m.DeleteSessionWhenNewCreatedFunc != nil {
+		return m.DeleteSessionWhenNewCreatedFunc(ctx, sessionID, userID)
+	}
+	return ErrTest
 }
