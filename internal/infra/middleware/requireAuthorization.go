@@ -8,12 +8,6 @@ import (
 	"github.com/arnald/forum/internal/pkg/helpers"
 )
 
-type Key string
-
-const (
-	UserIDKey Key = "user"
-)
-
 type requireAuthMiddleware struct {
 	sessionManager session.Manager
 }
@@ -68,7 +62,7 @@ func (a requireAuthMiddleware) RequireAuth(next http.HandlerFunc) http.HandlerFu
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), UserIDKey, user)
+		ctx := context.WithValue(r.Context(), userIDKey, user)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

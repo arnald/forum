@@ -1,10 +1,14 @@
 package validator
 
 const (
-	MinUsernameLength = 3
-	MaxUsernameLength = 50
-	MinPasswordLength = 8
-	MaxPasswordLength = 72
+	MinUsernameLength     = 3
+	MaxUsernameLength     = 50
+	MinPasswordLength     = 8
+	MaxPasswordLength     = 72
+	MinTopicTitleLength   = 5
+	MaxTopicTitleLength   = 100
+	MinTopicContentLength = 10
+	MaxTopicContentLength = 1000
 )
 
 func ValidateUserRegistration(v *Validator, data any) {
@@ -75,6 +79,35 @@ func ValidateUserLoginUsername(v *Validator, data any) {
 				required,
 				minLength(MinPasswordLength),
 				maxLength(MaxPasswordLength),
+			},
+		},
+	}
+
+	ValidateStruct(v, data, rules)
+}
+
+func ValidateCreateTopic(v *Validator, data any) {
+	rules := []ValidationRule{
+		{
+			Field: "Title",
+			Rules: []func(any) (bool, string){
+				required,
+				minLength(MinTopicTitleLength),
+				maxLength(MaxTopicTitleLength),
+			},
+		},
+		{
+			Field: "Content",
+			Rules: []func(any) (bool, string){
+				required,
+				minLength(MinTopicContentLength),
+				maxLength(MaxTopicContentLength),
+			},
+		},
+		{
+			Field: "ImagePath",
+			Rules: []func(any) (bool, string){
+				optional(validImagePath),
 			},
 		},
 	}

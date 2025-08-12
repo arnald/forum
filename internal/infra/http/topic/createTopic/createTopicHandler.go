@@ -7,21 +7,19 @@ import (
 	"github.com/arnald/forum/internal/app"
 	"github.com/arnald/forum/internal/app/topics/commands"
 	"github.com/arnald/forum/internal/config"
-	"github.com/arnald/forum/internal/domain/user"
 	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/infra/middleware"
 	"github.com/arnald/forum/internal/pkg/helpers"
+	"github.com/arnald/forum/internal/pkg/validator"
 )
 
 type CreateTopicRequestModel struct {
-	UserID    string `json:"user_id"`
 	Title     string `json:"title"`
 	Content   string `json:"content"`
 	ImagePath string `json:"image_path"`
 }
 
 type CreateTopicResponseModel struct {
-	TopicID string `json:"topic_id"`
 	UserID  string `json:"user_id"`
 	Message string `json:"message"`
 }
@@ -47,14 +45,14 @@ func (h *Handler) CreateTopic(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := r.Context().Value(middleware.UserIDKey).(*user.User)
+	user := middleware.GetUserFromContext(r)
 
 	ctx, cancel := context.WithTimeout(r.Context(), h.Config.Timeouts.HandlerTimeouts.UserRegister)
 	defer cancel()
 
 	var topicToCreate CreateTopicRequestModel
 
-	_, err := helpers.ParseBodyRequest(r, &topicToCreate)
+	topicAny, err := helpers.ParseBodyRequest(r, &topicToCreate)
 	if err != nil {
 		helpers.RespondWithError(w,
 			http.StatusBadRequest,
@@ -66,6 +64,21 @@ func (h *Handler) CreateTopic(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer r.Body.Close()
+
+	v := validator.New()
+
+	validator.ValidateCreateTopic(v, topicAny)
+
+	if !v.Valid() {
+		helpers.RespondWithError(
+			w,
+			http.StatusBadRequest,
+			v.ToStringErrors(),
+		)
+
+		h.Logger.PrintError(logger.ErrValidationFailed, v.Errors)
+		return
+	}
 
 	topic, err := h.UserServices.UserServices.Commands.CreateTopic.Handle(ctx, commands.CreateTopicRequest{
 		Title:     topicToCreate.Title,
@@ -85,7 +98,6 @@ func (h *Handler) CreateTopic(w http.ResponseWriter, r *http.Request) {
 	}
 
 	topicResponse := CreateTopicResponseModel{
-		TopicID: topic.ID,
 		UserID:  topic.UserID,
 		Message: "Topic created successfully",
 	}
@@ -100,8 +112,7 @@ func (h *Handler) CreateTopic(w http.ResponseWriter, r *http.Request) {
 	h.Logger.PrintInfo(
 		"Topic created successfully",
 		map[string]string{
-			"topic_id": topicResponse.TopicID,
-			"user_id":  topicResponse.UserID,
+			"user_id": topicResponse.UserID,
 		},
 	)
 }
