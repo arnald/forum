@@ -7,6 +7,12 @@ import (
 	"github.com/arnald/forum/internal/domain/user"
 )
 
+type Key string
+
+const (
+	userIDKey Key = "user"
+)
+
 func CheckTokenExpiration(session *user.Session) (sessionExpired, refreshTokenExpired bool) {
 	if session.Expiry.Before(time.Now()) {
 		sessionExpired = true
@@ -31,4 +37,8 @@ func GetTokensFromRequest(r *http.Request) (sessionToken, refreshToken string) {
 	}
 
 	return
+}
+
+func GetUserFromContext(r *http.Request) *user.User {
+	return r.Context().Value(userIDKey).(*user.User)
 }

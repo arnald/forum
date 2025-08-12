@@ -2,6 +2,7 @@ package validator
 
 import (
 	"fmt"
+	"path/filepath"
 	"reflect"
 	"regexp"
 	"slices"
@@ -91,6 +92,21 @@ func required(value any) (bool, string) {
 	return str != "", "must be provided"
 }
 
+func optional(validationFunc func(any) (bool, string)) func(any) (bool, string) {
+	return func(value any) (bool, string) {
+		str, ok := value.(string)
+		if !ok {
+			return false, "field must be a string"
+		}
+
+		if str == "" {
+			return true, ""
+		}
+
+		return validationFunc(value)
+	}
+}
+
 func minLength(minimumLenght int) func(any) (bool, string) {
 	return func(value any) (bool, string) {
 		str, ok := value.(string)
@@ -125,4 +141,20 @@ func (v *Validator) ToStringErrors() string {
 		strError += key + ": " + value + " "
 	}
 	return strings.TrimSpace(strError)
+}
+
+var validImageExtensions = map[string]bool{
+	".png":  true,
+	".jpg":  true,
+	".jpeg": true,
+	".gif":  true,
+}
+
+func validImagePath(value any) (bool, string) {
+	str, ok := value.(string)
+	if !ok {
+		return false, InvalidType
+	}
+	ext := strings.ToLower(filepath.Ext(str))
+	return validImageExtensions[ext], "must be a valid image file"
 }

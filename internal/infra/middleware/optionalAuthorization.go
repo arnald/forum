@@ -51,7 +51,7 @@ func (a optionalAuthMiddleware) OptionalAuth(next http.HandlerFunc) http.Handler
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), UserIDKey, user)
+		ctx := context.WithValue(r.Context(), userIDKey, user)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
