@@ -21,7 +21,7 @@ type createTopicRequestHandler struct {
 	repo user.Repository
 }
 
-func NewCreateTopicRequestHandler(repo user.Repository) CreateTopicRequestHandler {
+func NewCreateTopicHandler(repo user.Repository) CreateTopicRequestHandler {
 	return &createTopicRequestHandler{
 		repo: repo,
 	}

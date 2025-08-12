@@ -38,7 +38,7 @@ func NewServices(repo user.Repository) Services {
 				queries.NewUserLoginUsernameHandler(repo, encryption),
 			},
 			Commands: Commands{
-				commands.NewCreateTopicRequestHandler(repo),
+				commands.NewCreateTopicHandler(repo),
 			},
 		},
 	}
