@@ -157,3 +157,40 @@ func (r Repo) CreateTopic(ctx context.Context, topic *user.Topic) error {
 
 	return nil
 }
+
+func (r Repo) UpdateTopic(ctx context.Context, topic *user.Topic) error {
+	query := `
+	UPDATE topics 
+	SET title = ?, content = ?, image_path = ?, category_id = ?
+	WHERE id = ? AND user_id = ?`
+
+	stmt, err := r.DB.PrepareContext(ctx, query)
+	if err != nil {
+		return fmt.Errorf("prepare failed: %w", err)
+	}
+	defer stmt.Close()
+
+	result, err := stmt.ExecContext(
+		ctx,
+		topic.Title,
+		topic.Content,
+		topic.ImagePath,
+		topic.CategoryID,
+		topic.ID,
+		topic.UserID,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to update topic: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get rows affected: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("topic not found or user not authorized: no topic found")
+	}
+
+	return nil
+}

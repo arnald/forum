@@ -11,6 +11,7 @@ import (
 	"github.com/arnald/forum/internal/domain/session"
 	"github.com/arnald/forum/internal/infra/http/health"
 	createtopic "github.com/arnald/forum/internal/infra/http/topic/createTopic"
+	updatetopic "github.com/arnald/forum/internal/infra/http/topic/updateTopic"
 	userLogin "github.com/arnald/forum/internal/infra/http/user/login"
 	userRegister "github.com/arnald/forum/internal/infra/http/user/register"
 	"github.com/arnald/forum/internal/infra/logger"
@@ -79,6 +80,13 @@ func (server *Server) AddHTTPRoutes() {
 	server.router.HandleFunc(apiContext+"/topics/create",
 		middlewareChain(
 			createtopic.NewHandler(server.appServices, server.config, server.logger).CreateTopic,
+			server.middleware.Authorization.RequireAuth,
+		),
+	)
+
+	server.router.HandleFunc(apiContext+"/topics/update",
+		middlewareChain(
+			updatetopic.NewHandler(server.appServices, server.config, server.logger).UpdateTopic,
 			server.middleware.Authorization.RequireAuth,
 		),
 	)
