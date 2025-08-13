@@ -15,6 +15,7 @@ var (
 	ErrUnknownConstraint = errors.New("sqlite unknow constraint error")
 	ErrInvalidEmail      = errors.New("invalid email format")
 	ErrUserNotFound      = errors.New("user not found")
+	ErrTopicNotFound     = errors.New("topic not found")
 )
 
 func MapSQLiteError(err error) error {
