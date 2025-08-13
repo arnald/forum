@@ -132,8 +132,8 @@ func (r Repo) GetUserByUsername(ctx context.Context, username string) (*user.Use
 
 func (r Repo) CreateTopic(ctx context.Context, topic *user.Topic) error {
 	query := `
-	INSERT INTO topics (user_id, title, content, image_path)
-	VALUES (?, ?, ?, ?)`
+	INSERT INTO topics (user_id, title, content, image_path, category_id)
+	VALUES (?, ?, ?, ?, ?)`
 
 	stmt, err := r.DB.PrepareContext(ctx, query)
 	if err != nil {
@@ -147,6 +147,7 @@ func (r Repo) CreateTopic(ctx context.Context, topic *user.Topic) error {
 		topic.Title,
 		topic.Content,
 		topic.ImagePath,
+		topic.CategoryID,
 	)
 
 	mapErr := MapSQLiteError(err)
