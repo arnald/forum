@@ -150,9 +150,13 @@ func (r Repo) CreateTopic(ctx context.Context, topic *user.Topic) error {
 		topic.CategoryID,
 	)
 
-	mapErr := MapSQLiteError(err)
-	if mapErr != nil {
-		return mapErr
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return fmt.Errorf("user with ID %s not found: %w", topic.UserID, ErrUserNotFound)
+		default:
+			return fmt.Errorf("failed to create topic: %w", err)
+		}
 	}
 
 	return nil
@@ -170,7 +174,7 @@ func (r Repo) UpdateTopic(ctx context.Context, topic *user.Topic) error {
 	}
 	defer stmt.Close()
 
-	result, err := stmt.ExecContext(
+	_, err = stmt.ExecContext(
 		ctx,
 		topic.Title,
 		topic.Content,
@@ -179,17 +183,14 @@ func (r Repo) UpdateTopic(ctx context.Context, topic *user.Topic) error {
 		topic.ID,
 		topic.UserID,
 	)
-	if err != nil {
-		return fmt.Errorf("failed to update topic: %w", err)
-	}
 
-	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return fmt.Errorf("failed to get rows affected: %w", err)
-	}
-
-	if rowsAffected == 0 {
-		return fmt.Errorf("topic not found or user not authorized: no topic found")
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return fmt.Errorf("topic with ID %d not found: %w", topic.ID, ErrTopicNotFound)
+		default:
+			return fmt.Errorf("failed to update topic: %w", err)
+		}
 	}
 
 	return nil
