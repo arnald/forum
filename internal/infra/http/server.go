@@ -13,6 +13,7 @@ import (
 	userLogin "github.com/arnald/forum/internal/infra/http/user/login"
 	userRegister "github.com/arnald/forum/internal/infra/http/user/register"
 	"github.com/arnald/forum/internal/infra/logger"
+	"github.com/arnald/forum/internal/infra/middleware"
 	"github.com/arnald/forum/internal/infra/session"
 )
 
@@ -63,9 +64,11 @@ func (server *Server) AddHTTPRoutes() {
 }
 
 func (server *Server) ListenAndServe() {
+	corsWrappedRouter := middleware.NewCorsMiddleware(server.router)
+
 	srv := &http.Server{
 		Addr:         server.config.Host + ":" + server.config.Port,
-		Handler:      server.router,
+		Handler:      corsWrappedRouter,
 		ReadTimeout:  server.config.ReadTimeout,
 		WriteTimeout: server.config.WriteTimeout,
 		IdleTimeout:  server.config.IdleTimeout,
