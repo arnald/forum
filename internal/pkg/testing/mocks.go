@@ -16,6 +16,7 @@ type MockRepository struct {
 	GetUserByUsernameFunc func(ctx context.Context, username string) (*user.User, error)
 	GetAllFunc            func(ctx context.Context) ([]user.User, error)
 	CreateTopicFunc       func(ctx context.Context, topic *user.Topic) error
+	UpdateTopicFunc       func(ctx context.Context, topic *user.Topic) error
 }
 
 func (m *MockRepository) UserRegister(ctx context.Context, user *user.User) error {
@@ -46,6 +47,13 @@ func (m *MockRepository) GetAll(ctx context.Context) ([]user.User, error) {
 func (m *MockRepository) CreateTopic(ctx context.Context, topic *user.Topic) error {
 	if m.CreateTopicFunc != nil {
 		return m.CreateTopicFunc(ctx, topic)
+	}
+	return ErrTest
+}
+
+func (m *MockRepository) UpdateTopic(ctx context.Context, topic *user.Topic) error {
+	if m.UpdateTopicFunc != nil {
+		return m.UpdateTopicFunc(ctx, topic)
 	}
 	return ErrTest
 }

@@ -1,7 +1,7 @@
 package user
 
 type Topic struct {
-	ID         string
+	ID         int
 	UserID     string
 	CategoryID int
 	Title      string

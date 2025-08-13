@@ -16,6 +16,7 @@ type Queries struct {
 
 type Commands struct {
 	CreateTopic commands.CreateTopicRequestHandler
+	UpdateTopic commands.UpdateTopicRequestHandler
 }
 
 type UserServices struct {
@@ -39,6 +40,7 @@ func NewServices(repo user.Repository) Services {
 			},
 			Commands: Commands{
 				commands.NewCreateTopicHandler(repo),
+				commands.NewUpdateTopicHandler(repo),
 			},
 		},
 	}
