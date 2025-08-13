@@ -14,9 +14,10 @@ import (
 )
 
 type CreateTopicRequestModel struct {
-	Title     string `json:"title"`
-	Content   string `json:"content"`
-	ImagePath string `json:"image_path"`
+	CategoryID string `json:"category_id"`
+	Title      string `json:"title"`
+	Content    string `json:"content"`
+	ImagePath  string `json:"image_path"`
 }
 
 type CreateTopicResponseModel struct {
@@ -81,10 +82,11 @@ func (h *Handler) CreateTopic(w http.ResponseWriter, r *http.Request) {
 	}
 
 	topic, err := h.UserServices.UserServices.Commands.CreateTopic.Handle(ctx, commands.CreateTopicRequest{
-		Title:     topicToCreate.Title,
-		Content:   topicToCreate.Content,
-		ImagePath: topicToCreate.ImagePath,
-		User:      user,
+		CategoryID: topicToCreate.CategoryID,
+		Title:      topicToCreate.Title,
+		Content:    topicToCreate.Content,
+		ImagePath:  topicToCreate.ImagePath,
+		User:       user,
 	})
 	if err != nil {
 		helpers.RespondWithError(w,

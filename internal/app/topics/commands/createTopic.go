@@ -7,10 +7,11 @@ import (
 )
 
 type CreateTopicRequest struct {
-	User      *user.User
-	Title     string `json:"title"`
-	Content   string `json:"content"`
-	ImagePath string `json:"image_path"`
+	User       *user.User
+	CategoryID string `json:"category_id"`
+	Title      string `json:"title"`
+	Content    string `json:"content"`
+	ImagePath  string `json:"image_path"`
 }
 
 type CreateTopicRequestHandler interface {
@@ -29,10 +30,11 @@ func NewCreateTopicHandler(repo user.Repository) CreateTopicRequestHandler {
 
 func (h *createTopicRequestHandler) Handle(ctx context.Context, req CreateTopicRequest) (*user.Topic, error) {
 	topic := &user.Topic{
-		UserID:    req.User.ID,
-		Title:     req.Title,
-		Content:   req.Content,
-		ImagePath: req.ImagePath,
+		UserID:     req.User.ID,
+		CategoryID: req.CategoryID,
+		Title:      req.Title,
+		Content:    req.Content,
+		ImagePath:  req.ImagePath,
 	}
 
 	err := h.repo.CreateTopic(ctx, topic)
