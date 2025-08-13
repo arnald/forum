@@ -195,3 +195,31 @@ func (r Repo) UpdateTopic(ctx context.Context, topic *user.Topic) error {
 
 	return nil
 }
+
+func (r Repo) DeleteTopic(ctx context.Context, userID string, topicID int) error {
+	query := `
+	DELETE FROM topics
+	WHERE id = ? AND user_id = ?`
+
+	stmt, err := r.DB.PrepareContext(ctx, query)
+	if err != nil {
+		return fmt.Errorf("prepare failed: %w", err)
+	}
+	defer stmt.Close()
+
+	result, err := stmt.ExecContext(ctx, topicID, userID)
+	if err != nil {
+		return fmt.Errorf("failed to execute delete statement: %w", err)
+	}
+	
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get rows affected: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("topic with ID %d not found or user not authorized: %w", topicID, ErrTopicNotFound)
+	}
+
+	return nil
+}
