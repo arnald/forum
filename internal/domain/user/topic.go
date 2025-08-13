@@ -3,7 +3,7 @@ package user
 type Topic struct {
 	ID         string
 	UserID     string
-	CategoryID string
+	CategoryID int
 	Title      string
 	Content    string
 	ImagePath  string
