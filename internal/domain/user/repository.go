@@ -11,4 +11,5 @@ type Repository interface {
 	GetUserByEmail(ctx context.Context, email string) (*User, error)
 	CreateTopic(ctx context.Context, topic *Topic) error
 	UpdateTopic(ctx context.Context, topic *Topic) error
+	DeleteTopic(ctx context.Context, userID string, topicID int) error
 }

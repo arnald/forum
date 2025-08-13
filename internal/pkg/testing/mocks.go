@@ -18,6 +18,7 @@ type MockRepository struct {
 	GetAllFunc            func(ctx context.Context) ([]user.User, error)
 	CreateTopicFunc       func(ctx context.Context, topic *user.Topic) error
 	UpdateTopicFunc       func(ctx context.Context, topic *user.Topic) error
+	DeleteTopicFunc       func(ctx context.Context, userID string, topicID int) error
 }
 
 func (m *MockRepository) UserRegister(ctx context.Context, user *user.User) error {
@@ -55,6 +56,13 @@ func (m *MockRepository) CreateTopic(ctx context.Context, topic *user.Topic) err
 func (m *MockRepository) UpdateTopic(ctx context.Context, topic *user.Topic) error {
 	if m.UpdateTopicFunc != nil {
 		return m.UpdateTopicFunc(ctx, topic)
+	}
+	return ErrTest
+}
+
+func (m *MockRepository) DeleteTopic(ctx context.Context, userID string, topicID int) error {
+	if m.DeleteTopicFunc != nil {
+		return m.DeleteTopicFunc(ctx, userID, topicID)
 	}
 	return ErrTest
 }
