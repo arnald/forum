@@ -110,6 +110,14 @@ func ValidateCreateTopic(v *Validator, data any) {
 				optional(validImagePath),
 			},
 		},
+		// TODO: figure out validation with categoryID or Name
+		// {
+		// 	Field: "Category",
+		// 	Rules: []func(any) (bool, string){
+		// 		required,
+		// 		validCategory,
+		// 	},
+		// },
 	}
 
 	ValidateStruct(v, data, rules)

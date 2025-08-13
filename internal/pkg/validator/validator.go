@@ -158,3 +158,17 @@ func validImagePath(value any) (bool, string) {
 	ext := strings.ToLower(filepath.Ext(str))
 	return validImageExtensions[ext], "must be a valid image file"
 }
+
+// var validCategories = map[string]bool{
+// 	"General Discussion": true,
+// 	"Feedback":           true,
+// 	"Off-Topic":          true,
+// }
+
+// func validCategory(value any) (bool, string) {
+// 	str, ok := value.(string)
+// 	if !ok {
+// 		return false, InvalidType
+// 	}
+// 	return validCategories[str], "must be a valid category"
+// }
