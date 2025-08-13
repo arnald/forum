@@ -86,9 +86,11 @@ func (server *Server) AddHTTPRoutes() {
 }
 
 func (server *Server) ListenAndServe() {
+	corsWrappedRouter := middleware.NewCorsMiddleware(server.router)
+
 	srv := &http.Server{
 		Addr:         server.config.Host + ":" + server.config.Port,
-		Handler:      server.router,
+		Handler:      corsWrappedRouter,
 		ReadTimeout:  server.config.ReadTimeout,
 		WriteTimeout: server.config.WriteTimeout,
 		IdleTimeout:  server.config.IdleTimeout,
