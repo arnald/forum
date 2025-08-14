@@ -42,6 +42,17 @@ const (
 //     LinkURL     string    `json:"link_url"`
 // }
 
+// type Comment struct {
+//     ID        int
+//     Author    string
+//     AvatarURL string
+//     Date      string
+//     Text      string
+//     ImageURL  string
+//     Likes     int
+//     Dislikes  int
+// }
+
 type Topic struct {
 	Title string `json:"title"`
 	ID    int    `json:"id"`
