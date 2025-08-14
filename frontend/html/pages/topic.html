@@ -1,0 +1,295 @@
+{{define "content"}}
+<div class="main-container">
+  <div class="topic-container">
+    <div class="topic-header">
+      <p class="post-title">{{ .Topic.Title }}</p>
+      <a href="/category/{{ .Category.Slug }}" class="topic-category-link">
+        <div class="topic-category">
+          <span
+            class="topic-category-color"
+            style="background-color: #{{ .Category.Color }}"
+          ></span>
+          <span class="topic-category-name">{{ .Category.Name }}</span>
+        </div>
+      </a>
+    </div>
+
+    <div class="topic-content">
+      <!-- Topic Header -->
+      <div class="topic-head">
+        <div class="post-meta">
+          <div class="topic-user-box">
+            <img
+              src="/static/images/user-avatar.png"
+              alt="Author Avatar"
+              class="author-avatar"
+            />
+          </div>
+          <span class="post-author-name">John Doe</span>
+        </div>
+        <span class="post-date">Aug 14, 2025</span>
+      </div>
+
+      <!-- Topic Body -->
+      <div class="topic-body-container">
+        <div class="topic-body">
+          <p class="post-text">
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam nec
+            sapien in nunc dapibus facilisis. Lorem ipsum, dolor sit amet
+            consectetur adipisicing elit. Odit minima veritatis hic repellendus
+            inventore aliquam natus, dolores necessitatibus deleniti quo soluta
+            debitis voluptates rerum, molestiae veniam doloremque repudiandae.
+            Dignissimos nostrum tempore magnam quis vel ullam id dolorem dicta,
+            rerum, incidunt in recusandae consequuntur, aspernatur sunt odio
+            unde eum illo aliquid?
+          </p>
+
+          <!-- Optional Image -->
+          <div class="img-box">
+            <img
+              src="/static/images/example.jpg"
+              alt="Post Image"
+              class="post-image"
+            />
+          </div>
+
+          <!-- Optional Link -->
+          <div class="post-link">
+            <a
+              href="https://example.com"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              https://example.com
+            </a>
+          </div>
+        </div>
+
+        <!-- Post Reactions -->
+        <div class="reactions">
+          <div class="reaction-box">
+            <button class="btn like-btn">
+              <img
+                class="like-icon"
+                src="/static/images/icons/icon-like.png"
+                alt="Like the comment"
+              />
+            </button>
+            <span class="like-count">15</span>
+          </div>
+
+          <div class="reaction-box">
+            <button class="btn dislike-btn">
+              <img
+                class="dislike-icon"
+                src="/static/images/icons/icon-dislike.png"
+                alt="Dislike the comment"
+              />
+            </button>
+            <span class="dislike-count">3</span>
+          </div>
+
+          <div class="topic-extra-info">
+            <div class="views-box">
+              <span class="topic-views">Views</span>
+              <span class="views-count">40</span>
+            </div>
+
+            <div class="comments-box">
+              <span class="topic-comments">Comments</span>
+              <span class="comments-count">2</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Post Actions -->
+    <div class="post-actions">
+      <div class="author-choices">
+        <button class="action-btn btn-edit">Edit Topic</button>
+        <button class="action-btn btn-delete">Delete Topic</button>
+      </div>
+      <button class="action-btn btn-comment">Add a Comment</button>
+    </div>
+
+    <!-- Add Comment Form -->
+    <div class="add-comment">
+      <div class="comment-form-header">
+        <h3>Create Comment</h3>
+        <button type="button" class="close-comment-form">✖</button>
+      </div>
+      <form enctype="multipart/form-data" class="comment-form" novalidate>
+        <div class="comment-form-field">
+          <textarea
+            class="input comment-textarea"
+            name="add-comment"
+            type="text"
+            rows="5"
+            placeholder="Write your comment..."
+            required
+          ></textarea>
+          <div class="field-error" id="error-image"></div>
+        </div>
+
+        <div class="comment-form-field">
+          <div class="upload-box" id="commentUploadBox">
+            <input
+              class="input"
+              id="commentImageUpload"
+              name="comment-image-upload"
+              type="file"
+              accept="image/jpeg,image/png,image/gif"
+              hidden
+            />
+            <div class="upload-placeholder">
+              <img
+                src="upload-icon.png"
+                alt="Upload Icon"
+                class="upload-icon"
+              />
+              <p class="upload-text">Upload Image</p>
+            </div>
+            <img
+              id="commentImagePreview"
+              class="upload-preview"
+              style="display: none"
+            />
+          </div>
+          <div class="field-error" id="error-image"></div>
+        </div>
+
+        <button class="post-comment" type="submit">Post Comment</button>
+      </form>
+    </div>
+
+    <!-- Comments Section -->
+    <div class="comments-section">
+      <!-- Comment -->
+      <div class="comment-content">
+        <div class="comment-head">
+          <div class="comment-meta">
+            <div class="comment-img-box">
+              <img
+                src="/static/images/user-avatar.png"
+                alt="User Avatar"
+                class="comment-avatar"
+              />
+            </div>
+
+            <span class="comment-author">Jane Smith</span>
+          </div>
+          <span class="comment-date">Aug 14, 2025</span>
+        </div>
+
+        <div class="comment-body-container">
+          <div class="comment-body">
+            <p class="comment-text">
+              This is a sample comment. Lorem ipsum dolor sit amet consectetur
+              adipisicing elit. Expedita libero cumque maxime dolore porro quia
+              illum ab dignissimos animi, minus sint dolorem molestias odio
+              earum alias incidunt sequi nihil. Illo eum velit pariatur, eveniet
+              veniam ea minus. Incidunt, vel dolore.
+            </p>
+
+            <!-- Optional Comment Image -->
+            <div class="img-box">
+              <img
+                src="/static/images/example.jpg"
+                alt="Post Image"
+                class="post-image"
+              />
+            </div>
+
+            <div class="reactions">
+              <div class="reaction-box">
+                <button class="btn like-btn">
+                  <img
+                    class="like-icon"
+                    src="/static/images/icons/icon-like.png"
+                    alt="Like the comment"
+                  />
+                </button>
+                <span class="like-count">20</span>
+              </div>
+
+              <div class="reaction-box">
+                <button class="btn dislike-btn">
+                  <img
+                    class="dislike-icon"
+                    src="/static/images/icons/icon-dislike.png"
+                    alt="Dislike the comment"
+                  />
+                </button>
+                <span class="dislike-count">5</span>
+              </div>
+            </div>
+            <div class="comment-actions">
+              <button class="action-btn btn-edit">Edit</button>
+              <button class="action-btn btn-delete">Delete</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Comment -->
+      <div class="comment-content">
+        <div class="comment-head">
+          <div class="comment-meta">
+            <div class="comment-img-box">
+              <img
+                src="/static/images/user-avatar.png"
+                alt="User Avatar"
+                class="comment-avatar"
+              />
+            </div>
+
+            <span class="comment-author">Mike Clark</span>
+          </div>
+          <span class="comment-date">Aug 14, 2025</span>
+        </div>
+
+        <div class="comment-body-container">
+          <div class="comment-body">
+            <p class="comment-text">
+              This is a sample comment. Lorem ipsum dolor sit amet consectetur
+              adipisicing elit. Expedita libero cumque maxime dolore porro quia
+              illum ab dignissimos animi, minus sint dolorem molestias odio
+              earum alias incidunt sequi nihil. Illo eum velit pariatur, eveniet
+              veniam ea minus. Incidunt, vel dolore.
+            </p>
+
+            <div class="reactions">
+              <div class="reaction-box">
+                <button class="btn like-btn">
+                  <img
+                    class="like-icon"
+                    src="/static/images/icons/icon-like.png"
+                    alt="Like the comment"
+                  />
+                </button>
+                <span class="like-count">20</span>
+              </div>
+
+              <div class="reaction-box">
+                <button class="btn dislike-btn">
+                  <img
+                    class="dislike-icon"
+                    src="/static/images/icons/icon-dislike.png"
+                    alt="Dislike the comment"
+                  />
+                </button>
+                <span class="dislike-count">5</span>
+              </div>
+            </div>
+            <div class="comment-actions">
+              <button class="action-btn btn-edit">Edit</button>
+              <button class="action-btn btn-delete">Delete</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{{end}}
