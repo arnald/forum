@@ -1,23 +1,25 @@
 package app
 
 import (
-	"github.com/arnald/forum/internal/app/topics/commands"
-	"github.com/arnald/forum/internal/app/user/queries"
+	topicCommands "github.com/arnald/forum/internal/app/topics/commands"
+	topicQueries "github.com/arnald/forum/internal/app/topics/queries"
+	userQueries "github.com/arnald/forum/internal/app/user/queries"
 	"github.com/arnald/forum/internal/domain/user"
 	"github.com/arnald/forum/internal/pkg/bcrypt"
 	"github.com/arnald/forum/internal/pkg/uuid"
 )
 
 type Queries struct {
-	UserRegister      queries.UserRegisterRequestHandler
-	UserLoginEmail    queries.UserLoginEmailRequestHandler
-	UserLoginUsername queries.UserLoginUsernameRequestHandler
+	UserRegister      userQueries.UserRegisterRequestHandler
+	UserLoginEmail    userQueries.UserLoginEmailRequestHandler
+	UserLoginUsername userQueries.UserLoginUsernameRequestHandler
+	GetTopic          topicQueries.GetTopicRequestHandler
 }
 
 type Commands struct {
-	CreateTopic commands.CreateTopicRequestHandler
-	UpdateTopic commands.UpdateTopicRequestHandler
-	DeleteTopic commands.DeleteTopicRequestHandler
+	CreateTopic topicCommands.CreateTopicRequestHandler
+	UpdateTopic topicCommands.UpdateTopicRequestHandler
+	DeleteTopic topicCommands.DeleteTopicRequestHandler
 }
 
 type UserServices struct {
@@ -35,14 +37,15 @@ func NewServices(repo user.Repository) Services {
 	return Services{
 		UserServices: UserServices{
 			Queries: Queries{
-				queries.NewUserRegisterHandler(repo, uuidProvider, encryption),
-				queries.NewUserLoginEmailHandler(repo, encryption),
-				queries.NewUserLoginUsernameHandler(repo, encryption),
+				userQueries.NewUserRegisterHandler(repo, uuidProvider, encryption),
+				userQueries.NewUserLoginEmailHandler(repo, encryption),
+				userQueries.NewUserLoginUsernameHandler(repo, encryption),
+				topicQueries.NewGetTopicHandler(repo),
 			},
 			Commands: Commands{
-				commands.NewCreateTopicHandler(repo),
-				commands.NewUpdateTopicHandler(repo),
-				commands.NewDeleteTopicHandler(repo),
+				topicCommands.NewCreateTopicHandler(repo),
+				topicCommands.NewUpdateTopicHandler(repo),
+				topicCommands.NewDeleteTopicHandler(repo),
 			},
 		},
 	}

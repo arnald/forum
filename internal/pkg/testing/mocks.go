@@ -18,6 +18,7 @@ type MockRepository struct {
 	CreateTopicFunc       func(ctx context.Context, topic *user.Topic) error
 	UpdateTopicFunc       func(ctx context.Context, topic *user.Topic) error
 	DeleteTopicFunc       func(ctx context.Context, userID string, topicID int) error
+	GetTopicByIDFunc      func(ctx context.Context, topicID int) (*user.Topic, error)
 }
 
 func (m *MockRepository) UserRegister(ctx context.Context, user *user.User) error {
@@ -64,6 +65,13 @@ func (m *MockRepository) DeleteTopic(ctx context.Context, userID string, topicID
 		return m.DeleteTopicFunc(ctx, userID, topicID)
 	}
 	return ErrTest
+}
+
+func (m *MockRepository) GetTopicByID(ctx context.Context, topicID int) (*user.Topic, error) {
+	if m.GetTopicByIDFunc != nil {
+		return m.GetTopicByIDFunc(ctx, topicID)
+	}
+	return nil, ErrTest
 }
 
 type MockUUIDProvider struct {

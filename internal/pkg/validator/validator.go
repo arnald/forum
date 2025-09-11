@@ -143,14 +143,14 @@ func (v *Validator) ToStringErrors() string {
 	return strings.TrimSpace(strError)
 }
 
-var validImageExtensions = map[string]bool{
-	".png":  true,
-	".jpg":  true,
-	".jpeg": true,
-	".gif":  true,
-}
-
 func validImagePath(value any) (bool, string) {
+	validImageExtensions := map[string]bool{
+		".png":  true,
+		".jpg":  true,
+		".jpeg": true,
+		".gif":  true,
+	}
+
 	str, ok := value.(string)
 	if !ok {
 		return false, InvalidType

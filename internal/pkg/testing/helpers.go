@@ -52,7 +52,7 @@ func AssertTopicMatch(t *testing.T, got, want *user.Topic) {
 	}
 
 	if got == nil {
-		t.Fatalf("Handle() got nil topic, want topic with ID %s", want.ID)
+		t.Fatalf("Handle() got nil topic, want topic with ID %d", want.ID)
 		return
 	}
 

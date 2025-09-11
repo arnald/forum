@@ -5,21 +5,21 @@ import (
 	"net/http"
 
 	"github.com/arnald/forum/internal/app"
-	"github.com/arnald/forum/internal/app/topics/commands"
+	topicCommands "github.com/arnald/forum/internal/app/topics/commands"
 	"github.com/arnald/forum/internal/config"
 	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/infra/middleware"
 	"github.com/arnald/forum/internal/pkg/helpers"
 )
 
-type DeleteTopicRequestModel struct {
-	TopicID int `json:"topic_id"`
+type RequestModel struct {
+	TopicID int `json:"topicId"`
 }
 
-type DeleteTopicResponseModel struct {
-	UserID  string `json:"user_id"`
-	TopicID int    `json:"topic_id"`
+type ResponseModel struct {
+	UserID  string `json:"userId"`
 	Message string `json:"message"`
+	TopicID int    `json:"topicId"`
 }
 
 type Handler struct {
@@ -48,7 +48,7 @@ func (h *Handler) DeleteTopic(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), h.Config.Timeouts.HandlerTimeouts.UserRegister)
 	defer cancel()
 
-	var topicToDelete DeleteTopicRequestModel
+	var topicToDelete RequestModel
 
 	_, err := helpers.ParseBodyRequest(r, &topicToDelete)
 	if err != nil {
@@ -63,7 +63,7 @@ func (h *Handler) DeleteTopic(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	err = h.UserServices.UserServices.Commands.DeleteTopic.Handle(ctx, commands.DeleteTopicRequest{
+	err = h.UserServices.UserServices.Commands.DeleteTopic.Handle(ctx, topicCommands.DeleteTopicRequest{
 		TopicID: topicToDelete.TopicID,
 		User:    user,
 	})
@@ -77,18 +77,8 @@ func (h *Handler) DeleteTopic(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
-	if err != nil {
-		helpers.RespondWithError(w,
-			http.StatusInternalServerError,
-			"Failed to delete topic",
-		)
 
-		h.Logger.PrintError(err, nil)
-
-		return
-	}
-
-	topicResponse := DeleteTopicResponseModel{
+	topicResponse := ResponseModel{
 		UserID:  user.ID,
 		TopicID: topicToDelete.TopicID,
 		Message: "Topic deleted successfully",

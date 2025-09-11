@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/arnald/forum/internal/app"
-	"github.com/arnald/forum/internal/app/topics/commands"
+	topicCommands "github.com/arnald/forum/internal/app/topics/commands"
 	"github.com/arnald/forum/internal/config"
 	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/infra/middleware"
@@ -13,16 +13,16 @@ import (
 	"github.com/arnald/forum/internal/pkg/validator"
 )
 
-type UpdateTopicRequestModel struct {
-	CategoryID int    `json:"category_id"`
-	TopicID    int    `json:"topic_id"`
+type RequestModel struct {
 	Title      string `json:"title"`
 	Content    string `json:"content"`
-	ImagePath  string `json:"image_path"`
+	ImagePath  string `json:"imagePath"`
+	CategoryID int    `json:"categoryId"`
+	TopicID    int    `json:"topicId"`
 }
 
-type UpdateTopicResponseModel struct {
-	UserID  string `json:"user_id"`
+type ResponseModel struct {
+	UserID  string `json:"userId"`
 	Message string `json:"message"`
 }
 
@@ -52,7 +52,7 @@ func (h *Handler) UpdateTopic(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), h.Config.Timeouts.HandlerTimeouts.UserRegister)
 	defer cancel()
 
-	var topicToUpdate UpdateTopicRequestModel
+	var topicToUpdate RequestModel
 
 	topicAny, err := helpers.ParseBodyRequest(r, &topicToUpdate)
 	if err != nil {
@@ -82,7 +82,7 @@ func (h *Handler) UpdateTopic(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	topic, err := h.UserServices.UserServices.Commands.UpdateTopic.Handle(ctx, commands.UpdateTopicRequest{
+	topic, err := h.UserServices.UserServices.Commands.UpdateTopic.Handle(ctx, topicCommands.UpdateTopicRequest{
 		CategoryID: topicToUpdate.CategoryID,
 		TopicID:    topicToUpdate.TopicID,
 		Title:      topicToUpdate.Title,
@@ -101,7 +101,7 @@ func (h *Handler) UpdateTopic(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	topicResponse := UpdateTopicResponseModel{
+	topicResponse := ResponseModel{
 		UserID:  topic.UserID,
 		Message: "Topic updated successfully",
 	}

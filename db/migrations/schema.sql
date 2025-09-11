@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS topics (
     category_id INTEGER NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
     content TEXT NOT NULL,
-    image_path TEXT,
+    image_path TEXT DEFAULT '',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
