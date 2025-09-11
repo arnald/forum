@@ -149,7 +149,6 @@ func (r Repo) CreateTopic(ctx context.Context, topic *user.Topic) error {
 		topic.ImagePath,
 		topic.CategoryID,
 	)
-
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
@@ -183,7 +182,6 @@ func (r Repo) UpdateTopic(ctx context.Context, topic *user.Topic) error {
 		topic.ID,
 		topic.UserID,
 	)
-
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
@@ -211,7 +209,7 @@ func (r Repo) DeleteTopic(ctx context.Context, userID string, topicID int) error
 	if err != nil {
 		return fmt.Errorf("failed to execute delete statement: %w", err)
 	}
-	
+
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
 		return fmt.Errorf("failed to get rows affected: %w", err)
@@ -222,4 +220,33 @@ func (r Repo) DeleteTopic(ctx context.Context, userID string, topicID int) error
 	}
 
 	return nil
+}
+
+func (r Repo) GetTopicByID(ctx context.Context, topicID int) (*user.Topic, error) {
+	query := `
+	SELECT id, user_id, title, content, image_path, category_id, created_at, updated_at
+	FROM topics
+	WHERE id = ?
+	`
+	var topic user.Topic
+	err := r.DB.QueryRowContext(ctx, query, topicID).Scan(
+		&topic.ID,
+		&topic.UserID,
+		&topic.Title,
+		&topic.Content,
+		&topic.ImagePath,
+		&topic.CategoryID,
+		&topic.CreatedAt,
+		&topic.UpdatedAt,
+	)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, fmt.Errorf("topic with ID %d not found: %w", topicID, ErrTopicNotFound)
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get topic by ID: %w", err)
+	}
+
+	return &topic, nil
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/arnald/forum/internal/infra/http/health"
 	createtopic "github.com/arnald/forum/internal/infra/http/topic/createTopic"
 	deletetopic "github.com/arnald/forum/internal/infra/http/topic/deleteTopic"
+	gettopic "github.com/arnald/forum/internal/infra/http/topic/getTopic"
 	updatetopic "github.com/arnald/forum/internal/infra/http/topic/updateTopic"
 	userLogin "github.com/arnald/forum/internal/infra/http/user/login"
 	userRegister "github.com/arnald/forum/internal/infra/http/user/register"
@@ -99,6 +100,9 @@ func (server *Server) AddHTTPRoutes() {
 		),
 	)
 
+	server.router.HandleFunc(apiContext+"/topics/get",
+		gettopic.NewHandler(server.appServices, server.config, server.logger).GetTopic,
+	)
 }
 
 func (server *Server) ListenAndServe() {

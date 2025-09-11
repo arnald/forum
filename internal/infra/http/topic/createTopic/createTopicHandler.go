@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/arnald/forum/internal/app"
-	"github.com/arnald/forum/internal/app/topics/commands"
+	topicCommands "github.com/arnald/forum/internal/app/topics/commands"
 	"github.com/arnald/forum/internal/config"
 	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/infra/middleware"
@@ -13,15 +13,15 @@ import (
 	"github.com/arnald/forum/internal/pkg/validator"
 )
 
-type CreateTopicRequestModel struct {
-	CategoryID int    `json:"category_id"`
+type RequestModel struct {
 	Title      string `json:"title"`
 	Content    string `json:"content"`
-	ImagePath  string `json:"image_path"`
+	ImagePath  string `json:"imagePath"`
+	CategoryID int    `json:"categoryId"`
 }
 
-type CreateTopicResponseModel struct {
-	UserID  string `json:"user_id"`
+type ResponseModel struct {
+	UserID  string `json:"userId"`
 	Message string `json:"message"`
 }
 
@@ -51,7 +51,7 @@ func (h *Handler) CreateTopic(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), h.Config.Timeouts.HandlerTimeouts.UserRegister)
 	defer cancel()
 
-	var topicToCreate CreateTopicRequestModel
+	var topicToCreate RequestModel
 
 	topicAny, err := helpers.ParseBodyRequest(r, &topicToCreate)
 	if err != nil {
@@ -81,7 +81,7 @@ func (h *Handler) CreateTopic(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	topic, err := h.UserServices.UserServices.Commands.CreateTopic.Handle(ctx, commands.CreateTopicRequest{
+	topic, err := h.UserServices.UserServices.Commands.CreateTopic.Handle(ctx, topicCommands.CreateTopicRequest{
 		CategoryID: topicToCreate.CategoryID,
 		Title:      topicToCreate.Title,
 		Content:    topicToCreate.Content,
@@ -99,7 +99,7 @@ func (h *Handler) CreateTopic(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	topicResponse := CreateTopicResponseModel{
+	topicResponse := ResponseModel{
 		UserID:  topic.UserID,
 		Message: "Topic created successfully",
 	}

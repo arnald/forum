@@ -1,4 +1,4 @@
-package commands
+package topiccommands
 
 import (
 	"context"
@@ -8,11 +8,11 @@ import (
 
 type UpdateTopicRequest struct {
 	User       *user.User
-	TopicID    int    `json:"topic_id"`
-	CategoryID int    `json:"category_id"`
 	Title      string `json:"title"`
 	Content    string `json:"content"`
-	ImagePath  string `json:"image_path"`
+	ImagePath  string `json:"imagePath"`
+	TopicID    int    `json:"topicId"`
+	CategoryID int    `json:"categoryId"`
 }
 
 type UpdateTopicRequestHandler interface {

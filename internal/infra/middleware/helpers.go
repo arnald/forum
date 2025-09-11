@@ -34,5 +34,15 @@ func GetTokensFromRequest(r *http.Request) (sessionToken, refreshToken string) {
 }
 
 func GetUserFromContext(r *http.Request) *user.User {
-	return r.Context().Value(userIDKey).(*user.User)
+	value := r.Context().Value(userIDKey)
+	if value == nil {
+		return nil
+	}
+
+	user, ok := value.(*user.User)
+	if !ok {
+		return nil
+	}
+
+	return user
 }

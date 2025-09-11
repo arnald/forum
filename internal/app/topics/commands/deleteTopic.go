@@ -1,4 +1,4 @@
-package commands
+package topiccommands
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 
 type DeleteTopicRequest struct {
 	User    *user.User
-	TopicID int `json:"topic_id"`
+	TopicID int `json:"topicId"`
 }
 
 type DeleteTopicRequestHandler interface {
@@ -26,9 +26,7 @@ func NewDeleteTopicHandler(repo user.Repository) DeleteTopicRequestHandler {
 }
 
 func (h *deleteTopicRequestHandler) Handle(ctx context.Context, req DeleteTopicRequest) error {
-
 	err := h.repo.DeleteTopic(ctx, req.User.ID, req.TopicID)
-
 	if err != nil {
 		return err
 	}

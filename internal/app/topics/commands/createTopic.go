@@ -1,4 +1,4 @@
-package commands
+package topiccommands
 
 import (
 	"context"
@@ -8,10 +8,10 @@ import (
 
 type CreateTopicRequest struct {
 	User       *user.User
-	CategoryID int    `json:"category_id"`
 	Title      string `json:"title"`
 	Content    string `json:"content"`
-	ImagePath  string `json:"image_path"`
+	ImagePath  string `json:"imagePath"`
+	CategoryID int    `json:"categoryId"`
 }
 
 type CreateTopicRequestHandler interface {

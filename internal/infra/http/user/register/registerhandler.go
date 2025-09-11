@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/arnald/forum/internal/app"
-	"github.com/arnald/forum/internal/app/user/queries"
+	userQueries "github.com/arnald/forum/internal/app/user/queries"
 	"github.com/arnald/forum/internal/config"
 	"github.com/arnald/forum/internal/domain/session"
 	"github.com/arnald/forum/internal/infra/logger"
@@ -82,7 +82,7 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.UserServices.UserServices.Queries.UserRegister.Handle(ctx, queries.UserRegisterRequest{
+	user, err := h.UserServices.UserServices.Queries.UserRegister.Handle(ctx, userQueries.UserRegisterRequest{
 		Name:     userToRegister.Username,
 		Password: userToRegister.Password,
 		Email:    strings.ToLower(userToRegister.Email),
