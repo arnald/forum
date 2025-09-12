@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/arnald/forum/internal/domain/comments"
 	"github.com/arnald/forum/internal/domain/user"
 )
 
@@ -224,29 +225,76 @@ func (r Repo) DeleteTopic(ctx context.Context, userID string, topicID int) error
 
 func (r Repo) GetTopicByID(ctx context.Context, topicID int) (*user.Topic, error) {
 	query := `
-	SELECT id, user_id, title, content, image_path, category_id, created_at, updated_at
-	FROM topics
-	WHERE id = ?
+	SELECT 
+		t.id, t.user_id, t.title, t.content, t.image_path, t.category_id, t.created_at, t.updated_at,
+		c.id, c.user_id, c.content, c.created_at, c.updated_at,
+		u.username
+	FROM topics t
+	LEFT JOIN comments c ON t.id = c.topic_id
+	LEFT JOIN users u ON c.user_id = u.id
+	WHERE t.id = ?
 	`
-	var topic user.Topic
-	err := r.DB.QueryRowContext(ctx, query, topicID).Scan(
-		&topic.ID,
-		&topic.UserID,
-		&topic.Title,
-		&topic.Content,
-		&topic.ImagePath,
-		&topic.CategoryID,
-		&topic.CreatedAt,
-		&topic.UpdatedAt,
-	)
 
-	if errors.Is(err, sql.ErrNoRows) {
+	rows, err := r.DB.QueryContext(ctx, query, topicID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query topic: %w", err)
+	}
+	defer rows.Close()
+
+	topic := &user.Topic{}
+	commentsList := make([]comments.Comment, 0)
+	found := false
+
+	for rows.Next() {
+		found = true
+
+		var commentID sql.NullInt64
+		var commentUserID, commentContent, commentUsername sql.NullString
+		var commentCreatedAt, commentUpdatedAt sql.NullTime
+
+		err = rows.Scan(
+			&topic.ID,
+			&topic.UserID,
+			&topic.Title,
+			&topic.Content,
+			&topic.ImagePath,
+			&topic.CategoryID,
+			&topic.CreatedAt,
+			&topic.UpdatedAt,
+			&commentID,
+			&commentUserID,
+			&commentContent,
+			&commentCreatedAt,
+			&commentUpdatedAt,
+			&commentUsername,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan row: %w", err)
+		}
+
+		if commentID.Valid {
+			comment := comments.Comment{
+				ID:        int(commentID.Int64),
+				UserID:    commentUserID.String,
+				TopicID:   topicID,
+				Content:   commentContent.String,
+				CreatedAt: commentCreatedAt.Time,
+				UpdatedAt: commentUpdatedAt.Time,
+				Username:  commentUsername.String,
+			}
+			commentsList = append(commentsList, comment)
+		}
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return nil, fmt.Errorf("error iterating rows: %w", err)
+	}
+
+	if !found {
 		return nil, fmt.Errorf("topic with ID %d not found: %w", topicID, ErrTopicNotFound)
 	}
 
-	if err != nil {
-		return nil, fmt.Errorf("failed to get topic by ID: %w", err)
-	}
-
-	return &topic, nil
+	topic.Comments = commentsList
+	return topic, nil
 }
