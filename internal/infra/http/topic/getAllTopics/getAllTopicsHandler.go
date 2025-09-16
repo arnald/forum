@@ -1,0 +1,77 @@
+package getalltopics
+
+import (
+	"context"
+	"encoding/json"
+	"net/http"
+
+	"github.com/arnald/forum/internal/app"
+	topicQueries "github.com/arnald/forum/internal/app/topics/queries"
+	"github.com/arnald/forum/internal/config"
+	"github.com/arnald/forum/internal/domain/user"
+	"github.com/arnald/forum/internal/infra/logger"
+	"github.com/arnald/forum/internal/pkg/helpers"
+)
+
+type RequestModel struct {
+	OrderBy  string `json:"orderBy,omitempty"`
+	Filter   string `json:"filter,omitempty"`
+	Page     int    `json:"page"`
+	PageSize int    `json:"pageSize"`
+}
+
+type ResponseModel struct {
+	Topics []user.Topic `json:"topics"`
+}
+
+type Handler struct {
+	UserServices app.Services
+	Config       *config.ServerConfig
+	Logger       logger.Logger
+}
+
+func NewHandler(userServices app.Services, config *config.ServerConfig, logger logger.Logger) *Handler {
+	return &Handler{
+		UserServices: userServices,
+		Config:       config,
+		Logger:       logger,
+	}
+}
+
+func (h *Handler) GetAllTopics(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		h.Logger.PrintError(logger.ErrInvalidRequestMethod, nil)
+		helpers.RespondWithError(w, http.StatusMethodNotAllowed, "Invalid request method")
+		return
+	}
+
+	// TODO: add validation for query params (page, size, orderBy, filter)
+
+	ctx, cancel := context.WithTimeout(r.Context(), h.Config.Timeouts.HandlerTimeouts.UserRegister)
+	defer cancel()
+
+	var req RequestModel
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		h.Logger.PrintError(err, nil)
+		helpers.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+
+	topics, err := h.UserServices.UserServices.Queries.GetAllTopics.Handle(ctx, topicQueries.GetAllTopicsRequest{
+		Page:    req.Page,
+		Size:    req.PageSize,
+		OrderBy: req.OrderBy,
+		Filter:  req.Filter,
+	})
+	if err != nil {
+		h.Logger.PrintError(err, nil)
+		helpers.RespondWithError(w, http.StatusInternalServerError, "Failed to get topics")
+		return
+	}
+
+	response := ResponseModel{
+		Topics: topics,
+	}
+	helpers.RespondWithJSON(w, http.StatusOK, nil, response)
+}

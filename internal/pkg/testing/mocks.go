@@ -19,6 +19,7 @@ type MockRepository struct {
 	UpdateTopicFunc       func(ctx context.Context, topic *user.Topic) error
 	DeleteTopicFunc       func(ctx context.Context, userID string, topicID int) error
 	GetTopicByIDFunc      func(ctx context.Context, topicID int) (*user.Topic, error)
+	GetAllTopicsFunc      func(ctx context.Context, page, size int, orderBy, filter string) ([]user.Topic, error)
 }
 
 func (m *MockRepository) UserRegister(ctx context.Context, user *user.User) error {
@@ -70,6 +71,13 @@ func (m *MockRepository) DeleteTopic(ctx context.Context, userID string, topicID
 func (m *MockRepository) GetTopicByID(ctx context.Context, topicID int) (*user.Topic, error) {
 	if m.GetTopicByIDFunc != nil {
 		return m.GetTopicByIDFunc(ctx, topicID)
+	}
+	return nil, ErrTest
+}
+
+func (m *MockRepository) GetAllTopics(ctx context.Context, page, size int, orderBy, filter string) ([]user.Topic, error) {
+	if m.GetAllTopicsFunc != nil {
+		return m.GetAllTopicsFunc(ctx, page, size, orderBy, filter)
 	}
 	return nil, ErrTest
 }

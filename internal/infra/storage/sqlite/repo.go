@@ -226,16 +226,21 @@ func (r Repo) DeleteTopic(ctx context.Context, userID string, topicID int) error
 func (r Repo) GetTopicByID(ctx context.Context, topicID int) (*user.Topic, error) {
 	query := `
 	SELECT 
-		t.id, t.user_id, t.title, t.content, t.image_path, t.category_id, t.created_at, t.updated_at,
-		c.id, c.user_id, c.content, c.created_at, c.updated_at,
-		u.username
+		t.id, t.user_id, u.username, t.title, t.content, t.image_path, t.category_id, t.created_at, t.updated_at,
+		c.id, c.user_id, c.content, c.created_at, c.updated_at, u.username
 	FROM topics t
 	LEFT JOIN comments c ON t.id = c.topic_id
 	LEFT JOIN users u ON c.user_id = u.id
 	WHERE t.id = ?
 	`
 
-	rows, err := r.DB.QueryContext(ctx, query, topicID)
+	stmt, err := r.DB.PrepareContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("prepare failed: %w", err)
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.QueryContext(ctx, topicID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query topic: %w", err)
 	}
@@ -255,6 +260,7 @@ func (r Repo) GetTopicByID(ctx context.Context, topicID int) (*user.Topic, error
 		err = rows.Scan(
 			&topic.ID,
 			&topic.UserID,
+			&topic.OwnerUsername,
 			&topic.Title,
 			&topic.Content,
 			&topic.ImagePath,
@@ -297,4 +303,65 @@ func (r Repo) GetTopicByID(ctx context.Context, topicID int) (*user.Topic, error
 
 	topic.Comments = commentsList
 	return topic, nil
+}
+
+func (r Repo) GetAllTopics(ctx context.Context, page, size int, orderBy, filter string) ([]user.Topic, error) {
+	query := `
+	SELECT 
+		t.id, t.user_id, t.title, t.content, t.image_path, t.category_id, t.created_at, t.updated_at,
+		u.username
+	FROM topics t
+	LEFT JOIN users u ON t.user_id = u.id
+	WHERE 1=1
+	`
+
+	var args []interface{}
+	if filter != "" {
+		query += " AND (t.title LIKE ? OR t.content LIKE ?)"
+		filterParam := "%" + filter + "%"
+		args = append(args, filterParam, filterParam)
+	}
+
+	query += " ORDER BY t." + orderBy + " LIMIT ? OFFSET ?"
+	offset := (page - 1) * size
+	args = append(args, size, offset)
+
+	stmt, err := r.DB.PrepareContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("prepare failed: %w", err)
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.QueryContext(ctx, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query topics: %w", err)
+	}
+	defer rows.Close()
+
+	topics := []user.Topic{}
+	for rows.Next() {
+		var topic user.Topic
+		err = rows.Scan(
+			&topic.ID,
+			&topic.UserID,
+			&topic.Title,
+			&topic.Content,
+			&topic.ImagePath,
+			&topic.CategoryID,
+			&topic.CreatedAt,
+			&topic.UpdatedAt,
+			&topic.OwnerUsername,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan row: %w", err)
+		}
+		topics = append(topics, topic)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return nil, fmt.Errorf("error iterating rows: %w", err)
+	}
+
+	return topics, nil
 }

@@ -14,6 +14,7 @@ type Queries struct {
 	UserLoginEmail    userQueries.UserLoginEmailRequestHandler
 	UserLoginUsername userQueries.UserLoginUsernameRequestHandler
 	GetTopic          topicQueries.GetTopicRequestHandler
+	GetAllTopics      topicQueries.GetAllTopicsRequestHandler
 }
 
 type Commands struct {
@@ -41,6 +42,7 @@ func NewServices(repo user.Repository) Services {
 				userQueries.NewUserLoginEmailHandler(repo, encryption),
 				userQueries.NewUserLoginUsernameHandler(repo, encryption),
 				topicQueries.NewGetTopicHandler(repo),
+				topicQueries.NewGetAllTopicsHandler(repo),
 			},
 			Commands: Commands{
 				topicCommands.NewCreateTopicHandler(repo),
