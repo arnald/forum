@@ -326,17 +326,38 @@ func (r Repo) GetTopicByID(ctx context.Context, topicID int) (*user.Topic, error
 	return topic, nil
 }
 
+func (r Repo) GetTotalTopicsCount(ctx context.Context, filter string) (int, error) {
+	countQuery := `
+    SELECT COUNT(*) 
+    FROM topics t
+    WHERE 1=1`
+
+	args := make([]interface{}, 0)
+	if filter != "" {
+		countQuery += " AND (t.title LIKE ? OR t.content LIKE ?)"
+		filterParam := "%" + filter + "%"
+		args = append(args, filterParam, filterParam)
+	}
+
+	var totalCount int
+	err := r.DB.QueryRowContext(ctx, countQuery, args...).Scan(&totalCount)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get total count: %w", err)
+	}
+
+	return totalCount, nil
+}
+
 func (r Repo) GetAllTopics(ctx context.Context, page, size int, orderBy, filter string) ([]user.Topic, error) {
 	query := `
-	SELECT 
-		t.id, t.user_id, t.title, t.content, t.image_path, t.category_id, t.created_at, t.updated_at,
-		u.username
-	FROM topics t
-	LEFT JOIN users u ON t.user_id = u.id
-	WHERE 1=1
-	`
+    SELECT 
+        t.id, t.user_id, t.title, t.content, t.image_path, t.category_id, t.created_at, t.updated_at,
+        u.username
+    FROM topics t
+    LEFT JOIN users u ON t.user_id = u.id
+    WHERE 1=1`
 
-	var args []interface{}
+	args := make([]interface{}, 0)
 	if filter != "" {
 		query += " AND (t.title LIKE ? OR t.content LIKE ?)"
 		filterParam := "%" + filter + "%"
@@ -359,7 +380,7 @@ func (r Repo) GetAllTopics(ctx context.Context, page, size int, orderBy, filter 
 	}
 	defer rows.Close()
 
-	topics := []user.Topic{}
+	topics := make([]user.Topic, 0)
 	for rows.Next() {
 		var topic user.Topic
 		err = rows.Scan(

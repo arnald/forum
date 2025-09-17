@@ -14,7 +14,7 @@ type GetAllTopicsRequest struct {
 }
 
 type GetAllTopicsRequestHandler interface {
-	Handle(ctx context.Context, req GetAllTopicsRequest) ([]user.Topic, error)
+	Handle(ctx context.Context, req GetAllTopicsRequest) ([]user.Topic, int, error)
 }
 
 type getAllTopicsRequestHandler struct {
@@ -27,10 +27,15 @@ func NewGetAllTopicsHandler(repo user.Repository) GetAllTopicsRequestHandler {
 	}
 }
 
-func (h getAllTopicsRequestHandler) Handle(ctx context.Context, req GetAllTopicsRequest) ([]user.Topic, error) {
+func (h getAllTopicsRequestHandler) Handle(ctx context.Context, req GetAllTopicsRequest) ([]user.Topic, int, error) {
 	topics, err := h.repo.GetAllTopics(ctx, req.Page, req.Size, req.OrderBy, req.Filter)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	return topics, nil
+
+	count, err := h.repo.GetTotalTopicsCount(ctx, req.Filter)
+	if err != nil {
+		return nil, 0, err
+	}
+	return topics, count, nil
 }
