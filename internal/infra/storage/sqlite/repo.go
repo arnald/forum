@@ -169,10 +169,16 @@ func (r Repo) UpdateTopic(ctx context.Context, topic *user.Topic) error {
 	}
 	defer func() {
 		if err != nil {
-			tx.Rollback()
+			rollbackErr := tx.Rollback()
+			if rollbackErr != nil {
+				err = fmt.Errorf("transaction rollback failed: %w (original error: %w)", rollbackErr, err)
+			}
 			return
 		}
 		err = tx.Commit()
+		if err != nil {
+			err = fmt.Errorf("transaction commit failed: %w", err)
+		}
 	}()
 
 	query := `
