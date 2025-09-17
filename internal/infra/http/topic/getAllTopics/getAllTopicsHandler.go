@@ -22,7 +22,10 @@ type RequestModel struct {
 }
 
 type ResponseModel struct {
-	Topics []user.Topic `json:"topics"`
+	Topics      []user.Topic `json:"topics"`
+	TotalCount  int          `json:"totalCount"`
+	CurrentPage int          `json:"currentPage"`
+	PageSize    int          `json:"pageSize"`
 }
 
 type Handler struct {
@@ -71,7 +74,7 @@ func (h *Handler) GetAllTopics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	topics, err := h.UserServices.UserServices.Queries.GetAllTopics.Handle(ctx, topicQueries.GetAllTopicsRequest{
+	topics, count, err := h.UserServices.UserServices.Queries.GetAllTopics.Handle(ctx, topicQueries.GetAllTopicsRequest{
 		Page:    req.Page,
 		Size:    req.PageSize,
 		OrderBy: req.OrderBy,
@@ -84,7 +87,10 @@ func (h *Handler) GetAllTopics(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := ResponseModel{
-		Topics: topics,
+		Topics:      topics,
+		TotalCount:  count,
+		CurrentPage: req.Page,
+		PageSize:    req.PageSize,
 	}
 	helpers.RespondWithJSON(w, http.StatusOK, nil, response)
 }
