@@ -163,19 +163,30 @@ func (r Repo) CreateTopic(ctx context.Context, topic *user.Topic) error {
 }
 
 func (r Repo) UpdateTopic(ctx context.Context, topic *user.Topic) error {
+	tx, err := r.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+			return
+		}
+		err = tx.Commit()
+	}()
+
 	query := `
 	UPDATE topics 
-	SET title = ?, content = ?, image_path = ?, category_id = ?
+	SET title = ?, content = ?, image_path = ?, category_id = ?, updated_at = CURRENT_TIMESTAMP
 	WHERE id = ? AND user_id = ?`
 
-	stmt, err := r.DB.PrepareContext(ctx, query)
+	stmt, err := tx.PrepareContext(ctx, query)
 	if err != nil {
 		return fmt.Errorf("prepare failed: %w", err)
 	}
 	defer stmt.Close()
 
-	_, err = stmt.ExecContext(
-		ctx,
+	result, err := stmt.ExecContext(ctx,
 		topic.Title,
 		topic.Content,
 		topic.ImagePath,
@@ -184,12 +195,16 @@ func (r Repo) UpdateTopic(ctx context.Context, topic *user.Topic) error {
 		topic.UserID,
 	)
 	if err != nil {
-		switch {
-		case errors.Is(err, sql.ErrNoRows):
-			return fmt.Errorf("topic with ID %d not found: %w", topic.ID, ErrTopicNotFound)
-		default:
-			return fmt.Errorf("failed to update topic: %w", err)
-		}
+		return fmt.Errorf("failed to execute update: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get rows affected: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("topic with ID %d not found or user not authorized: %w", topic.ID, ErrTopicNotFound)
 	}
 
 	return nil
