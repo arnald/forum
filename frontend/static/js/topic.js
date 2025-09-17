@@ -31,9 +31,10 @@ document.addEventListener("DOMContentLoaded", () => {
     ".upload-placeholder",
     "error-image"
   );
+
   initUploadFeature(
     "commentUploadBox",
-    "comment-image-upload",
+    "commentImageUpload",
     "commentImagePreview",
     ".upload-placeholder"
   );
@@ -50,8 +51,15 @@ function initUploadFeature(
   const uploadBox = document.getElementById(boxId);
   const fileInput = document.getElementById(inputId);
   const preview = document.getElementById(previewId);
-  const uploadPlaceholder = uploadBox.querySelector(placeholderSelector);
+  const uploadPlaceholder = uploadBox
+    ? uploadBox.querySelector(placeholderSelector)
+    : null;
   const errorEl = errorId ? document.getElementById(errorId) : null;
+
+  // Early return if essential elements are missing
+  if (!uploadBox || !fileInput || !preview || !uploadPlaceholder) {
+    return;
+  }
 
   let removeBtn = removeBtnId ? document.getElementById(removeBtnId) : null;
   if (!removeBtn) {
