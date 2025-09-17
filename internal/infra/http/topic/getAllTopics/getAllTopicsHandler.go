@@ -11,6 +11,7 @@ import (
 	"github.com/arnald/forum/internal/domain/user"
 	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/pkg/helpers"
+	"github.com/arnald/forum/internal/pkg/validator"
 )
 
 type RequestModel struct {
@@ -45,8 +46,6 @@ func (h *Handler) GetAllTopics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: add validation for query params (page, size, orderBy, filter)
-
 	ctx, cancel := context.WithTimeout(r.Context(), h.Config.Timeouts.HandlerTimeouts.UserRegister)
 	defer cancel()
 
@@ -55,6 +54,20 @@ func (h *Handler) GetAllTopics(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.Logger.PrintError(err, nil)
 		helpers.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+
+	v := validator.New()
+
+	validator.ValidateGetAllTopics(v, &req)
+	if !v.Valid() {
+		helpers.RespondWithError(
+			w,
+			http.StatusBadRequest,
+			v.ToStringErrors(),
+		)
+
+		h.Logger.PrintError(logger.ErrValidationFailed, v.Errors)
 		return
 	}
 
