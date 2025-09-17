@@ -12,18 +12,17 @@ const commentForm = document.querySelector(".add-comment");
 const closeBtn = document.querySelector(".close-comment-form");
 
 if (addCommentBtn && commentForm) {
-  addCommentBtn.addEventListener("click", () => {
-    commentForm.classList.toggle("active");
-  });
+  addCommentBtn.addEventListener("click", () =>
+    commentForm.classList.toggle("active")
+  );
 }
-
 if (closeBtn && commentForm) {
-  closeBtn.addEventListener("click", () => {
-    commentForm.classList.remove("active");
-  });
+  closeBtn.addEventListener("click", () =>
+    commentForm.classList.remove("active")
+  );
 }
 
-// Image Input, Image preview(both for post creation and comment creation)
+// Image upload (post + comment)
 document.addEventListener("DOMContentLoaded", () => {
   initUploadFeature(
     "uploadBox",
@@ -45,7 +44,8 @@ function initUploadFeature(
   inputId,
   previewId,
   placeholderSelector,
-  errorId
+  errorId,
+  removeBtnId
 ) {
   const uploadBox = document.getElementById(boxId);
   const fileInput = document.getElementById(inputId);
@@ -53,68 +53,69 @@ function initUploadFeature(
   const uploadPlaceholder = uploadBox.querySelector(placeholderSelector);
   const errorEl = errorId ? document.getElementById(errorId) : null;
 
-  const removeBtn = document.createElement("button");
-  removeBtn.type = "button";
-  removeBtn.textContent = "✕ Remove";
-  removeBtn.style.display = "none";
-  removeBtn.style.marginTop = "8px";
-  removeBtn.style.background = "#e63946";
-  removeBtn.style.color = "white";
-  removeBtn.style.border = "none";
-  removeBtn.style.borderRadius = "5px";
-  removeBtn.style.padding = "4px 8px";
-  removeBtn.style.cursor = "pointer";
-  uploadBox.appendChild(removeBtn);
+  let removeBtn = removeBtnId ? document.getElementById(removeBtnId) : null;
+  if (!removeBtn) {
+    removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.textContent = "✕ Remove";
+    Object.assign(removeBtn.style, {
+      display: "none",
+      marginTop: "8px",
+      background: "#e63946",
+      color: "white",
+      border: "none",
+      borderRadius: "5px",
+      padding: "4px 8px",
+      cursor: "pointer",
+    });
+    uploadBox.appendChild(removeBtn);
+  }
 
   uploadBox.addEventListener("click", () => fileInput.click());
 
   fileInput.addEventListener("change", () => {
     if (errorEl) errorEl.textContent = "";
     const file = fileInput.files[0];
-    if (!file) {
-      preview.style.display = "none";
-      removeBtn.style.display = "none";
-      uploadPlaceholder.style.display = "flex";
-      return;
-    }
+    if (!file) return reset();
+
     const allowedTypes = ["image/jpeg", "image/png", "image/gif"];
     const maxSizeMB = 20;
     if (
       !allowedTypes.includes(file.type) ||
       file.size > maxSizeMB * 1024 * 1024
     ) {
-      if (errorEl) {
+      if (errorEl)
         errorEl.textContent = !allowedTypes.includes(file.type)
           ? "Only JPEG, PNG, or GIF images are allowed."
           : "Image is too big. Max size is 20 MB.";
-      }
-      fileInput.value = "";
-      preview.style.display = "none";
-      removeBtn.style.display = "none";
-      uploadPlaceholder.style.display = "flex";
-      return;
+      return reset();
     }
-    uploadPlaceholder.style.display = "none";
+
     const reader = new FileReader();
     reader.onload = (e) => {
       preview.src = e.target.result;
       preview.style.display = "block";
       removeBtn.style.display = "inline-block";
+      uploadPlaceholder.style.display = "none";
     };
     reader.readAsDataURL(file);
   });
 
   removeBtn.addEventListener("click", (ev) => {
     ev.stopPropagation();
+    reset();
+  });
+
+  function reset() {
     fileInput.value = "";
     preview.src = "";
     preview.style.display = "none";
     removeBtn.style.display = "none";
     uploadPlaceholder.style.display = "flex";
-  });
+  }
 }
 
-// Buttons Functionality
+// Buttons (edit/save/cancel/delete)
 document.addEventListener("click", (e) => {
   const target = e.target;
 
@@ -126,44 +127,39 @@ document.addEventListener("click", (e) => {
     const textEl = container.querySelector(".post-text, .comment-text");
     const imgEl = container.querySelector(".post-image, .comment-image");
 
-    // Store original
     container.dataset.originalText = textEl.textContent.trim();
     container.dataset.originalImg = imgEl ? imgEl.src : "";
 
-    // Replace text with textarea
     textEl.innerHTML = `
-      <textarea class="edit-text" style="width:100%; min-height:80px;">${container.dataset.originalText}</textarea>
-    `;
-
-    // Image upload HTML
-    let imgHtml = `<img id="editImagePreview" style="max-width:100%; border-radius:8px; margin-top:8px; display:none;">`;
-    if (container.dataset.originalImg) {
-      imgHtml = `<img id="editImagePreview" src="${container.dataset.originalImg}" style="max-width:100%; border-radius:8px; margin-top:8px;">`;
-    }
-
-    textEl.insertAdjacentHTML(
-      "beforeend",
-      `
+      <textarea class="edit-text" style="width:100%; min-height:80px;">${
+        container.dataset.originalText
+      }</textarea>
       <div class="edit-image-box" id="editImageBox">
-        ${imgHtml}
+        <img id="editImagePreview" src="${container.dataset.originalImg || ""}" 
+             style="max-width:100%; max-height:600px; border-radius:8px; margin-top:8px; ${
+               container.dataset.originalImg ? "" : "display:none"
+             }">
+        <button type="button" id="editRemoveImage" 
+                style="margin-top:8px; background:#e63946; color:white; border:none; border-radius:5px; padding:4px 8px; cursor:pointer; ${
+                  container.dataset.originalImg ? "" : "display:none"
+                }">
+          ✕ Remove Image
+        </button>
         <input type="file" id="edit-image-upload" accept="image/jpeg,image/png,image/gif" hidden />
-        <div class="upload-placeholder" style="margin-top:8px; color:gray; cursor:pointer;">
-          Click to upload new image
-        </div>
+        <div class="upload-placeholder" style="margin-top:8px; color:gray; cursor:pointer;">Click to upload new image</div>
       </div>
       <button class="btn-save action-btn" style="background:#068f56; color:white; margin-top:8px;">Save</button>
       <button class="btn-cancel action-btn" style="background:#ccc; margin-top:8px;">Cancel</button>
-    `
-    );
+    `;
 
-    // Init upload
     initUploadFeature(
       "editImageBox",
       "edit-image-upload",
       "editImagePreview",
-      ".upload-placeholder"
+      ".upload-placeholder",
+      null,
+      "editRemoveImage"
     );
-
     return;
   }
 
@@ -177,21 +173,18 @@ document.addEventListener("click", (e) => {
     const imgSrc =
       imgPreview && imgPreview.style.display !== "none" ? imgPreview.src : "";
 
-    // Update text
     const textEl = container.querySelector(".post-text, .comment-text");
     textEl.textContent = newText;
 
-    // Update image
     let imgEl = container.querySelector(".comment-image, .post-image");
-
-    // Ensure .img-box exists right after the text
-    let imgBox = container.querySelector(".img-box");
-
-    if (!imgBox) {
-      imgBox = document.createElement("div");
-      imgBox.className = "img-box";
-      textEl.insertAdjacentElement("afterend", imgBox); // place right after text
-    }
+    let imgBox =
+      container.querySelector(".img-box") ||
+      (() => {
+        const box = document.createElement("div");
+        box.className = "img-box";
+        textEl.insertAdjacentElement("afterend", box);
+        return box;
+      })();
 
     if (imgSrc) {
       if (!imgEl) {
@@ -199,27 +192,20 @@ document.addEventListener("click", (e) => {
         imgEl.className = textEl.classList.contains("post-text")
           ? "post-image"
           : "comment-image";
-        imgEl.style.maxWidth = "100%";
-        imgEl.style.borderRadius = "8px";
-        imgEl.style.marginTop = "8px";
-        imgEl.src = imgSrc;
-
-        imgBox.appendChild(imgEl); // image goes inside img-box
-      } else {
-        imgEl.src = imgSrc;
+        Object.assign(imgEl.style, {
+          maxWidth: "100%",
+          maxHeight: "600px",
+          borderRadius: "8px",
+          marginTop: "8px",
+        });
+        imgBox.appendChild(imgEl);
       }
-    } else if (imgEl) {
-      imgEl.remove();
-    }
+      imgEl.src = imgSrc;
+    } else if (imgEl) imgEl.remove();
 
-    // Remove edit elements
-    const editBox = container.querySelector(".edit-image-box");
-    if (editBox) editBox.remove();
-    const saveBtn = container.querySelector(".btn-save");
-    const cancelBtn = container.querySelector(".btn-cancel");
-    if (saveBtn) saveBtn.remove();
-    if (cancelBtn) cancelBtn.remove();
-
+    container.querySelector(".edit-image-box")?.remove();
+    container.querySelector(".btn-save")?.remove();
+    container.querySelector(".btn-cancel")?.remove();
     return;
   }
 
@@ -231,10 +217,8 @@ document.addEventListener("click", (e) => {
     const textEl = container.querySelector(".post-text, .comment-text");
     const imgEl = container.querySelector(".post-image, .comment-image");
 
-    // Restore original text
     textEl.textContent = container.dataset.originalText || "";
 
-    // Restore original image
     if (container.dataset.originalImg) {
       if (!imgEl) {
         const img = document.createElement("img");
@@ -243,41 +227,30 @@ document.addEventListener("click", (e) => {
           : "comment-image";
         img.src = container.dataset.originalImg;
         img.style.maxWidth = "100%";
-
-        const bodyContainer = container.querySelector(
-          ".topic-body, .comment-body"
-        );
-        const imgBox =
-          bodyContainer.querySelector(".img-box") ||
-          document.createElement("div");
-        if (!imgBox.classList.contains("img-box")) {
-          imgBox.className = "img-box";
-          bodyContainer.appendChild(imgBox);
-        }
-        imgBox.appendChild(img);
-      } else {
-        imgEl.src = container.dataset.originalImg;
-      }
-    } else if (imgEl) {
-      imgEl.remove();
-    }
-
+        (
+          container
+            .querySelector(".topic-body, .comment-body")
+            ?.querySelector(".img-box") ||
+          container.appendChild(
+            Object.assign(document.createElement("div"), {
+              className: "img-box",
+            })
+          )
+        ).appendChild(img);
+      } else imgEl.src = container.dataset.originalImg;
+    } else if (imgEl) imgEl.remove();
     return;
   }
 
   // --- DELETE ---
   if (target.classList.contains("btn-delete")) {
     if (confirm("Are you sure you want to delete this?")) {
-      // Look for comment OR post container
       const commentContainer = target.closest(".comment-content");
-      const postContainer = target.closest(".topic-container"); // full post wrapper
-
-      if (commentContainer) {
-        commentContainer.remove();
-      } else if (postContainer) {
+      const postContainer = target.closest(".topic-container");
+      if (commentContainer) commentContainer.remove();
+      else if (postContainer) {
         postContainer.remove();
-        // Optional: redirect to homepage after post deletion
-        window.location.href = "/"; // change to your homepage URL
+        window.location.href = "/";
       }
     }
   }
