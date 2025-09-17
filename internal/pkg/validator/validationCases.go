@@ -9,6 +9,7 @@ const (
 	MaxTopicTitleLength   = 100
 	MinTopicContentLength = 10
 	MaxTopicContentLength = 1000
+	MaxPageSize           = 100
 )
 
 func ValidateUserRegistration(v *Validator, data any) {
@@ -118,6 +119,34 @@ func ValidateCreateTopic(v *Validator, data any) {
 		// 		validCategory,
 		// 	},
 		// },
+	}
+
+	ValidateStruct(v, data, rules)
+}
+
+func ValidateGetAllTopics(v *Validator, data any) {
+	rules := []ValidationRule{
+		{
+			Field: "OrderBy",
+			Rules: []func(any) (bool, string){
+				optional(validOrderBy),
+			},
+		},
+		{
+			Field: "Page",
+			Rules: []func(any) (bool, string){
+				required,
+				isPositiveInt,
+			},
+		},
+		{
+			Field: "PageSize",
+			Rules: []func(any) (bool, string){
+				required,
+				isPositiveInt,
+				maxInt(MaxPageSize),
+			},
+		},
 	}
 
 	ValidateStruct(v, data, rules)
