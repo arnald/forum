@@ -1,4 +1,4 @@
-// Reaction box click triggers button click
+////// Reaction box click triggers button click //////
 document.querySelectorAll(".reaction-box").forEach((box) => {
   box.addEventListener("click", function () {
     const btn = this.querySelector("button");
@@ -6,7 +6,7 @@ document.querySelectorAll(".reaction-box").forEach((box) => {
   });
 });
 
-// Toggle add comment form
+////// Toggle add comment form //////
 const addCommentBtn = document.querySelector(".btn-comment");
 const commentForm = document.querySelector(".add-comment");
 const closeBtn = document.querySelector(".close-comment-form");
@@ -22,21 +22,14 @@ if (closeBtn && commentForm) {
   );
 }
 
-// Image upload (post + comment)
+////// Image upload (post + comment) //////
 document.addEventListener("DOMContentLoaded", () => {
-  initUploadFeature(
-    "uploadBox",
-    "image-upload",
-    "imagePreview",
-    ".upload-placeholder",
-    "error-image"
-  );
-
   initUploadFeature(
     "commentUploadBox",
     "commentImageUpload",
     "commentImagePreview",
-    ".upload-placeholder"
+    ".upload-placeholder",
+    "error-image"
   );
 });
 
@@ -123,7 +116,7 @@ function initUploadFeature(
   }
 }
 
-// Buttons (edit/save/cancel/delete)
+////// Buttons (edit/save/cancel/delete) //////
 document.addEventListener("click", (e) => {
   const target = e.target;
 
@@ -148,7 +141,7 @@ document.addEventListener("click", (e) => {
                container.dataset.originalImg ? "" : "display:none"
              }">
         <button type="button" id="editRemoveImage" 
-                style="margin-top:8px; background:#e63946; color:white; border:none; border-radius:5px; padding:4px 8px; cursor:pointer; ${
+                style="display:block; margin-top:8px; background:#e63946; color:white; border:none; border-radius:5px; padding:4px 8px; cursor:pointer; ${
                   container.dataset.originalImg ? "" : "display:none"
                 }">
           ✕ Remove Image

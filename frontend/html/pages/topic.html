@@ -120,6 +120,9 @@
         <button type="button" class="close-comment-form">✖</button>
       </div>
       <form enctype="multipart/form-data" class="comment-form" novalidate>
+        <!-- Add hidden input so we can send the topic id
+             without using the url paramerters -->
+        <input type="hidden" name="topic_id" value="{{.Topic.ID}}" />
         <div class="comment-form-field">
           <textarea
             class="input comment-textarea"
