@@ -87,5 +87,8 @@ func setupRoutes() *http.ServeMux {
 	// Single Topic page
 	router.HandleFunc("/topic/", handler.TopicPage)
 
+	// Handle Add Comment Form
+	router.HandleFunc("/comment/add", handler.AddCommentHandler)
+
 	return router
 }

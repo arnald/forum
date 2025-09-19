@@ -1,7 +1,10 @@
 package handler
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -12,6 +15,7 @@ import (
 	"text/template"
 
 	"github.com/arnald/forum/cmd/helpers/validation"
+	"github.com/arnald/forum/internal/pkg/uuid"
 )
 
 const (
@@ -370,6 +374,89 @@ func TopicPage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Render error", http.StatusInternalServerError)
 		log.Println("Render error:", err)
 	}
+}
+
+// Add Comment Handler
+func AddCommentHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Parse multipart form (max 20MB file + form data)
+	err := r.ParseMultipartForm(20 << 10)
+	if err != nil {
+		http.Error(w, "Invalid form data", http.StatusBadRequest)
+		return
+	}
+
+	topicID := r.FormValue("topic_id")
+	content := r.FormValue(("add-comment"))
+
+	// Handle optional image
+	var imagePath string
+	file, header, err := r.FormFile("comment-image-upload")
+	if err == nil {
+		defer file.Close()
+
+		// Ensure upload directory exists
+		basePath, _ := os.Getwd()
+		uploadDir := filepath.Join(basePath, "frontend", "static", "images", "uploads", "comments")
+		err := os.MkdirAll(uploadDir, os.ModePerm)
+		if err != nil {
+			http.Error(w, "Failed to create upload dir", http.StatusInternalServerError)
+			return
+		}
+
+		// Generate unique filename
+		uuidProvider := uuid.NewProvider()
+		ext := filepath.Ext(header.Filename)
+		filename := fmt.Sprintf("%s%s", uuidProvider.NewUUID().String(), ext)
+		dstPath := filepath.Join(uploadDir, filename)
+
+		dst, err := os.Create(dstPath)
+		if err != nil {
+			http.Error(w, "Failed to save file", http.StatusInternalServerError)
+			return
+		}
+		defer dst.Close()
+
+		_, err = io.Copy(dst, file)
+		if err != nil {
+			http.Error(w, "Failed to write file", http.StatusInternalServerError)
+			return
+		}
+
+		// Public path for frontend + backend
+		imagePath = "/static/images/uploads/comments/" + filename
+	}
+
+	// Build payload for backend
+	payload := map[string]interface{}{
+		"topic_id": topicID,
+		"author":   "TODO: get from session", // You’d replace this later
+		"content":  content,
+		"image":    imagePath,
+	}
+
+	jsonBytes, err := json.Marshal(payload)
+	if err != nil {
+		http.Error(w, "Failed to encode payload", http.StatusInternalServerError)
+		return
+	}
+
+	// Send payload to backend API
+	resp, err := http.Post("http://localhost:8080/api/comments", "application/json", bytes.NewReader(jsonBytes))
+	if err != nil {
+		http.Error(w, "Failed to reach backend", http.StatusBadGateway)
+		return
+	}
+	defer resp.Body.Close()
+
+	// Forward backend response back to JS
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(resp.StatusCode)
+	io.Copy(w, resp.Body)
 }
 
 // Register Handler GET
