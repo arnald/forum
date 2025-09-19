@@ -30,6 +30,20 @@ document.addEventListener("DOMContentLoaded", () => {
     commentForm.addEventListener("submit", async (e) => {
       e.preventDefault();
 
+      const textarea = commentForm.querySelector(".comment-textarea");
+      const errorDiv = commentForm.querySelector("#error-image");
+      const content = textarea.value.trim();
+
+      // Clear previous error
+      errorDiv.textContent = "";
+
+      // Validation: empty textarea
+      if (!content) {
+        errorDiv.textContent = "Input must not be empty.";
+        textarea.focus();
+        return; // stop submission
+      }
+
       const formData = new FormData(commentForm);
 
       try {
