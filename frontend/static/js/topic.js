@@ -22,6 +22,36 @@ if (closeBtn && commentForm) {
   );
 }
 
+////// Handle submit form, for adding comment //////
+document.addEventListener("DOMContentLoaded", () => {
+  const commentForm = document.querySelector(".comment-form");
+
+  if (commentForm) {
+    commentForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(commentForm);
+
+      try {
+        const res = await fetch("/comment/add", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!res.ok) throw new Error("Failed to post comment");
+
+        const result = await res.json();
+
+        // Redirect to re-trigger Go template render
+        window.location.href = `http://localhost:3001/topic/${result.topic_id}`;
+      } catch (err) {
+        console.error("Comment error:", err);
+        alert("Could not post comment. Please try again.");
+      }
+    });
+  }
+});
+
 ////// Image upload (post + comment) //////
 document.addEventListener("DOMContentLoaded", () => {
   initUploadFeature(
@@ -140,12 +170,6 @@ document.addEventListener("click", (e) => {
              style="max-width:100%; max-height:600px; border-radius:8px; margin-top:8px; ${
                container.dataset.originalImg ? "" : "display:none"
              }">
-        <button type="button" id="editRemoveImage" 
-                style="display:block; margin-top:8px; background:#e63946; color:white; border:none; border-radius:5px; padding:4px 8px; cursor:pointer; ${
-                  container.dataset.originalImg ? "" : "display:none"
-                }">
-          ✕ Remove Image
-        </button>
         <input type="file" id="edit-image-upload" accept="image/jpeg,image/png,image/gif" hidden />
         <div class="upload-placeholder" style="margin-top:8px; color:gray; cursor:pointer;">Click to upload new image</div>
       </div>
@@ -158,8 +182,7 @@ document.addEventListener("click", (e) => {
       "edit-image-upload",
       "editImagePreview",
       ".upload-placeholder",
-      null,
-      "editRemoveImage"
+      null
     );
     return;
   }

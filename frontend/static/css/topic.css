@@ -96,7 +96,8 @@
   align-items: center;
   margin: 1rem 0;
 }
-.post-image {
+.post-image,
+.comment-image {
   max-width: 100%;
   min-height: 220px;
   max-height: 600px;
