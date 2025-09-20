@@ -101,7 +101,7 @@
   max-width: 100%;
   min-height: 220px;
   max-height: 600px;
-  object-fit: contain;
+  object-fit: cover;
   border-radius: 8px;
 }
 .post-link {

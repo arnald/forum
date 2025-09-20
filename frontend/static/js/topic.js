@@ -172,6 +172,10 @@ document.addEventListener("click", (e) => {
     const textEl = container.querySelector(".post-text, .comment-text");
     const imgEl = container.querySelector(".post-image, .comment-image");
 
+    if (container.querySelector(".edit-text")) {
+      return; // already editing
+    }
+
     container.dataset.originalText = textEl.textContent.trim();
     container.dataset.originalImg = imgEl ? imgEl.src : "";
 
