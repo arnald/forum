@@ -1,3 +1,21 @@
+/*
+Package config provides application configuration management for the forum.
+
+This package handles:
+- Loading configuration from environment variables and .env files
+- Setting up default values for all configuration options
+- Validating configuration parameters
+- Providing typed configuration structures for all components
+
+Configuration is organized into logical groups:
+- Server configuration (host, port, timeouts)
+- Database configuration (driver, path, migrations)
+- Session management configuration (cookies, security)
+- Handler timeout configuration
+
+The configuration system supports environment variable overrides and
+provides sensible defaults for development environments.
+*/
 package config
 
 import (
@@ -11,75 +29,89 @@ import (
 	"github.com/arnald/forum/internal/pkg/path"
 )
 
+// Default configuration values in seconds
 const (
-	readTimeout         = 5
-	writeTimeout        = 10
-	idleTimeout         = 15
-	configParts         = 2
-	defaultExpiry       = 86400
-	cleanupInternal     = 3600
-	maxSessionsPerUser  = 5
-	sessionIDLenght     = 32
-	userRegisterTimeout = 15
-	refreshTokenExpiry  = 30
-	userLoginTimeout    = 15
+	readTimeout         = 5      // HTTP read timeout in seconds
+	writeTimeout        = 10     // HTTP write timeout in seconds
+	idleTimeout         = 15     // HTTP idle timeout in seconds
+	configParts         = 2      // Expected parts in key=value configuration
+	defaultExpiry       = 86400  // Session expiry: 24 hours in seconds
+	cleanupInternal     = 3600   // Session cleanup interval: 1 hour in seconds
+	maxSessionsPerUser  = 5      // Maximum concurrent sessions per user
+	sessionIDLenght     = 32     // Length of generated session IDs
+	userRegisterTimeout = 15     // User registration handler timeout in seconds
+	refreshTokenExpiry  = 30     // Refresh token expiry in days
+	userLoginTimeout    = 15     // User login handler timeout in seconds
 )
 
+// Configuration validation errors
 var (
 	ErrMissingServerHost    = errors.New("missing SERVER_HOST in config")
 	ErrServerPortNotInteger = errors.New("invalid SERVER_PORT: must be integer")
 )
 
+// ServerConfig contains all configuration for the forum server
+// This is the main configuration structure that aggregates all other configs
 type ServerConfig struct {
-	Host           string
-	Port           string
-	Environment    string
-	APIContext     string
-	Database       DatabaseConfig
-	SessionManager SessionManagerConfig
-	Timeouts       TimeoutsConfig
-	ReadTimeout    time.Duration
-	WriteTimeout   time.Duration
-	IdleTimeout    time.Duration
+	Host           string                // Server host address (e.g., "localhost", "0.0.0.0")
+	Port           string                // Server port (e.g., "8080")
+	Environment    string                // Environment name (development, production, testing)
+	APIContext     string                // Base path for API endpoints (e.g., "/api/v1")
+	Database       DatabaseConfig        // Database configuration settings
+	SessionManager SessionManagerConfig  // Session and cookie management settings
+	Timeouts       TimeoutsConfig        // Various timeout configurations
+	ReadTimeout    time.Duration         // HTTP server read timeout
+	WriteTimeout   time.Duration         // HTTP server write timeout
+	IdleTimeout    time.Duration         // HTTP server idle connection timeout
 }
 
+// DatabaseConfig contains all database-related configuration
+// Supports SQLite with configurable migrations and seeding
 type DatabaseConfig struct {
-	Driver         string
-	Path           string
-	Pragma         string
-	MigrateOnStart bool
-	SeedOnStart    bool
-	OpenConn       int
+	Driver         string // Database driver name (e.g., "sqlite3")
+	Path           string // Database file path (e.g., "data/forum.db")
+	Pragma         string // SQLite pragma settings for performance and integrity
+	MigrateOnStart bool   // Whether to run database migrations on startup
+	SeedOnStart    bool   // Whether to seed database with initial data on startup
+	OpenConn       int    // Maximum number of open database connections
 }
 
+// SessionManagerConfig contains all session and cookie management settings
+// Handles user authentication state and security policies
 type SessionManagerConfig struct {
-	CookieName         string
-	CookiePath         string
-	CookieDomain       string
-	SameSite           string
-	DefaultExpiry      time.Duration
-	CleanupInterval    time.Duration
-	MaxSessionsPerUser int
-	SessionIDLength    int
-	SecureCookie       bool
-	HTTPOnlyCookie     bool
-	EnablePersistence  bool
-	LogSessions        bool
-	RefreshTokenExpiry time.Duration
+	CookieName         string        // Name of the session cookie
+	CookiePath         string        // Cookie path scope (usually "/")
+	CookieDomain       string        // Cookie domain scope (empty for current domain)
+	SameSite           string        // SameSite cookie attribute for CSRF protection
+	DefaultExpiry      time.Duration // How long sessions last before expiring
+	CleanupInterval    time.Duration // How often to clean up expired sessions
+	MaxSessionsPerUser int           // Maximum concurrent sessions per user
+	SessionIDLength    int           // Length of generated session identifiers
+	SecureCookie       bool          // Whether to set Secure flag (HTTPS only)
+	HTTPOnlyCookie     bool          // Whether to set HttpOnly flag (no JS access)
+	EnablePersistence  bool          // Whether sessions persist across server restarts
+	LogSessions        bool          // Whether to log session operations for debugging
+	RefreshTokenExpiry time.Duration // How long refresh tokens remain valid
 }
 
+// TimeoutsConfig groups various timeout configurations
+// Helps prevent slow operations from blocking the server
 type TimeoutsConfig struct {
-	HandlerTimeouts  HandlerTimeoutsConfig
-	UseCasesTimeouts UseCasesTimeoutsConfig
+	HandlerTimeouts  HandlerTimeoutsConfig  // HTTP handler timeout settings
+	UseCasesTimeouts UseCasesTimeoutsConfig // Business logic timeout settings
 }
 
+// HandlerTimeoutsConfig contains timeout settings for HTTP handlers
+// Prevents slow HTTP requests from blocking other requests
 type HandlerTimeoutsConfig struct {
-	UserRegister time.Duration
-	UserLogin    time.Duration
+	UserRegister time.Duration // Timeout for user registration requests
+	UserLogin    time.Duration // Timeout for user login requests
 }
 
-type UseCasesTimeoutsConfig struct { // Not implemented yet, but can be used for future use cases
-	UserRegister time.Duration
+// UseCasesTimeoutsConfig contains timeout settings for business logic operations
+// Currently minimal but extensible for future use cases
+type UseCasesTimeoutsConfig struct {
+	UserRegister time.Duration // Timeout for user registration business logic
 }
 
 func LoadConfig() (*ServerConfig, error) {
