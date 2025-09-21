@@ -1,8 +1,69 @@
-{{ define "content" }}
-<h1 class="forum-title">Welcome to Forum</h1>
-<div class="main-container">
-  {{ template "category_details" . }}
-  <!--  -->
-  {{ template "categories" . }}
-</div>
-{{ end }}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forum - Home</title>
+    <!-- Link to main stylesheet for consistent forum styling -->
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- Navigation bar - appears on all pages for consistent navigation -->
+    <nav>
+        <!-- Public navigation links - always visible -->
+        <a href="/">Home</a>
+        <a href="/posts">Posts</a>
+        <a href="/login">Login</a>
+
+        <!-- User info section - only shown when user is logged in -->
+        <!-- JavaScript will toggle this visibility based on authentication status -->
+        <span id="user-info" style="display: none;">
+            Welcome, <span id="username"></span>!
+            <a href="/create-post">Create Post</a>
+            <button id="logout-btn">Logout</button>
+        </span>
+    </nav>
+
+    <!-- Main content area -->
+    <main>
+        <h1>Welcome to the Forum</h1>
+
+        <div class="home-content">
+            <!-- Welcome message for new visitors -->
+            <p>Join our community and start discussing topics that matter to you!</p>
+
+            <!-- Quick action buttons for common tasks -->
+            <div class="quick-links">
+                <a href="/posts" class="btn btn-primary">View All Posts</a>
+                <a href="/register" class="btn btn-secondary">Join Now</a>
+            </div>
+
+            <!-- Categories section - shows available discussion categories -->
+            <div class="categories-section">
+                <h2>Categories</h2>
+                <!-- Container for dynamically loaded categories -->
+                <!-- JavaScript will populate this with categories from the API -->
+                <div id="categories-list">
+                    <!-- Categories will be loaded here by home.js -->
+                </div>
+            </div>
+
+            <!-- Recent posts section - shows latest forum activity -->
+            <div class="recent-posts">
+                <h2>Recent Posts</h2>
+                <!-- Container for dynamically loaded recent posts -->
+                <!-- JavaScript will populate this with recent posts from the API -->
+                <div id="recent-posts-list">
+                    <!-- Recent posts will be loaded here by home.js -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- JavaScript files for functionality -->
+    <!-- auth.js handles user authentication state and UI updates -->
+    <script src="/static/js/auth.js"></script>
+    <!-- home.js handles loading and displaying categories and recent posts -->
+    <script src="/static/js/home.js"></script>
+</body>
+</html>

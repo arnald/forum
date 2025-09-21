@@ -85,6 +85,10 @@ func (h Handler) UserLoginEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Set session cookie
+	sessionCookie := h.SessionManager.NewSessionCookie(newSession.AccessToken)
+	http.SetCookie(w, sessionCookie)
+
 	loginResponse := LoginResponse{
 		UserID:       user.ID,
 		Username:     user.Username,

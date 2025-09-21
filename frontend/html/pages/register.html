@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Forum</title>
+    <!-- Link to main stylesheet for consistent forum styling -->
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- Navigation bar - modified for register page (no register link) -->
+    <nav>
+        <a href="/">Home</a>
+        <a href="/posts">Posts</a>
+        <!-- Login link instead of register since user is on register page -->
+        <a href="/login">Login</a>
+    </nav>
+
+    <!-- Main content area -->
+    <main>
+        <h1>Register</h1>
+
+        <!-- Registration form - creates new user account -->
+        <!-- Form submission is handled by JavaScript in auth.js -->
+        <form id="registerForm">
+            <!-- Email field - must be unique in the system -->
+            <div>
+                <label for="email">Email:</label>
+                <!-- Email input with built-in validation -->
+                <input type="email" id="email" name="email" required>
+            </div>
+
+            <!-- Username field - must be unique in the system -->
+            <div>
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+
+            <!-- Password field - will be encrypted before storage -->
+            <div>
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+
+            <!-- Password confirmation field - validated client-side -->
+            <div>
+                <label for="confirmPassword">Confirm Password:</label>
+                <!-- Used to ensure user typed password correctly -->
+                <input type="password" id="confirmPassword" name="confirmPassword" required>
+            </div>
+
+            <!-- Submit button triggers form validation and API call -->
+            <button type="submit">Register</button>
+        </form>
+
+        <!-- Error message container - shown when registration fails -->
+        <!-- Displays validation errors or server errors -->
+        <div id="error-message" style="color: red; display: none;"></div>
+
+        <!-- Success message container - shown when registration succeeds -->
+        <!-- Confirms account creation before redirect to login -->
+        <div id="success-message" style="color: green; display: none;"></div>
+
+        <!-- Link to login page for existing users -->
+        <p>Already have an account? <a href="/login">Login here</a></p>
+    </main>
+
+    <!-- JavaScript file for authentication functionality -->
+    <!-- Handles form validation, submission, API calls, and user feedback -->
+    <script src="/static/js/auth.js"></script>
+</body>
+</html>

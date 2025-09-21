@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Post - Forum</title>
+    <!-- Link to main stylesheet for consistent forum styling -->
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- Navigation bar with user authentication display -->
+    <nav>
+        <!-- Standard navigation links -->
+        <a href="/">Home</a>
+        <a href="/posts">Posts</a>
+        <a href="/login">Login</a>
+
+        <!-- User info section - should be visible since this is a protected page -->
+        <!-- Only authenticated users should be able to access this page -->
+        <span id="user-info" style="display: none;">
+            Welcome, <span id="username"></span>!
+            <button id="logout-btn">Logout</button>
+        </span>
+    </nav>
+
+    <!-- Main content area -->
+    <main>
+        <h1>Create New Post</h1>
+
+        <!-- Post creation form - requires authentication -->
+        <!-- Form submission creates a new post in the database -->
+        <form id="createPostForm">
+            <!-- Post title field -->
+            <div>
+                <label for="title">Title:</label>
+                <!-- Required field for post title -->
+                <input type="text" id="title" name="title" required>
+            </div>
+
+            <!-- Post content field -->
+            <div>
+                <label for="content">Content:</label>
+                <!-- Large text area for post content - supports multiline text -->
+                <textarea id="content" name="content" rows="10" required></textarea>
+            </div>
+
+            <!-- Category selection section -->
+            <div>
+                <label for="categories">Categories:</label>
+                <!-- Container for category checkboxes -->
+                <!-- JavaScript will load available categories and create checkboxes -->
+                <div id="categories-list">
+                    <!-- Categories will be loaded here by posts.js -->
+                    <!-- Each category appears as a checkbox for multi-selection -->
+                </div>
+            </div>
+
+            <!-- Form action buttons -->
+            <button type="submit">Create Post</button>
+            <!-- Cancel link returns to posts page without saving -->
+            <a href="/posts">Cancel</a>
+        </form>
+
+        <!-- Error message container - shown when post creation fails -->
+        <div id="error-message" style="color: red; display: none;"></div>
+
+        <!-- Success message container - shown when post is created successfully -->
+        <div id="success-message" style="color: green; display: none;"></div>
+    </main>
+
+    <!-- JavaScript files for functionality -->
+    <!-- auth.js handles user authentication verification -->
+    <script src="/static/js/auth.js"></script>
+    <!-- posts.js handles form submission, category loading, and post creation -->
+    <script src="/static/js/posts.js"></script>
+</body>
+</html>

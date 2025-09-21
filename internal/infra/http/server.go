@@ -1,3 +1,17 @@
+/*
+Package http provides the HTTP server implementation for the forum application.
+
+This package contains:
+- HTTP server setup and configuration
+- Route definitions and middleware integration
+- Request routing and handler coordination
+- Static file serving for frontend assets
+- Authentication middleware application
+
+The server follows a clean architecture pattern where HTTP handlers
+are kept separate from business logic, and all requests are routed
+through appropriate middleware for authentication, CORS, etc.
+*/
 package http
 
 import (
@@ -14,6 +28,7 @@ import (
 	"github.com/arnald/forum/internal/infra/http/health"
 	"github.com/arnald/forum/internal/infra/http/post"
 	userLogin "github.com/arnald/forum/internal/infra/http/user/login"
+	userLogout "github.com/arnald/forum/internal/infra/http/user/logout"
 	userRegister "github.com/arnald/forum/internal/infra/http/user/register"
 	"github.com/arnald/forum/internal/infra/http/vote"
 	"github.com/arnald/forum/internal/infra/logger"
@@ -21,36 +36,74 @@ import (
 	"github.com/arnald/forum/internal/infra/session"
 )
 
+// Constants for API configuration
 const (
-	apiContext   = "/api/v1"
-	readTimeout  = 5 * time.Second
-	writeTimeout = 10 * time.Second
-	idleTimeout  = 15 * time.Second
+	apiContext   = "/api/v1"                // Base path for all API endpoints
+	readTimeout  = 5 * time.Second          // Timeout for reading request
+	writeTimeout = 10 * time.Second         // Timeout for writing response
+	idleTimeout  = 15 * time.Second         // Timeout for idle connections
 )
 
+// Server represents the HTTP server with all its dependencies
+// It encapsulates the HTTP router, application services, configuration,
+// session management, database connection, and logging functionality
 type Server struct {
-	appServices    app.Services
-	config         *config.ServerConfig
-	router         *http.ServeMux
-	sessionManager user.SessionManager
-	db             *sql.DB
-	logger         logger.Logger
+	appServices    app.Services           // Business logic services
+	config         *config.ServerConfig   // Server configuration
+	router         *http.ServeMux         // HTTP request router
+	sessionManager user.SessionManager    // User session management
+	db             *sql.DB                // Database connection
+	logger         logger.Logger          // Application logger
 }
 
+// NewServer creates and configures a new HTTP server instance
+// It initializes all dependencies, sets up routing, and prepares the server for handling requests
+//
+// Parameters:
+//   - cfg: Server configuration containing host, port, timeouts, etc.
+//   - db: Database connection for data persistence
+//   - logger: Logger instance for application logging
+//   - appServices: Business logic services for handling application operations
+//
+// Returns:
+//   - *Server: Configured HTTP server ready to handle requests
 func NewServer(cfg *config.ServerConfig, db *sql.DB, logger logger.Logger, appServices app.Services) *Server {
 	httpServer := &Server{
-		router:      http.NewServeMux(),
-		appServices: appServices,
-		config:      cfg,
-		db:          db,
-		logger:      logger,
+		router:      http.NewServeMux(),  // Initialize HTTP router
+		appServices: appServices,         // Inject business logic services
+		config:      cfg,                 // Store server configuration
+		db:          db,                  // Store database connection
+		logger:      logger,              // Store logger instance
 	}
+	// Initialize session management
 	httpServer.initSessionManager()
+	// Set up all HTTP routes and handlers
 	httpServer.AddHTTPRoutes()
 	return httpServer
 }
 
+// AddHTTPRoutes configures all HTTP routes for the application
+// This includes static file serving, frontend page routes, and API endpoints
+// Routes are organized into sections: static files, frontend pages, and API endpoints
+// Authentication middleware is applied to protected endpoints
 func (server *Server) AddHTTPRoutes() {
+	// =====================================
+	// STATIC FILE SERVING
+	// =====================================
+	// Serve CSS, JavaScript, and image files from frontend/static directory
+	server.router.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("frontend/static/"))))
+
+	// =====================================
+	// FRONTEND PAGE ROUTES
+	// =====================================
+	// Serve HTML pages to users - these provide the user interface
+	server.router.HandleFunc("/", server.servePage("home.html"))                        // Home page
+	server.router.HandleFunc("/login", server.servePage("login.html"))                  // Login form
+	server.router.HandleFunc("/register", server.servePage("register.html"))            // Registration form
+	server.router.HandleFunc("/posts", server.servePage("posts.html"))                  // Posts listing page
+	server.router.HandleFunc("/create-post", server.servePage("create-post.html"))      // Post creation form
+	server.router.HandleFunc("/post/", server.servePage("post-detail.html"))            // Individual post view
+
 	// Health endpoint
 	server.router.HandleFunc(apiContext+"/health", health.NewHandler(server.logger).HealthCheck)
 
@@ -67,6 +120,10 @@ func (server *Server) AddHTTPRoutes() {
 		apiContext+"/register",
 		userRegister.NewHandler(server.config, server.appServices, server.sessionManager, server.logger).UserRegister,
 	)
+	server.router.HandleFunc(
+		apiContext+"/logout",
+		userLogout.NewHandler(server.config, server.appServices, server.sessionManager, server.logger).UserLogout,
+	)
 
 	// Post endpoints
 	createPostHandler := post.NewCreatePostHandler(server.appServices.PostServices.Queries.CreatePost)
@@ -77,10 +134,13 @@ func (server *Server) AddHTTPRoutes() {
 	)
 	updatePostHandler := post.NewUpdatePostHandler(server.appServices.PostServices.Queries.UpdatePost)
 
-	server.router.HandleFunc(apiContext+"/posts", createPostHandler.CreatePost)
+	// Protected post endpoints (require authentication)
+	server.router.Handle(apiContext+"/posts", middleware.AuthMiddleware(server.sessionManager, server.logger)(http.HandlerFunc(createPostHandler.CreatePost)))
+	server.router.Handle(apiContext+"/posts/update", middleware.AuthMiddleware(server.sessionManager, server.logger)(http.HandlerFunc(updatePostHandler.UpdatePost)))
+
+	// Public post endpoints
 	server.router.HandleFunc(apiContext+"/posts/all", getPostsHandler.GetAllPosts)
 	server.router.HandleFunc(apiContext+"/posts/get", getPostsHandler.GetPostByID)
-	server.router.HandleFunc(apiContext+"/posts/update", updatePostHandler.UpdatePost)
 
 	// Comment endpoints
 	createCommentHandler := comment.NewCreateCommentHandler(server.appServices.CommentServices.Queries.CreateComment)
@@ -90,10 +150,13 @@ func (server *Server) AddHTTPRoutes() {
 	)
 	updateCommentHandler := comment.NewUpdateCommentHandler(server.appServices.CommentServices.Queries.UpdateComment)
 
-	server.router.HandleFunc(apiContext+"/comments", createCommentHandler.CreateComment)
+	// Protected comment endpoints (require authentication)
+	server.router.Handle(apiContext+"/comments", middleware.AuthMiddleware(server.sessionManager, server.logger)(http.HandlerFunc(createCommentHandler.CreateComment)))
+	server.router.Handle(apiContext+"/comments/update", middleware.AuthMiddleware(server.sessionManager, server.logger)(http.HandlerFunc(updateCommentHandler.UpdateComment)))
+
+	// Public comment endpoints
 	server.router.HandleFunc(apiContext+"/comments/post", getCommentsHandler.GetCommentsByPost)
 	server.router.HandleFunc(apiContext+"/comments/tree", getCommentsHandler.GetCommentTree)
-	server.router.HandleFunc(apiContext+"/comments/update", updateCommentHandler.UpdateComment)
 
 	// Vote endpoints
 	voteHandler := vote.NewVoteHandler(
@@ -102,9 +165,12 @@ func (server *Server) AddHTTPRoutes() {
 		server.appServices.VoteServices.Queries.GetUserVotes,
 	)
 
-	server.router.HandleFunc(apiContext+"/votes/cast", voteHandler.CastVote)
+	// Protected vote endpoints (require authentication)
+	server.router.Handle(apiContext+"/votes/cast", middleware.AuthMiddleware(server.sessionManager, server.logger)(http.HandlerFunc(voteHandler.CastVote)))
+	server.router.Handle(apiContext+"/votes/user", middleware.AuthMiddleware(server.sessionManager, server.logger)(http.HandlerFunc(voteHandler.GetUserVotes)))
+
+	// Public vote endpoints
 	server.router.HandleFunc(apiContext+"/votes/status", voteHandler.GetVoteStatus)
-	server.router.HandleFunc(apiContext+"/votes/user", voteHandler.GetUserVotes)
 
 	// Category endpoints
 	categoryHandler := category.NewCategoryHandler(
@@ -116,11 +182,14 @@ func (server *Server) AddHTTPRoutes() {
 		server.appServices.CategoryServices.Queries.GetCategoryWithPosts,
 	)
 
-	server.router.HandleFunc(apiContext+"/categories", categoryHandler.CreateCategory)
+	// Protected category endpoints (require authentication)
+	server.router.Handle(apiContext+"/categories", middleware.AuthMiddleware(server.sessionManager, server.logger)(http.HandlerFunc(categoryHandler.CreateCategory)))
+	server.router.Handle(apiContext+"/categories/update", middleware.AuthMiddleware(server.sessionManager, server.logger)(http.HandlerFunc(categoryHandler.UpdateCategory)))
+	server.router.Handle(apiContext+"/categories/delete", middleware.AuthMiddleware(server.sessionManager, server.logger)(http.HandlerFunc(categoryHandler.DeleteCategory)))
+
+	// Public category endpoints
 	server.router.HandleFunc(apiContext+"/categories/all", categoryHandler.GetAllCategories)
 	server.router.HandleFunc(apiContext+"/categories/get", categoryHandler.GetCategoryByID)
-	server.router.HandleFunc(apiContext+"/categories/update", categoryHandler.UpdateCategory)
-	server.router.HandleFunc(apiContext+"/categories/delete", categoryHandler.DeleteCategory)
 	server.router.HandleFunc(apiContext+"/categories/posts", categoryHandler.GetCategoryWithPosts)
 }
 
@@ -147,4 +216,10 @@ func (server *Server) ListenAndServe() {
 
 func (server *Server) initSessionManager() {
 	server.sessionManager = session.NewSessionManager(server.db, server.config.SessionManager)
+}
+
+func (server *Server) servePage(filename string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "frontend/html/pages/"+filename)
+	}
 }
