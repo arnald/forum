@@ -1,0 +1,18 @@
+{{define "content"}}
+<div class="container">
+    <div class="form-container">
+        <h2>Edit Comment</h2>
+        <form method="POST" action="/edit-comment/{{.Comment.ID}}">
+            <div class="form-group">
+                <label for="content">Comment:</label>
+                <textarea id="content" name="content" rows="6" required>{{.Comment.Content}}</textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">Update Comment</button>
+                <a href="/post/{{.Comment.PostID}}" class="btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{{end}}

@@ -1,0 +1,183 @@
+{{define "content"}}
+<div class="container">
+    <div class="admin-panel">
+        <h2>Admin Panel</h2>
+
+        <div class="admin-tabs">
+            <button class="tab-button active" onclick="showAdminTab('users')">Users ({{len .Users}})</button>
+            <button class="tab-button" onclick="showAdminTab('pending-posts')">Pending Posts ({{len .PendingPosts}})</button>
+            <button class="tab-button" onclick="showAdminTab('categories')">Categories ({{len .Categories}})</button>
+            <button class="tab-button" onclick="showAdminTab('reports')">Reports ({{len .Reports}})</button>
+        </div>
+
+        <!-- Users Tab -->
+        <div id="users" class="admin-tab-content active">
+            <h3>User Management</h3>
+            <div class="admin-table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Provider</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range .Users}}
+                        <tr>
+                            <td>{{.ID}}</td>
+                            <td>{{.Username}}</td>
+                            <td>{{.Email}}</td>
+                            <td>
+                                <span class="role-badge role-{{.Role}}">{{.Role}}</span>
+                            </td>
+                            <td>{{if .Provider}}{{.Provider}}{{else}}Local{{end}}</td>
+                            <td>{{.CreatedAt.Format "Jan 2, 2006"}}</td>
+                            <td>
+                                {{if ne .Role "admin"}}
+                                <form method="POST" action="/admin/update-role" style="display: inline;">
+                                    <input type="hidden" name="user_id" value="{{.ID}}">
+                                    <select name="role" onchange="this.form.submit()">
+                                        <option value="user" {{if eq .Role "user"}}selected{{end}}>User</option>
+                                        <option value="moderator" {{if eq .Role "moderator"}}selected{{end}}>Moderator</option>
+                                        <option value="admin" {{if eq .Role "admin"}}selected{{end}}>Admin</option>
+                                    </select>
+                                </form>
+                                {{end}}
+                            </td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pending Posts Tab -->
+        <div id="pending-posts" class="admin-tab-content">
+            <h3>Pending Posts</h3>
+            {{if .PendingPosts}}
+                <div class="pending-posts-grid">
+                    {{range .PendingPosts}}
+                    <div class="pending-post-card">
+                        <div class="post-header">
+                            <h4>{{.Title}}</h4>
+                            <span class="post-author">by {{.Username}}</span>
+                        </div>
+                        <div class="post-content">
+                            <p>{{.Content | truncate 200}}</p>
+                            {{if .ImagePath}}
+                                <div class="post-image-small">
+                                    <img src="{{.ImagePath}}" alt="Post image" class="post-img-small">
+                                </div>
+                            {{end}}
+                        </div>
+                        <div class="post-actions">
+                            <form method="POST" action="/admin/approve-post/{{.ID}}" style="display: inline;">
+                                <button type="submit" class="btn-approve">Approve</button>
+                            </form>
+                            <form method="POST" action="/admin/reject-post/{{.ID}}" style="display: inline;">
+                                <button type="submit" class="btn-reject">Reject</button>
+                            </form>
+                        </div>
+                        <div class="post-date">
+                            {{.CreatedAt.Format "Jan 2, 2006 15:04"}}
+                        </div>
+                    </div>
+                    {{end}}
+                </div>
+            {{else}}
+                <p class="no-content">No pending posts.</p>
+            {{end}}
+        </div>
+
+        <!-- Categories Tab -->
+        <div id="categories" class="admin-tab-content">
+            <h3>Category Management</h3>
+
+            <div class="create-category">
+                <h4>Create New Category</h4>
+                <form method="POST" action="/admin/create-category" class="category-form">
+                    <div class="form-group">
+                        <input type="text" name="name" placeholder="Category name" required>
+                        <button type="submit" class="btn-primary">Create</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="categories-list">
+                <h4>Existing Categories</h4>
+                <div class="categories-grid">
+                    {{range .Categories}}
+                    <div class="category-item">
+                        <span class="category-name">{{.Name}}</span>
+                        <form method="POST" action="/admin/delete-category/{{.ID}}" style="display: inline;">
+                            <button type="submit" class="btn-delete" onclick="return confirm('Are you sure you want to delete this category?')">Delete</button>
+                        </form>
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+        </div>
+
+        <!-- Reports Tab -->
+        <div id="reports" class="admin-tab-content">
+            <h3>Reports</h3>
+            {{if .Reports}}
+                <div class="reports-list">
+                    {{range .Reports}}
+                    <div class="report-card">
+                        <div class="report-header">
+                            <strong>Report #{{.ID}}</strong>
+                            <span class="report-date">{{.CreatedAt.Format "Jan 2, 2006 15:04"}}</span>
+                        </div>
+                        <div class="report-content">
+                            <p><strong>Reporter:</strong> {{.ReporterName}}</p>
+                            <p><strong>Reason:</strong> {{.Reason}}</p>
+                            <p><strong>Description:</strong> {{.Description}}</p>
+                            {{if .PostID}}
+                                <p><strong>Reported Post ID:</strong> {{.PostID}}</p>
+                            {{end}}
+                            {{if .CommentID}}
+                                <p><strong>Reported Comment ID:</strong> {{.CommentID}}</p>
+                            {{end}}
+                        </div>
+                        <div class="report-actions">
+                            <button class="btn-secondary">Review</button>
+                            <button class="btn-approve">Resolve</button>
+                        </div>
+                    </div>
+                    {{end}}
+                </div>
+            {{else}}
+                <p class="no-content">No pending reports.</p>
+            {{end}}
+        </div>
+    </div>
+</div>
+
+<script>
+function showAdminTab(tabName) {
+    // Hide all tab contents
+    var contents = document.getElementsByClassName('admin-tab-content');
+    for (var i = 0; i < contents.length; i++) {
+        contents[i].classList.remove('active');
+    }
+
+    // Remove active class from all buttons
+    var buttons = document.getElementsByClassName('tab-button');
+    for (var i = 0; i < buttons.length; i++) {
+        buttons[i].classList.remove('active');
+    }
+
+    // Show selected tab content
+    document.getElementById(tabName).classList.add('active');
+
+    // Add active class to clicked button
+    event.target.classList.add('active');
+}
+</script>
+{{end}}

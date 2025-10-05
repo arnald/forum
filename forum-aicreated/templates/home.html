@@ -1,0 +1,82 @@
+{{define "content"}}
+<div class="container">
+    <div class="filter-bar">
+        <h2>Forum Posts</h2>
+        <div class="filters">
+            <a href="/" class="filter-link">All Posts</a>
+            {{if .User}}
+                <a href="/filter?filter=my-posts" class="filter-link">My Posts</a>
+                <a href="/filter?filter=liked-posts" class="filter-link">Liked Posts</a>
+            {{end}}
+        </div>
+
+        <div class="category-filters">
+            <h3>Filter by Category:</h3>
+            {{if .Categories}}
+                {{range .Categories}}
+                    <a href="/filter?category={{.ID}}" class="category-link">{{.Name}}</a>
+                {{end}}
+            {{end}}
+        </div>
+    </div>
+
+    <div class="posts-container">
+        {{if .Posts}}
+            {{range .Posts}}
+                <article class="post-card">
+                    <header class="post-header">
+                        <h3><a href="/post/{{.ID}}">{{.Title}}</a></h3>
+                        <div class="post-meta">
+                            <span class="author">by {{.Username}}</span>
+                            <span class="date">{{.CreatedAt.Format "Jan 2, 2006 15:04"}}</span>
+                        </div>
+                    </header>
+
+                    <div class="post-content">
+                        <p>{{.Content}}</p>
+                        {{if .ImagePath}}
+                            <div class="post-image">
+                                <img src="{{.ImagePath}}" alt="Post image" class="post-img">
+                            </div>
+                        {{end}}
+                    </div>
+
+                    {{if .Categories}}
+                        <div class="post-categories">
+                            {{range .Categories}}
+                                <span class="category-tag">{{.}}</span>
+                            {{end}}
+                        </div>
+                    {{end}}
+
+                    <div class="post-actions">
+                        <div class="likes">
+                            {{if $.User}}
+                                <form method="POST" action="/like-post/{{.ID}}" style="display: inline;">
+                                    <button type="submit" class="btn-like">👍 {{.Likes}}</button>
+                                </form>
+                                <form method="POST" action="/dislike-post/{{.ID}}" style="display: inline;">
+                                    <button type="submit" class="btn-dislike">👎 {{.Dislikes}}</button>
+                                </form>
+                            {{else}}
+                                <span class="like-count">👍 {{.Likes}}</span>
+                                <span class="dislike-count">👎 {{.Dislikes}}</span>
+                            {{end}}
+                        </div>
+                        <a href="/post/{{.ID}}" class="read-more">Read More</a>
+                    </div>
+                </article>
+            {{end}}
+        {{else}}
+            <div class="no-posts">
+                <p>No posts found.</p>
+                {{if .User}}
+                    <a href="/create-post" class="btn-primary">Create the first post!</a>
+                {{else}}
+                    <p><a href="/login">Login</a> to create posts.</p>
+                {{end}}
+            </div>
+        {{end}}
+    </div>
+</div>
+{{end}}

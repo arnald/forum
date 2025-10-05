@@ -1,0 +1,19 @@
+forum-authentication
+Objectives
+You must follow the same principles as the forum.txt project.
+The goal of this project is to implement, into your forum, new ways of authentication. You have to be able to register and to login using at least Google and Github authentication tools.
+
+Some examples of authentication means are:
+
+Facebook
+GitHub
+Google
+Instructions
+Your project must have implemented at least the two authentication examples given.
+Your project must be written in Go.
+The code must respect the good practices.
+Allowed packages
+All standard go packages are allowed.
+sqlite3
+bcrypt
+gofrs/uuid or google/uuid

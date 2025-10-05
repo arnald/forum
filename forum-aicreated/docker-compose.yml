@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  forum:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/root/data
+    environment:
+      - DB_PATH=/root/data/forum.db

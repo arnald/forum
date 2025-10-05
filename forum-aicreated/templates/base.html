@@ -1,0 +1,45 @@
+{{define "base.html"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forum</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">Forum</a>
+            <div class="nav-links">
+                {{if .User}}
+                    <a href="/create-post">Create Post</a>
+                    <a href="/filter?filter=my-posts">My Posts</a>
+                    <a href="/filter?filter=liked-posts">Liked Posts</a>
+                    <a href="/notifications">Notifications</a>
+                    <a href="/activity">Activity</a>
+                    {{if eq .User.Role "admin"}}
+                        <a href="/admin">Admin Panel</a>
+                    {{end}}
+                    <span>Welcome, {{.User.Username}}!</span>
+                    <a href="/logout">Logout</a>
+                {{else}}
+                    <a href="/login">Login</a>
+                    <a href="/register">Register</a>
+                {{end}}
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        {{template "content" .}}
+    </main>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <p>&copy; 2024 Forum. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>
+{{end}}

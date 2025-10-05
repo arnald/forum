@@ -1,0 +1,226 @@
+Authentication
+Are an email and a password asked for in the registration?
+Does the project detect if the email or password are wrong?
+Does the project detect if the email or user name is already taken in the registration?
+Try to register as a new user in the forum.
+Is it possible to register?
+Try to login with the user you created.
+Can you login and have all the rights of a registered user?
+Try to login without any credentials.
+Does it show a warning message?
+Are sessions present in the project?
+Try opening two different browsers and login into one of them. Refresh the other browser.
+Can you confirm that the browser non logged remains unregistered?
+Try opening two different browsers and login into both of them. Refresh both browsers.
+Can you confirm that only one of those browsers has an active session?
+Try opening two different browsers and login into one of them. Then create a new post or just add a comment. Refresh both browsers.
+Does it present the comment/post on both browsers?
+SQLite
+Does the code contain at least one CREATE query?
+Does the code contain at least one INSERT query?
+Does the code contain at least one SELECT query?
+Try registering in the forum, open the database with sqlite3 <database_name.db> and perform a query to select all the users (Example: SELECT * FROM users;).
+Does it present the user you created?
+Try creating a post in the forum, open the database with sqlite3 <database_name.db> and perform a query to select all the posts (Example: SELECT * FROM posts;).
+Does it present the post you created?
+Try creating a comment in the forum, open the database with sqlite3 <database_name.db> and perform a query to select all the comments (Example: SELECT * FROM comments;).
+Does it present the comment you created?
+Docker
+Does the project have Dockerfiles?
+Try to run the command "docker image build [OPTINS] PATH | URL | -" to build the image using the project Dockerfiles and run the command "docker images" to see images.
+student$ docker images
+REPOSITORY              TAG                             IMAGE ID            CREATED             SIZE
+<name of the image>     latest                          85a65d66ca39        7 seconds ago       795MB
+Did all images build as above?
+Try running the command "docker container run [OPTIONS] IMAGE [COMMAND] [ARG...]" to start the containers using the images just created and run the command "docker ps -a" to see containers.
+student$ docker ps -a
+CONTAINER ID        IMAGE                  COMMAND                  CREATED             STATUS              PORTS                    NAMES
+cc8f5dcf760f        <name of the image>    "./server"               6 seconds ago       Up 6 seconds        0.0.0.0:8080->8080/tcp   forum
+Are the Docker containers running as above?
+Does the project have no unused objects?
+Functional
+Enter the forum as a non-registered user and try to create a post.
+Are you forbidden from creating a post?
+Enter the forum as a non-registered user and try to create a comment.
+Are you forbidden from creating a comment?
+Enter the forum as a non-registered user and try to like a comment.
+Are you forbidden from liking a post?
+Enter the forum as a non-registered user and try to dislike a comment.
+Are you forbidden from disliking a comment?
+Enter the forum as a registered user, go to a post and try to create a comment for it.
+Were you able to create the comment?
+Enter the forum as a registered user, go to a post and try to create an empty comment for it.
+Were you forbidden from creating the empty comment?
+Enter the forum as a registered user and try to create a post.
+Were you able to create a post?
+Enter the forum as a registered user and try to create an empty post.
+Were you forbidden from creating the empty post?
+Try creating a post as a registered user and try to choose several categories for that post.
+Were you able to choose several categories for that post?
+Try creating a post as a registered user and try to choose a category for that post.
+Were you able to choose a category for that post?
+Enter the forum as a registered user and try to like or dislike a post.
+Can you like or dislike the post?
+Enter the forum as a registered user and try to like or dislike a comment.
+Can you like or dislike the comment?
+Enter the forum as a registered user, try liking or disliking a post and then refresh the page.
+Does the number of likes/dislikes change?
+Enter the forum as a registered user and try to like and then dislike the same post.
+Can you confirm that it is not possible that the post is liked and disliked at the same time?
+Enter the forum as a registered user and try seeing all of your created posts.
+Does it present the expected posts?
+Enter the forum as a registered user and try seeing all of your liked posts.
+Does it present the expected posts?
+Navigate to a post of your choice and see its comments.
+Are all users (registered or not) able to see the number of likes and dislikes that comment has?
+Try seeing all posts from one category using the filter.
+Are all posts displayed from that category?
+Did the server behaved as expected?(did not crashed)
+Does the server use the right HTTP method?
+Are all the pages working? (Absence of 404 page?)
+Does the project handle HTTP status 400 - Bad Requests?
+Does the project handle HTTP status 500 - Internal Server Errors?
+Are only the allowed packages being used?
+As an auditor, is this project up to every standard? If not, why are you failing the project?(Empty Work, Incomplete Work, Invalid compilation, Cheating, Crashing, Leaks)
+General
++Does the project present a script to build the images and containers? (using a script to simplify the build)
++Is the password encrypted in the database?
+Basic
++Does the project run quickly and effectively? (Favoring recursive, no unnecessary data requests, etc)
++Does the code obey the good practices?
++Is there a test file for this code?
+Social
++Did you learn anything from this project?
++Can it be open-sourced / be used for other sources?
++Would you recommend/nominate this program as an example for the rest of the school?
+
+Functional
+Try opening the forum.
+Does the URL contain HTTPS?
+Is the project implementing cipher suites?
+Is the Go TLS structure well configured?
+Is the server timeout reduced (Read, write and IdleTimeout)?
+Does the project implement Rate limiting (avoiding DoS attacks)?
+Try creating a user. Go to the database using the command "sqlite3 <database-name>" and run "SELECT * FROM <user-table>;" to select all users.
+Are the passwords encrypted?
+Try to login into the forum and open the inspector(CTRL+SHIFT+i) and go to the storage to see the cookies(this can be different depending on the browser).
+Does the session cookie present a UUID(Universal Unique Identifier)?
+Does the project present a way to configure the certificates information, either via .env, config files or another method?
+Are only the allowed packages being used?
+As an auditor, is this project up to every standard? If not, why are you failing the project?(Empty Work, Incomplete Work, Invalid compilation, Cheating, Crashing, Leaks)
+General
++Does the project implement its own certificates for the HTTPS protocol?
++Does the database present a password for protection?
+Basic
++Does the project run quickly and effectively? (no unnecessary data requests, etc)
++Does the code obey the good practices?
++Is there a test file for this code?
+Social
++Did you learn anything from this project?
++Can it be open-sourced / be used for other sources?
++Would you recommend/nominate this program as an example for the rest of the school?
+
+Functional
+Does the forum present the 4 types of users?
+Try to enter the forum as a Guest
+Can you confirm that the content is only viewable?
+Try registering as a normal user.
+Can you create posts and comments?
+Try registering as a normal user.
+Can you like or dislike a post?
+Try registering as a moderator. Then login to an admin account and see if the admin user has received the request.
+Can you confirm that the admin received the request?
+Try accepting a moderator using the admin user.
+Was the user promoted to moderator?
+Try using the moderator to delete an obscene post.
+Can you confirm that it is possible to delete the post?
+Try using the moderator to report a illegal post.
+Did the admin user receive the report?
+Try using the admin user to answer the moderator request.
+Did the moderator receive the answer from the admin?
+Try using an admin user to demote a moderator.
+Can you confirm that it is possible?
+As an auditor, is this project up to every standard? If not, why are you failing the project?(Empty Work, Incomplete Work, Invalid compilation, Cheating, Crashing, Leaks)
+General
++Does the project present more then 4 types of users?
+Basic
++Does the code obey the good practices?
++Are the instructions in the website clear?
+Social
++Did you learn anything from this project?
++Would you recommend/nominate this program as an example for the rest of the school?
+
+Functional
+Try creating a post with a PNG image.
+Was the post created successfully?
+Try creating a post with a JPEG image.
+Was the post created successfully?
+Try creating a post with a GIF image.
+Was the post created successfully?
+Try to create a post with an image larger than 20mb at your choice.
+Were you warned that this was not possible?
+Try navigating through the site and come back to one of the created posts.
+Can you still see the image associated to that post?
+As an auditor, is this project up to every standard? If not, why are you failing the project?(Empty Work, Incomplete Work, Invalid compilation, Cheating, Crashing, Leaks)
+General
++Can you create a post with a different image type?
+Basic
++Does the code obey the good practices?
++Are the instructions in the website clear?
+Social
++Did you learn anything from this project?
++Would you recommend/nominate this program as an example for the rest of the school?
+
+Functional
+Try to login with Github.
+Is it possible to enter the forum?
+Try to login with Google.
+Is it possible to enter the forum?
+Try login with Github or Google, creating a post with that user and logout.
+Is the post created visible?
+Try to login with the user you created.
+Can you login and have all the rights of a registered user?
+Try creating an account twice with the same credential.
+Does it present an error?
+Try to enter your account with no email, password or with errors in any of them.
+Does it present an error and an error message?
+Does the registration ask for an email and a password?
+As an auditor, is this project up to every standard? If not, why are you failing the project?(Empty Work, Incomplete Work, Invalid compilation, Cheating, Crashing, Leaks)
+General
++Does the project present more than two different authentication methods?
+Basic
++Does the project run quickly and effectively (favoring of recursion, no unnecessary data requests, etc.)?
++Does the code obey the good practices?
+Social
++Did you learn anything from this project?
++Would you recommend/nominate this program as an example for the rest of the school?
+
+Functional
+Try to like any post of your choice.
+Does the liked post appear on the activity page?
+Try to dislike any post of your choice.
+Does the disliked post appear on the activity page?
+Try to comment any post of your choice.
+Does the comment appear on the activity page along with the commented post you made?
+Try to create a new post.
+Does new post appear on the activity page?
+Try to login as another user and make a comment on the post you created above. Then return to the user that created the post.
+Did the user who created the post received a notification saying that the post has been commented?
+Try to login as another user and like the post you created above. Then return to the user that created the post.
+Did the user who created the post received a notification saying that the post has been liked?
+Try to login as another user and dislike the post you created above. Then return to the user that created the post.
+Did the user who created the post received a notification saying that the post has been disliked?
+Try to edit a post and a comment of your choice.
+Is it allowed to edit posts and comments?
+Try to remove a post and a comment of your choice.
+Is it allowed to remove posts and comments?
+As an auditor, is this project up to every standard? If not, why are you failing the project?(Empty Work, Incomplete Work, Invalid compilation, Cheating, Crashing, Leaks)
+General
++Are there any other feature not mentioned in the subject?
+Basic
++Does the project run quickly and effectively (Favoring of recursion, no unnecessary data requests, etc.)?
++Does the code obey the good practices?
++Is there a test file for this code?
+Social
++Did you learn anything from this project?
++Would you recommend/nominate this program as an example for the rest of the school?

@@ -1,0 +1,113 @@
+{{define "content"}}
+<div class="container">
+    <div class="activity-container">
+        <h2>Your Activity</h2>
+
+        <div class="activity-tabs">
+            <button class="tab-button active" onclick="showTab('created-posts')">Created Posts ({{len .Activity.CreatedPosts}})</button>
+            <button class="tab-button" onclick="showTab('liked-posts')">Liked Posts ({{len .Activity.LikedPosts}})</button>
+            <button class="tab-button" onclick="showTab('comments')">Comments ({{len .Activity.Comments}})</button>
+        </div>
+
+        <div id="created-posts" class="tab-content active">
+            <h3>Posts You Created</h3>
+            {{if .Activity.CreatedPosts}}
+                <div class="posts-grid">
+                    {{range .Activity.CreatedPosts}}
+                        <div class="activity-post">
+                            <h4><a href="/post/{{.ID}}">{{.Title}}</a></h4>
+                            <p>{{.Content | truncate 150}}</p>
+                            {{if .ImagePath}}
+                                <div class="post-image-small">
+                                    <img src="{{.ImagePath}}" alt="Post image" class="post-img-small">
+                                </div>
+                            {{end}}
+                            <div class="post-stats">
+                                <span>👍 {{.Likes}}</span>
+                                <span>👎 {{.Dislikes}}</span>
+                                <span>{{.CreatedAt.Format "Jan 2, 2006"}}</span>
+                            </div>
+                        </div>
+                    {{end}}
+                </div>
+            {{else}}
+                <p class="no-activity">You haven't created any posts yet.</p>
+            {{end}}
+        </div>
+
+        <div id="liked-posts" class="tab-content">
+            <h3>Posts You Liked</h3>
+            {{if .Activity.LikedPosts}}
+                <div class="posts-grid">
+                    {{range .Activity.LikedPosts}}
+                        <div class="activity-post">
+                            <h4><a href="/post/{{.ID}}">{{.Title}}</a></h4>
+                            <p>by {{.Username}}</p>
+                            <p>{{.Content | truncate 150}}</p>
+                            {{if .ImagePath}}
+                                <div class="post-image-small">
+                                    <img src="{{.ImagePath}}" alt="Post image" class="post-img-small">
+                                </div>
+                            {{end}}
+                            <div class="post-stats">
+                                <span>👍 {{.Likes}}</span>
+                                <span>👎 {{.Dislikes}}</span>
+                                <span>{{.CreatedAt.Format "Jan 2, 2006"}}</span>
+                            </div>
+                        </div>
+                    {{end}}
+                </div>
+            {{else}}
+                <p class="no-activity">You haven't liked any posts yet.</p>
+            {{end}}
+        </div>
+
+        <div id="comments" class="tab-content">
+            <h3>Your Comments</h3>
+            {{if .Activity.Comments}}
+                <div class="comments-list">
+                    {{range .Activity.Comments}}
+                        <div class="activity-comment">
+                            <div class="comment-header">
+                                <strong>On post: <a href="/post/{{.PostID}}">{{.PostTitle}}</a></strong>
+                                <span class="comment-date">{{.CreatedAt.Format "Jan 2, 2006 15:04"}}</span>
+                            </div>
+                            <div class="comment-content">
+                                <p>{{.Content}}</p>
+                            </div>
+                            <div class="comment-stats">
+                                <span>👍 {{.Likes}}</span>
+                                <span>👎 {{.Dislikes}}</span>
+                            </div>
+                        </div>
+                    {{end}}
+                </div>
+            {{else}}
+                <p class="no-activity">You haven't made any comments yet.</p>
+            {{end}}
+        </div>
+    </div>
+</div>
+
+<script>
+function showTab(tabName) {
+    // Hide all tab contents
+    var contents = document.getElementsByClassName('tab-content');
+    for (var i = 0; i < contents.length; i++) {
+        contents[i].classList.remove('active');
+    }
+
+    // Remove active class from all buttons
+    var buttons = document.getElementsByClassName('tab-button');
+    for (var i = 0; i < buttons.length; i++) {
+        buttons[i].classList.remove('active');
+    }
+
+    // Show selected tab content
+    document.getElementById(tabName).classList.add('active');
+
+    // Add active class to clicked button
+    event.target.classList.add('active');
+}
+</script>
+{{end}}

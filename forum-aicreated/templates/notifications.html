@@ -1,0 +1,41 @@
+{{define "content"}}
+<div class="container">
+    <div class="notifications-container">
+        <div class="notifications-header">
+            <h2>Notifications</h2>
+            {{if .Notifications}}
+                <form method="POST" action="/mark-all-read" style="display: inline;">
+                    <button type="submit" class="btn-secondary">Mark All Read</button>
+                </form>
+            {{end}}
+        </div>
+
+        {{if .Notifications}}
+            <div class="notifications-list">
+                {{range .Notifications}}
+                    <div class="notification {{if not .Read}}unread{{end}}">
+                        <div class="notification-content">
+                            <div class="notification-message">
+                                <strong>{{.ActorName}}</strong> {{.Message}}
+                            </div>
+                            <div class="notification-time">
+                                {{.CreatedAt.Format "Jan 2, 2006 15:04"}}
+                            </div>
+                        </div>
+                        {{if not .Read}}
+                            <form method="POST" action="/mark-read" class="mark-read-form">
+                                <input type="hidden" name="notification_id" value="{{.ID}}">
+                                <button type="submit" class="btn-mark-read">Mark Read</button>
+                            </form>
+                        {{end}}
+                    </div>
+                {{end}}
+            </div>
+        {{else}}
+            <div class="no-notifications">
+                <p>No notifications yet.</p>
+            </div>
+        {{end}}
+    </div>
+</div>
+{{end}}
