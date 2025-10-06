@@ -52,7 +52,8 @@ func (h *Handler) CreateCommentHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create notification for post author (if it's not the commenter themselves)
-	post, err := h.GetPostByID(postID)
+	// Use status-agnostic post retrieval to ensure notifications work for all posts
+	post, err := h.GetPostByIDWithStatus(postID)
 	if err == nil && post.UserID != user.ID {
 		message := fmt.Sprintf("%s commented on your post: %s", user.Username, post.Title)
 		h.CreateNotification(post.UserID, user.ID, models.NotificationTypeComment, &postID, nil, message)
@@ -96,7 +97,8 @@ func (h *Handler) LikePostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Notify post author about the like (but not if they liked their own post)
-	post, err := h.GetPostByID(postID)
+	// Use status-agnostic post retrieval to ensure notifications work for all posts
+	post, err := h.GetPostByIDWithStatus(postID)
 	if err == nil && post.UserID != user.ID {
 		message := fmt.Sprintf("%s liked your post: %s", user.Username, post.Title)
 		h.CreateNotification(post.UserID, user.ID, models.NotificationTypeLike, &postID, nil, message)
@@ -137,7 +139,9 @@ func (h *Handler) DislikePostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	post, err := h.GetPostByID(postID)
+	// Notify post author about the dislike (but not if they disliked their own post)
+	// Use status-agnostic post retrieval to ensure notifications work for all posts
+	post, err := h.GetPostByIDWithStatus(postID)
 	if err == nil && post.UserID != user.ID {
 		message := fmt.Sprintf("%s disliked your post: %s", user.Username, post.Title)
 		h.CreateNotification(post.UserID, user.ID, models.NotificationTypeDislike, &postID, nil, message)

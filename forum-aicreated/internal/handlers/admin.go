@@ -5,6 +5,7 @@
 package handlers
 
 import (
+	"fmt"
 	"forum/internal/models"
 	"net/http"
 	"strconv"
@@ -24,9 +25,9 @@ func (h *Handler) AdminPanel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verify user has admin privileges
-	// Return 404 instead of 403 to hide admin panel existence from non-admins
-	if user.Role != models.RoleAdmin {
+	// Verify user has admin or moderator privileges
+	// Return 404 instead of 403 to hide admin panel existence from regular users
+	if user.Role != models.RoleAdmin && user.Role != models.RoleModerator {
 		h.NotFound(w, r)
 		return
 	}
@@ -188,23 +189,34 @@ func (h *Handler) UpdateUserRole(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/admin", http.StatusSeeOther)
 }
 
+// ===== POST MODERATION HANDLERS =====
+
+// ApprovePost handles post approval by admins and moderators (POST /admin/approve-post/{id})
+// Changes post status from 'pending' to 'approved', making it visible to all users
+// Sends notification to post author about the approval decision
+// Enhanced to include user notifications for better user experience
 func (h *Handler) ApprovePost(w http.ResponseWriter, r *http.Request) {
+	// Ensure POST method for data modification
 	if r.Method != "POST" {
 		h.MethodNotAllowed(w, r)
 		return
 	}
 
+	// Verify user is authenticated
 	user, err := h.auth.GetUserFromRequest(r)
 	if err != nil {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
 
+	// Verify user has moderation privileges (admin OR moderator)
+	// This allows both roles to approve posts for efficient content moderation
 	if user.Role != models.RoleAdmin && user.Role != models.RoleModerator {
 		h.NotFound(w, r)
 		return
 	}
 
+	// Extract post ID from URL path
 	postIDStr := strings.TrimPrefix(r.URL.Path, "/admin/approve-post/")
 	postID, err := strconv.Atoi(postIDStr)
 	if err != nil {
@@ -212,6 +224,16 @@ func (h *Handler) ApprovePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get post details before approval for notification purposes
+	// Uses GetPostByIDWithStatus to retrieve posts regardless of current status
+	post, err := h.GetPostByIDWithStatus(postID)
+	if err != nil {
+		h.NotFound(w, r)
+		return
+	}
+
+	// Update post status to approved in database
+	// This makes the post visible to all users in the main forum feed
 	query := `UPDATE posts SET status = 'approved' WHERE id = ?`
 	_, err = h.db.Exec(query, postID)
 	if err != nil {
@@ -219,26 +241,41 @@ func (h *Handler) ApprovePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Notify post author about approval decision
+	// Provides feedback to users about their content status for better UX
+	message := fmt.Sprintf("Your post '%s' has been approved by %s", post.Title, user.Username)
+	h.CreateNotification(post.UserID, user.ID, models.NotificationTypePostApproved, &postID, nil, message)
+
+	// Redirect back to admin panel to continue moderation workflow
 	http.Redirect(w, r, "/admin", http.StatusSeeOther)
 }
 
+// RejectPost handles post rejection by admins and moderators (POST /admin/reject-post/{id})
+// Changes post status from 'pending' to 'rejected', keeping it hidden from public view
+// Post remains visible to author in their "My Posts" section with rejected status
+// Sends notification to post author about the rejection decision with moderator details
 func (h *Handler) RejectPost(w http.ResponseWriter, r *http.Request) {
+	// Ensure POST method for data modification
 	if r.Method != "POST" {
 		h.MethodNotAllowed(w, r)
 		return
 	}
 
+	// Verify user is authenticated
 	user, err := h.auth.GetUserFromRequest(r)
 	if err != nil {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
 
+	// Verify user has moderation privileges (admin OR moderator)
+	// Both roles can reject posts to maintain content quality standards
 	if user.Role != models.RoleAdmin && user.Role != models.RoleModerator {
 		h.NotFound(w, r)
 		return
 	}
 
+	// Extract post ID from URL path
 	postIDStr := strings.TrimPrefix(r.URL.Path, "/admin/reject-post/")
 	postID, err := strconv.Atoi(postIDStr)
 	if err != nil {
@@ -246,6 +283,16 @@ func (h *Handler) RejectPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get post details before rejection for notification purposes
+	// Uses GetPostByIDWithStatus to handle posts in any status (pending, etc.)
+	post, err := h.GetPostByIDWithStatus(postID)
+	if err != nil {
+		h.NotFound(w, r)
+		return
+	}
+
+	// Update post status to rejected in database
+	// Rejected posts remain hidden from public but visible to author
 	query := `UPDATE posts SET status = 'rejected' WHERE id = ?`
 	_, err = h.db.Exec(query, postID)
 	if err != nil {
@@ -253,6 +300,12 @@ func (h *Handler) RejectPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Notify post author about rejection decision
+	// Important for transparency - users should know why their content isn't visible
+	message := fmt.Sprintf("Your post '%s' has been rejected by %s", post.Title, user.Username)
+	h.CreateNotification(post.UserID, user.ID, models.NotificationTypePostRejected, &postID, nil, message)
+
+	// Redirect back to admin panel to continue moderation workflow
 	http.Redirect(w, r, "/admin", http.StatusSeeOther)
 }
 

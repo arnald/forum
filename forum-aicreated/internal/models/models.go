@@ -125,13 +125,20 @@ type CommentLike struct {
 
 // ===== NOTIFICATION SYSTEM =====
 
-// NotificationType represents the different types of notifications
+// NotificationType represents the different types of notifications users can receive
+// Each type corresponds to a specific forum interaction or moderation action
 type NotificationType string
 
 const (
+	// User interaction notifications - triggered by other users' actions
 	NotificationTypeLike    NotificationType = "like"    // Someone liked user's content
 	NotificationTypeDislike NotificationType = "dislike" // Someone disliked user's content
 	NotificationTypeComment NotificationType = "comment" // Someone commented on user's post
+
+	// Moderation notifications - triggered by admin/moderator actions
+	// Added to provide transparency in the content moderation process
+	NotificationTypePostApproved NotificationType = "post_approved" // User's post was approved by moderator/admin
+	NotificationTypePostRejected NotificationType = "post_rejected" // User's post was rejected by moderator/admin
 )
 
 // Notification represents a user notification about forum activity

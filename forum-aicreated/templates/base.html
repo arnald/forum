@@ -24,8 +24,9 @@
                     <a href="/filter?filter=liked-posts">Liked Posts</a>
                     <a href="/notifications">Notifications</a>
                     <a href="/activity">Activity</a>
-                    {{/* Admin-only navigation item */}}
-                    {{if eq .User.Role "admin"}}
+                    {{/* Admin and moderator navigation item - Enhanced to allow both roles access
+                         Moderators can approve/reject posts, admins have full control including user management */}}
+                    {{if or (eq .User.Role "admin") (eq .User.Role "moderator")}}
                         <a href="/admin">Admin Panel</a>
                     {{end}}
                     <span>Welcome, {{.User.Username}}!</span>
