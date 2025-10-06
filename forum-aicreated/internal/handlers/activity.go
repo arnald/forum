@@ -29,28 +29,29 @@ type ActivityComment struct {
 
 // GetUserCreatedPosts retrieves all posts created by a specific user
 // Uses the existing post filtering system with user context for proper visibility
-func (h *Handler) GetUserCreatedPosts(userID int) ([]models.Post, error) {
-	// Create a mock user object for the filtering system
-	// This ensures proper visibility rules are applied
-	user := &models.User{ID: userID}
-	return h.GetPostsForUserInternal("my-posts", userID, user)
+func (h *Handler) GetUserCreatedPosts(user *models.User) ([]models.Post, error) {
+	// Pass the complete user object to maintain role-based visibility
+	// This ensures admins/moderators can see their pending posts in activity
+	return h.GetPostsForUserInternal("my-posts", user.ID, user)
 }
 
 // GetUserLikedPosts retrieves all posts that a user has liked
 // Uses the existing post filtering system with proper visibility rules
-func (h *Handler) GetUserLikedPosts(userID int) ([]models.Post, error) {
-	// Create a mock user object for the filtering system
-	user := &models.User{ID: userID}
-	return h.GetPostsForUserInternal("liked-posts", userID, user)
+func (h *Handler) GetUserLikedPosts(user *models.User) ([]models.Post, error) {
+	// Pass the complete user object to maintain role-based visibility
+	// This ensures admins/moderators can see liked pending posts in activity
+	return h.GetPostsForUserInternal("liked-posts", user.ID, user)
 }
 
 // GetUserComments retrieves all comments made by a specific user with post context
 // Includes post titles and like/dislike counts for comprehensive activity display
 // Limited to 50 most recent comments to prevent excessive data loading
-func (h *Handler) GetUserComments(userID int) ([]ActivityComment, error) {
+// Enhanced to respect post visibility rules based on user role
+func (h *Handler) GetUserComments(user *models.User) ([]ActivityComment, error) {
 	// Complex query that joins comments with users, posts, and aggregates likes
 	// Includes post title so we can show "User commented on: Post Title"
-	query := `
+	// Enhanced with role-based post visibility filtering
+	baseQuery := `
 		SELECT c.id, c.post_id, c.user_id, c.content, c.created_at, c.updated_at,
 		       u.username, p.title as post_title,
 		       COALESCE(SUM(CASE WHEN cl.is_like = 1 THEN 1 ELSE 0 END), 0) as likes,
@@ -59,13 +60,29 @@ func (h *Handler) GetUserComments(userID int) ([]ActivityComment, error) {
 		JOIN users u ON c.user_id = u.id                   -- Get commenter username
 		JOIN posts p ON c.post_id = p.id                   -- Get post title for context
 		LEFT JOIN comment_likes cl ON c.id = cl.comment_id -- Get like/dislike counts
-		WHERE c.user_id = ?                                -- Filter by specific user
+		WHERE c.user_id = ? AND `
+
+	// Build post visibility filter based on user role
+	var whereClause string
+	var args []interface{}
+	args = append(args, user.ID)
+
+	if user.Role == models.RoleAdmin || user.Role == models.RoleModerator {
+		// Admins and moderators can see comments on all posts
+		whereClause = "1=1"
+	} else {
+		// Regular users can see comments on approved posts + posts they own
+		whereClause = "(p.status = 'approved' OR p.user_id = ?)"
+		args = append(args, user.ID)
+	}
+
+	finalQuery := baseQuery + whereClause + `
 		GROUP BY c.id                                      -- Group to aggregate likes
 		ORDER BY c.created_at DESC                         -- Newest first
 		LIMIT 50                                           -- Prevent excessive data
 	`
 
-	rows, err := h.db.Query(query, userID)
+	rows, err := h.db.Query(finalQuery, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -100,21 +117,24 @@ func (h *Handler) Activity(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Retrieve all posts created by the user
-	createdPosts, err := h.GetUserCreatedPosts(user.ID)
+	// Pass complete user object to maintain role-based visibility
+	createdPosts, err := h.GetUserCreatedPosts(user)
 	if err != nil {
 		h.InternalServerError(w, r, err)
 		return
 	}
 
 	// Retrieve all posts the user has liked
-	likedPosts, err := h.GetUserLikedPosts(user.ID)
+	// Pass complete user object to maintain role-based visibility
+	likedPosts, err := h.GetUserLikedPosts(user)
 	if err != nil {
 		h.InternalServerError(w, r, err)
 		return
 	}
 
 	// Retrieve all comments made by the user
-	comments, err := h.GetUserComments(user.ID)
+	// Pass complete user object to maintain role-based visibility
+	comments, err := h.GetUserComments(user)
 	if err != nil {
 		h.InternalServerError(w, r, err)
 		return

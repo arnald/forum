@@ -321,7 +321,8 @@ func (h *Handler) CreateCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if user.Role != models.RoleAdmin {
+	// Allow both admins and moderators to create categories for content organization
+	if user.Role != models.RoleAdmin && user.Role != models.RoleModerator {
 		h.NotFound(w, r)
 		return
 	}
@@ -354,7 +355,8 @@ func (h *Handler) DeleteCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if user.Role != models.RoleAdmin {
+	// Allow both admins and moderators to delete categories for content organization
+	if user.Role != models.RoleAdmin && user.Role != models.RoleModerator {
 		h.NotFound(w, r)
 		return
 	}
