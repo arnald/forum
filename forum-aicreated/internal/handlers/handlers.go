@@ -44,17 +44,17 @@ func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Fetch all approved posts from the database
-	// This excludes pending/rejected posts to show only public content
-	posts, err := h.GetPosts("")
+	// Get current user if logged in (optional - doesn't fail if not logged in)
+	// This allows the template to show different content for logged-in users
+	user, _ := h.auth.GetUserFromRequest(r)
+
+	// Fetch posts based on user's role and permissions
+	// Uses role-based visibility: anonymous see approved, users see approved + own, admins see all
+	posts, err := h.GetPostsWithUser(user)
 	if err != nil {
 		h.InternalServerError(w, r, err)
 		return
 	}
-
-	// Get current user if logged in (optional - doesn't fail if not logged in)
-	// This allows the template to show different content for logged-in users
-	user, _ := h.auth.GetUserFromRequest(r)
 
 	// Prepare data structure for template rendering
 	// Using anonymous struct for simple data passing to template
@@ -376,10 +376,13 @@ func (h *Handler) ViewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Fetch post details from database
-	post, err := h.GetPostByID(postID)
+	// Get current user context (optional - for showing user-specific content)
+	user, _ := h.auth.GetUserFromRequest(r)
+
+	// Fetch post details from database with user-specific visibility
+	post, err := h.GetPostByIDWithUser(postID, user)
 	if err != nil {
-		// Post doesn't exist or is not approved
+		// Post doesn't exist or user doesn't have permission to view it
 		h.NotFound(w, r)
 		return
 	}
@@ -390,9 +393,6 @@ func (h *Handler) ViewPost(w http.ResponseWriter, r *http.Request) {
 		h.InternalServerError(w, r, err)
 		return
 	}
-
-	// Get current user context (optional - for showing user-specific content)
-	user, _ := h.auth.GetUserFromRequest(r)
 
 	// Prepare data for template
 	data := struct {

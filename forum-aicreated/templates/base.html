@@ -1,3 +1,6 @@
+{{/* Base template that provides the common layout structure for all pages.
+     This template defines the HTML skeleton including navigation, header, footer,
+     and content area. Other templates extend this by defining the "content" block. */}}
 {{define "base.html"}}
 <!DOCTYPE html>
 <html lang="en">
@@ -8,22 +11,27 @@
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
+    {{/* Navigation bar with conditional menu items based on user authentication and role */}}
     <nav class="navbar">
         <div class="nav-container">
             <a href="/" class="nav-brand">Forum</a>
             <div class="nav-links">
+                {{/* Show different navigation options for authenticated vs anonymous users */}}
                 {{if .User}}
+                    {{/* Authenticated user menu */}}
                     <a href="/create-post">Create Post</a>
                     <a href="/filter?filter=my-posts">My Posts</a>
                     <a href="/filter?filter=liked-posts">Liked Posts</a>
                     <a href="/notifications">Notifications</a>
                     <a href="/activity">Activity</a>
+                    {{/* Admin-only navigation item */}}
                     {{if eq .User.Role "admin"}}
                         <a href="/admin">Admin Panel</a>
                     {{end}}
                     <span>Welcome, {{.User.Username}}!</span>
                     <a href="/logout">Logout</a>
                 {{else}}
+                    {{/* Anonymous user menu */}}
                     <a href="/login">Login</a>
                     <a href="/register">Register</a>
                 {{end}}
@@ -31,10 +39,13 @@
         </div>
     </nav>
 
+    {{/* Main content area where page-specific content is rendered */}}
     <main class="main-content">
+        {{/* This template block is filled by individual page templates */}}
         {{template "content" .}}
     </main>
 
+    {{/* Site footer with copyright information */}}
     <footer class="footer">
         <div class="footer-container">
             <p>&copy; 2024 Forum. All rights reserved.</p>

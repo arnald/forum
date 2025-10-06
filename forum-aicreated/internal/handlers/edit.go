@@ -1,3 +1,7 @@
+// Package handlers - edit.go implements content editing functionality.
+// This file handles editing of posts and comments, including authorization checks
+// to ensure only owners or moderators/admins can edit content. Implements proper
+// ownership validation and updates timestamps on successful edits.
 package handlers
 
 import (

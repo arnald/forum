@@ -1,7 +1,10 @@
+{{/* User login page template.
+     Provides email/password authentication form with validation and registration link. */}}
 {{define "content"}}
 <div class="auth-container">
     <div class="auth-form">
         <h2>Login</h2>
+        {{/* Login form posts to /login handler */}}
         <form method="POST" action="/login">
             <div class="form-group">
                 <label for="email">Email:</label>

@@ -231,26 +231,31 @@ func (h *Handler) FilterPosts(w http.ResponseWriter, r *http.Request) {
 	var posts []models.Post
 	var err error
 
-	// Determine which filtering logic to apply based on parameters
+	// Get current user for filtering and visibility
+	user, _ := h.auth.GetUserFromRequest(r)
+
+	// Parse category ID if provided
+	var categoryID int
 	if categoryStr != "" {
-		// Filter by specific category
-		categoryID, err := strconv.Atoi(categoryStr)
+		var err error
+		categoryID, err = strconv.Atoi(categoryStr)
 		if err != nil {
 			h.BadRequest(w, r, "Invalid category ID")
 			return
 		}
-		posts, err = h.GetPostsByCategory(categoryID)
-	} else if filter == "my-posts" || filter == "liked-posts" {
+	}
+
+	// Determine which filtering logic to apply based on parameters
+	if filter == "my-posts" || filter == "liked-posts" {
 		// Filter by user-specific criteria (requires authentication)
-		user, err := h.auth.GetUserFromRequest(r)
-		if err != nil {
+		if user == nil {
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
-		posts, err = h.GetPostsForUser(filter, user.ID)
+		posts, err = h.GetPostsForUserInternalWithCategory(filter, user.ID, user, categoryID)
 	} else {
-		// No filter or invalid filter - show all posts
-		posts, err = h.GetPosts("")
+		// Show posts with user-specific visibility (optionally filtered by category)
+		posts, err = h.GetPostsForUserInternalWithCategory("", 0, user, categoryID)
 	}
 
 	if err != nil {
@@ -259,7 +264,6 @@ func (h *Handler) FilterPosts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get additional data needed for template rendering
-	user, _ := h.auth.GetUserFromRequest(r)  // Optional user context
 	categories, _ := h.GetCategories()       // For category filter dropdown
 
 	// Prepare data structure for template
@@ -280,53 +284,5 @@ func (h *Handler) FilterPosts(w http.ResponseWriter, r *http.Request) {
 }
 
 // ===== USER-SPECIFIC QUERIES =====
-
-// GetPostsForUser retrieves posts based on user-specific filters.
-// Supports "my-posts" (posts created by user) and "liked-posts" (posts liked by user).
-// Used by FilterPosts for personalized content views.
-func (h *Handler) GetPostsForUser(filter string, userID int) ([]models.Post, error) {
-	var query string
-
-	baseQuery := `
-		SELECT p.id, p.user_id, p.title, p.content, p.image_path, p.created_at, u.username,
-		       COALESCE(SUM(CASE WHEN pl.is_like = 1 THEN 1 ELSE 0 END), 0) as likes,
-		       COALESCE(SUM(CASE WHEN pl.is_like = 0 THEN 1 ELSE 0 END), 0) as dislikes
-		FROM posts p
-		JOIN users u ON p.user_id = u.id
-		LEFT JOIN post_likes pl ON p.id = pl.post_id
-	`
-
-	switch filter {
-	case "my-posts":
-		query = baseQuery + " WHERE p.user_id = ? AND p.status = 'approved' GROUP BY p.id ORDER BY p.created_at DESC"
-	case "liked-posts":
-		query = baseQuery + " JOIN post_likes pl2 ON p.id = pl2.post_id AND pl2.user_id = ? AND pl2.is_like = 1 WHERE p.status = 'approved' GROUP BY p.id ORDER BY p.created_at DESC"
-	default:
-		return h.GetPosts("")
-	}
-
-	rows, err := h.db.Query(query, userID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var posts []models.Post
-	for rows.Next() {
-		var post models.Post
-		err := rows.Scan(&post.ID, &post.UserID, &post.Title, &post.Content, &post.ImagePath, &post.CreatedAt, &post.Username, &post.Likes, &post.Dislikes)
-		if err != nil {
-			return nil, err
-		}
-
-		categories, err := h.GetPostCategories(post.ID)
-		if err != nil {
-			return nil, err
-		}
-		post.Categories = categories
-
-		posts = append(posts, post)
-	}
-
-	return posts, nil
-}
+// Note: User-specific post queries have been moved to queries.go as GetPostsForUserInternal
+// for better organization and to support role-based visibility throughout the application.

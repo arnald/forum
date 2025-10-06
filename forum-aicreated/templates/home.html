@@ -1,15 +1,21 @@
+{{/* Homepage template that displays the main forum post listing.
+     Shows all approved posts with filtering options, post metadata, and interaction buttons.
+     Supports category filtering and user-specific views for authenticated users. */}}
 {{define "content"}}
 <div class="container">
+    {{/* Filter navigation bar with post filtering options */}}
     <div class="filter-bar">
         <h2>Forum Posts</h2>
         <div class="filters">
             <a href="/" class="filter-link">All Posts</a>
+            {{/* User-specific filters only shown to authenticated users */}}
             {{if .User}}
                 <a href="/filter?filter=my-posts" class="filter-link">My Posts</a>
                 <a href="/filter?filter=liked-posts" class="filter-link">Liked Posts</a>
             {{end}}
         </div>
 
+        {{/* Category filter links for browsing posts by topic */}}
         <div class="category-filters">
             <h3>Filter by Category:</h3>
             {{if .Categories}}
@@ -20,15 +26,22 @@
         </div>
     </div>
 
+    {{/* Main posts listing area */}}
     <div class="posts-container">
         {{if .Posts}}
+            {{/* Loop through each post and display as a card */}}
             {{range .Posts}}
                 <article class="post-card">
+                    {{/* Post header with title, author, and timestamp */}}
                     <header class="post-header">
                         <h3><a href="/post/{{.ID}}">{{.Title}}</a></h3>
                         <div class="post-meta">
                             <span class="author">by {{.Username}}</span>
                             <span class="date">{{.CreatedAt.Format "Jan 2, 2006 15:04"}}</span>
+                            {{/* Show status indicator for non-approved posts */}}
+                            {{if ne .Status "approved"}}
+                                <span class="status-badge status-{{.Status}}">{{.Status}}</span>
+                            {{end}}
                         </div>
                     </header>
 

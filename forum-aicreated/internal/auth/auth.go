@@ -106,6 +106,10 @@ func (a *Auth) CreateOAuthUser(email, username, provider, providerID string) (*m
 	return user, nil
 }
 
+// ===== USER RETRIEVAL =====
+
+// GetUserByEmail retrieves a user from the database by their email address
+// Used during login to find the user account for authentication
 func (a *Auth) GetUserByEmail(email string) (*models.User, error) {
 	user := &models.User{}
 	query := `SELECT id, email, username, password, role, provider, provider_id, created_at FROM users WHERE email = ?`
@@ -116,6 +120,8 @@ func (a *Auth) GetUserByEmail(email string) (*models.User, error) {
 	return user, nil
 }
 
+// GetUserByID retrieves a user from the database by their unique ID
+// Used for session validation and retrieving current user information
 func (a *Auth) GetUserByID(id int) (*models.User, error) {
 	user := &models.User{}
 	query := `SELECT id, email, username, password, role, provider, provider_id, created_at FROM users WHERE id = ?`
@@ -126,6 +132,8 @@ func (a *Auth) GetUserByID(id int) (*models.User, error) {
 	return user, nil
 }
 
+// GetUserByProvider retrieves a user by their OAuth provider information
+// Used during OAuth login to find existing accounts linked to external providers
 func (a *Auth) GetUserByProvider(provider, providerID string) (*models.User, error) {
 	user := &models.User{}
 	query := `SELECT id, email, username, password, role, provider, provider_id, created_at FROM users WHERE provider = ? AND provider_id = ?`
@@ -136,20 +144,28 @@ func (a *Auth) GetUserByProvider(provider, providerID string) (*models.User, err
 	return user, nil
 }
 
+// ===== SESSION MANAGEMENT =====
+
+// CreateSession creates a new user session with a random UUID and 24-hour expiration
+// Called after successful login to maintain user authentication state
 func (a *Auth) CreateSession(userID int) (*models.Session, error) {
+	// Generate a unique session ID using UUID v4
 	sessionID, err := uuid.NewV4()
 	if err != nil {
 		return nil, err
 	}
 
+	// Set session to expire in 24 hours for security
 	expiresAt := time.Now().Add(24 * time.Hour)
 
+	// Store session in database
 	query := `INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?)`
 	_, err = a.db.Exec(query, sessionID.String(), userID, expiresAt)
 	if err != nil {
 		return nil, err
 	}
 
+	// Return complete session object
 	session := &models.Session{
 		ID:        sessionID.String(),
 		UserID:    userID,
@@ -160,6 +176,8 @@ func (a *Auth) CreateSession(userID int) (*models.Session, error) {
 	return session, nil
 }
 
+// GetSession retrieves a session by ID and validates its expiration
+// Automatically deletes expired sessions and returns an error if session is invalid
 func (a *Auth) GetSession(sessionID string) (*models.Session, error) {
 	session := &models.Session{}
 	query := `SELECT id, user_id, expires_at, created_at FROM sessions WHERE id = ?`
@@ -168,6 +186,7 @@ func (a *Auth) GetSession(sessionID string) (*models.Session, error) {
 		return nil, err
 	}
 
+	// Check if session has expired and clean it up if so
 	if time.Now().After(session.ExpiresAt) {
 		a.DeleteSession(sessionID)
 		return nil, errors.New("session expired")
@@ -176,23 +195,31 @@ func (a *Auth) GetSession(sessionID string) (*models.Session, error) {
 	return session, nil
 }
 
+// DeleteSession removes a session from the database
+// Called during logout or when cleaning up expired sessions
 func (a *Auth) DeleteSession(sessionID string) error {
 	query := `DELETE FROM sessions WHERE id = ?`
 	_, err := a.db.Exec(query, sessionID)
 	return err
 }
 
+// GetUserFromRequest extracts the current user from an HTTP request
+// Reads the session cookie, validates the session, and returns the user object
+// Returns error if no valid session exists
 func (a *Auth) GetUserFromRequest(r *http.Request) (*models.User, error) {
+	// Extract session ID from cookie
 	cookie, err := r.Cookie("session_id")
 	if err != nil {
 		return nil, errors.New("no session found")
 	}
 
+	// Validate session and check expiration
 	session, err := a.GetSession(cookie.Value)
 	if err != nil {
 		return nil, err
 	}
 
+	// Get the user associated with the session
 	user, err := a.GetUserByID(session.UserID)
 	if err != nil {
 		return nil, err
@@ -201,6 +228,10 @@ func (a *Auth) GetUserFromRequest(r *http.Request) (*models.User, error) {
 	return user, nil
 }
 
+// ===== VALIDATION HELPERS =====
+
+// EmailExists checks if an email address is already registered
+// Used during registration to prevent duplicate accounts
 func (a *Auth) EmailExists(email string) (bool, error) {
 	var count int
 	query := `SELECT COUNT(*) FROM users WHERE email = ?`
@@ -211,6 +242,8 @@ func (a *Auth) EmailExists(email string) (bool, error) {
 	return count > 0, nil
 }
 
+// UsernameExists checks if a username is already taken
+// Used during registration to ensure unique usernames
 func (a *Auth) UsernameExists(username string) (bool, error) {
 	var count int
 	query := `SELECT COUNT(*) FROM users WHERE username = ?`
@@ -221,29 +254,42 @@ func (a *Auth) UsernameExists(username string) (bool, error) {
 	return count > 0, nil
 }
 
+// ===== ADMIN FUNCTIONS =====
+
+// UpdateUserRole changes a user's role (admin/moderator/user)
+// Only accessible by administrators for user management
 func (a *Auth) UpdateUserRole(userID int, role models.UserRole) error {
 	query := `UPDATE users SET role = ? WHERE id = ?`
 	_, err := a.db.Exec(query, role, userID)
 	return err
 }
 
+// ===== PERMISSION SYSTEM =====
+
+// HasPermission checks if a user has a specific permission based on their role
+// Implements role-based access control with hierarchical permissions
+// Permissions: "view", "create", "edit_own", "moderate", "delete_posts"
 func (a *Auth) HasPermission(user *models.User, permission string) bool {
+	// Anonymous users can only view content
 	if user == nil {
 		return permission == "view"
 	}
 
+	// Role-based permission checking
 	switch user.Role {
 	case models.RoleAdmin:
-		return true
+		return true // Admins have all permissions
 	case models.RoleModerator:
 		return permission == "view" || permission == "moderate" || permission == "delete_posts"
 	case models.RoleUser:
 		return permission == "view" || permission == "create" || permission == "edit_own"
 	default:
-		return permission == "view"
+		return permission == "view" // Default to view-only for unknown roles
 	}
 }
 
+// IsOwner checks if a user owns a specific resource (post, comment, etc.)
+// Used to determine if a user can edit or delete their own content
 func (a *Auth) IsOwner(user *models.User, ownerID int) bool {
 	return user != nil && user.ID == ownerID
 }

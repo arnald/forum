@@ -11,25 +11,82 @@ import (
 
 // ===== POST QUERIES =====
 
-// GetPosts retrieves all approved posts from the database.
+// GetPosts retrieves posts from the database with role-based visibility.
 // Returns posts with computed like/dislike counts and author usernames.
 // Uses JOIN operations to minimize database round trips.
+// - Anonymous users: only approved posts
+// - Regular users: approved posts + their own posts (any status)
+// - Admins/Moderators: all posts regardless of status
 func (h *Handler) GetPosts(filter string) ([]models.Post, error) {
+	return h.GetPostsForUserInternal("", 0, nil)
+}
+
+// GetPostsWithUser retrieves posts with user-specific visibility rules
+func (h *Handler) GetPostsWithUser(user *models.User) ([]models.Post, error) {
+	return h.GetPostsForUserInternal("", 0, user)
+}
+
+// GetPostsForUserInternal retrieves posts based on filter and user permissions
+// Supports categoryID for filtering by specific category
+func (h *Handler) GetPostsForUserInternal(filter string, userID int, currentUser *models.User) ([]models.Post, error) {
+	return h.GetPostsForUserInternalWithCategory(filter, userID, currentUser, 0)
+}
+
+// GetPostsForUserInternalWithCategory retrieves posts based on filter, user permissions, and optional category
+func (h *Handler) GetPostsForUserInternalWithCategory(filter string, userID int, currentUser *models.User, categoryID int) ([]models.Post, error) {
 	// Complex query that JOINs posts, users, and aggregates likes/dislikes
 	// COALESCE ensures we get 0 instead of NULL for posts with no votes
 	baseQuery := `
 		SELECT p.id, p.user_id, p.title, p.content, p.image_path, p.created_at, u.username,
 		       COALESCE(SUM(CASE WHEN pl.is_like = 1 THEN 1 ELSE 0 END), 0) as likes,
-		       COALESCE(SUM(CASE WHEN pl.is_like = 0 THEN 1 ELSE 0 END), 0) as dislikes
+		       COALESCE(SUM(CASE WHEN pl.is_like = 0 THEN 1 ELSE 0 END), 0) as dislikes,
+		       p.status
 		FROM posts p
 		JOIN users u ON p.user_id = u.id                    -- Get author username
-		LEFT JOIN post_likes pl ON p.id = pl.post_id        -- Get vote counts (LEFT JOIN for posts with no votes)
-		WHERE p.status = 'approved'                          -- Only show approved posts
-		GROUP BY p.id ORDER BY p.created_at DESC            -- Group by post, order newest first
-	`
+		LEFT JOIN post_likes pl ON p.id = pl.post_id        -- Get vote counts (LEFT JOIN for posts with no votes)`
+
+	// Add category JOIN if filtering by category
+	if categoryID > 0 {
+		baseQuery += " JOIN post_categories pc ON p.id = pc.post_id"
+	}
+
+	baseQuery += " WHERE "
+
+	// Build WHERE clause based on user role and permissions
+	var whereClause string
+	var args []interface{}
+
+	if currentUser == nil {
+		// Anonymous users: only approved posts
+		whereClause = "p.status = 'approved'"
+	} else if currentUser.Role == models.RoleAdmin || currentUser.Role == models.RoleModerator {
+		// Admins and moderators: see all posts
+		whereClause = "1=1" // No status restriction
+	} else {
+		// Regular users: approved posts + their own posts
+		whereClause = "(p.status = 'approved' OR p.user_id = ?)"
+		args = append(args, currentUser.ID)
+	}
+
+	// Add category filter
+	if categoryID > 0 {
+		whereClause += " AND pc.category_id = ?"
+		args = append(args, categoryID)
+	}
+
+	// Add user-specific filters
+	if filter == "my-posts" && currentUser != nil {
+		whereClause += " AND p.user_id = ?"
+		args = append(args, currentUser.ID)
+	} else if filter == "liked-posts" && currentUser != nil {
+		baseQuery += " JOIN post_likes pl2 ON p.id = pl2.post_id AND pl2.user_id = ? AND pl2.is_like = 1"
+		args = append(args, currentUser.ID)
+	}
+
+	finalQuery := baseQuery + whereClause + " GROUP BY p.id ORDER BY p.created_at DESC"
 
 	// Execute the query
-	rows, err := h.db.Query(baseQuery)
+	rows, err := h.db.Query(finalQuery, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +96,7 @@ func (h *Handler) GetPosts(filter string) ([]models.Post, error) {
 	var posts []models.Post
 	for rows.Next() {
 		var post models.Post
-		err := rows.Scan(&post.ID, &post.UserID, &post.Title, &post.Content, &post.ImagePath, &post.CreatedAt, &post.Username, &post.Likes, &post.Dislikes)
+		err := rows.Scan(&post.ID, &post.UserID, &post.Title, &post.Content, &post.ImagePath, &post.CreatedAt, &post.Username, &post.Likes, &post.Dislikes, &post.Status)
 		if err != nil {
 			return nil, err
 		}
@@ -57,25 +114,51 @@ func (h *Handler) GetPosts(filter string) ([]models.Post, error) {
 	return posts, nil
 }
 
-// GetPostByID retrieves a single post by its ID.
-// Similar to GetPosts but for individual post viewing.
+// GetPostByID retrieves a single post by its ID for anonymous users.
 // Only returns approved posts to prevent access to pending/rejected content.
 func (h *Handler) GetPostByID(id int) (*models.Post, error) {
+	return h.GetPostByIDWithUser(id, nil)
+}
+
+// GetPostByIDWithUser retrieves a single post by its ID with user-specific visibility.
+// Applies the same role-based visibility rules as GetPostsForUserInternal:
+// - Anonymous users: only approved posts
+// - Regular users: approved posts + their own posts (any status)
+// - Admins/Moderators: all posts regardless of status
+func (h *Handler) GetPostByIDWithUser(id int, currentUser *models.User) (*models.Post, error) {
 	// Same complex query as GetPosts but filtered by specific ID
-	query := `
+	baseQuery := `
 		SELECT p.id, p.user_id, p.title, p.content, p.image_path, p.created_at, u.username,
 		       COALESCE(SUM(CASE WHEN pl.is_like = 1 THEN 1 ELSE 0 END), 0) as likes,
-		       COALESCE(SUM(CASE WHEN pl.is_like = 0 THEN 1 ELSE 0 END), 0) as dislikes
+		       COALESCE(SUM(CASE WHEN pl.is_like = 0 THEN 1 ELSE 0 END), 0) as dislikes,
+		       p.status
 		FROM posts p
 		JOIN users u ON p.user_id = u.id
 		LEFT JOIN post_likes pl ON p.id = pl.post_id
-		WHERE p.id = ? AND p.status = 'approved'           -- Specific post + approval check
-		GROUP BY p.id
-	`
+		WHERE p.id = ? AND `
+
+	// Build WHERE clause based on user role and permissions
+	var whereClause string
+	var args []interface{}
+	args = append(args, id) // First argument is always the post ID
+
+	if currentUser == nil {
+		// Anonymous users: only approved posts
+		whereClause = "p.status = 'approved'"
+	} else if currentUser.Role == models.RoleAdmin || currentUser.Role == models.RoleModerator {
+		// Admins and moderators: see all posts
+		whereClause = "1=1" // No status restriction
+	} else {
+		// Regular users: approved posts + their own posts
+		whereClause = "(p.status = 'approved' OR p.user_id = ?)"
+		args = append(args, currentUser.ID)
+	}
+
+	finalQuery := baseQuery + whereClause + " GROUP BY p.id"
 
 	var post models.Post
 	// QueryRow for single result - will return sql.ErrNoRows if not found
-	err := h.db.QueryRow(query, id).Scan(&post.ID, &post.UserID, &post.Title, &post.Content, &post.ImagePath, &post.CreatedAt, &post.Username, &post.Likes, &post.Dislikes)
+	err := h.db.QueryRow(finalQuery, args...).Scan(&post.ID, &post.UserID, &post.Title, &post.Content, &post.ImagePath, &post.CreatedAt, &post.Username, &post.Likes, &post.Dislikes, &post.Status)
 	if err != nil {
 		return nil, err
 	}

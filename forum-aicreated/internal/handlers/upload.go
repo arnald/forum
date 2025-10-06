@@ -1,3 +1,7 @@
+// Package handlers - upload.go implements secure file upload functionality.
+// This file handles image uploads for posts, including validation of file types,
+// size limits, and secure filename generation. Implements proper security measures
+// to prevent malicious uploads and directory traversal attacks.
 package handlers
 
 import (

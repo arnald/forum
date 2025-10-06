@@ -1,3 +1,7 @@
+// Package handlers - admin.go implements administrative functionality for the forum.
+// This file contains handlers for the admin panel, user role management, post moderation,
+// and category management. All functions require admin-level permissions and include
+// proper authorization checks to prevent unauthorized access.
 package handlers
 
 import (
@@ -7,13 +11,21 @@ import (
 	"strings"
 )
 
+// ===== ADMIN PANEL HANDLERS =====
+
+// AdminPanel displays the main administrative dashboard (GET /admin)
+// Shows user management, post moderation, category management, and reports
+// Requires admin role - returns 404 for non-admin users for security
 func (h *Handler) AdminPanel(w http.ResponseWriter, r *http.Request) {
+	// Verify user is authenticated
 	user, err := h.auth.GetUserFromRequest(r)
 	if err != nil {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
 
+	// Verify user has admin privileges
+	// Return 404 instead of 403 to hide admin panel existence from non-admins
 	if user.Role != models.RoleAdmin {
 		h.NotFound(w, r)
 		return

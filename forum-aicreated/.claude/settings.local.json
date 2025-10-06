@@ -10,7 +10,12 @@
       "Bash(go fmt:*)",
       "Bash(go vet:*)",
       "Bash(go clean:*)",
-      "Bash(go work:*)"
+      "Bash(go work:*)",
+      "Bash(for:*)",
+      "Bash(do echo \"=== $file ===\")",
+      "Bash(head:*)",
+      "Bash(done)",
+      "Bash(timeout:*)"
     ],
     "deny": [],
     "ask": []

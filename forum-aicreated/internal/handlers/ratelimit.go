@@ -1,3 +1,7 @@
+// Package handlers - ratelimit.go implements rate limiting to prevent abuse.
+// This file provides request rate limiting based on client IP addresses to prevent
+// spam, brute force attacks, and DoS attempts. Uses in-memory storage with automatic
+// cleanup of expired entries and configurable limits per time window.
 package handlers
 
 import (
