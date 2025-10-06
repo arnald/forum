@@ -14,7 +14,10 @@ import (
 	"github.com/arnald/forum/internal/pkg/uuid"
 )
 
-const contextTimeout = 15 * time.Second
+const (
+	contextTimeout = 15 * time.Second
+	SQLDateTime    = "2006-01-02 15:04:05"
+)
 
 type CreateSessionRequest struct {
 	UserID    string
@@ -61,10 +64,10 @@ func (sm *Manager) CreateSession(ctx context.Context, userID string) (*session.S
 		ctx,
 		newSessionToken,
 		userID,
-		expiry.Format(time.RFC3339),
+		expiry.Format(SQLDateTime),
 
 		newrefreshToken,
-		refreshExpiry.Format(time.RFC3339),
+		refreshExpiry.Format(SQLDateTime),
 	)
 	if err != nil {
 		return nil, err

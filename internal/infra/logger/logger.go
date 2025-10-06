@@ -83,7 +83,7 @@ func (l *logger) print(level Level, message string, properties map[string]string
 		return 0, nil
 	}
 
-	timestamp := time.Now().UTC().Format(time.RFC3339)
+	timestamp := time.Now().UTC().Format(time.TimeOnly)
 
 	logMsg := fmt.Sprintf("%-6s - [%s] - %s", timestamp, level.String(), message)
 
