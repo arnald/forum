@@ -1,4 +1,4 @@
-package session
+package sessionstore
 
 import (
 	"context"
@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/arnald/forum/internal/config"
+	"github.com/arnald/forum/internal/domain/session"
 	"github.com/arnald/forum/internal/domain/user"
 	"github.com/arnald/forum/internal/pkg/uuid"
 )
@@ -27,7 +28,7 @@ type Manager struct {
 	sessionConfig  config.SessionManagerConfig
 }
 
-func NewSessionManager(db *sql.DB, sessionConfig config.SessionManagerConfig) user.SessionManager {
+func NewSessionManager(db *sql.DB, sessionConfig config.SessionManagerConfig) session.Manager {
 	return &Manager{
 		db:             db,
 		sessionConfig:  sessionConfig,
@@ -39,7 +40,7 @@ type tokenGenerator interface {
 	NewUUID() string
 }
 
-func (sm *Manager) CreateSession(ctx context.Context, userID string) (*user.Session, error) {
+func (sm *Manager) CreateSession(ctx context.Context, userID string) (*session.Session, error) {
 	query := `
 	INSERT INTO sessions (token, user_id, expires_at, refresh_token, refresh_token_expires_at)
 	VALUES (?, ?, ?, ?, ?)`
@@ -74,7 +75,7 @@ func (sm *Manager) CreateSession(ctx context.Context, userID string) (*user.Sess
 		return nil, err
 	}
 
-	session := &user.Session{
+	session := &session.Session{
 		AccessToken:        newSessionToken,
 		UserID:             userID,
 		Expiry:             expiry,
@@ -85,7 +86,7 @@ func (sm *Manager) CreateSession(ctx context.Context, userID string) (*user.Sess
 	return session, nil
 }
 
-func (sm *Manager) GetSession(sessionID string) (*user.Session, error) {
+func (sm *Manager) GetSession(sessionID string) (*session.Session, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), contextTimeout)
 	defer cancel()
 
@@ -99,7 +100,7 @@ func (sm *Manager) GetSession(sessionID string) (*user.Session, error) {
 
 	row := stmt.QueryRowContext(ctx, sessionID)
 
-	var session user.Session
+	var session session.Session
 
 	err = row.Scan(&session.AccessToken, &session.UserID, &session.Expiry)
 	if err != nil {
@@ -116,7 +117,7 @@ func (sm *Manager) GetSession(sessionID string) (*user.Session, error) {
 	return &session, nil
 }
 
-func (sm *Manager) GetSessionFromSessionTokens(sessionToken, refreshToken string) (*user.Session, error) {
+func (sm *Manager) GetSessionFromSessionTokens(sessionToken, refreshToken string) (*session.Session, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), contextTimeout)
 	defer cancel()
 
@@ -133,7 +134,7 @@ func (sm *Manager) GetSessionFromSessionTokens(sessionToken, refreshToken string
 
 	row := stmt.QueryRowContext(ctx, sessionToken, refreshToken)
 
-	var session user.Session
+	var session session.Session
 
 	err = row.Scan(&session.AccessToken, &session.UserID, &session.Expiry,
 		&session.RefreshToken, &session.RefreshTokenExpiry)

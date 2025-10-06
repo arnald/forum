@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/arnald/forum/internal/domain/session"
 	"github.com/arnald/forum/internal/domain/user"
 )
 
@@ -67,16 +68,16 @@ func (m *MockEncryptionProvider) Matches(hashedPassword string, plaintextPasswor
 }
 
 type MockSessionManager struct {
-	GetSessionFunc                  func(sessionID string) (*user.Session, error)
-	CreateSessionFunc               func(userID string) (*user.Session, error)
+	GetSessionFunc                  func(sessionID string) (*session.Session, error)
+	CreateSessionFunc               func(userID string) (*session.Session, error)
 	DeleteSessionFunc               func(sessionID string) error
 	NewSessionCookieFunc            func(token string) *http.Cookie
 	GetUserFromSessionFunc          func(sessionID string) (*user.User, error)
-	GetSessionFromSessionTokensFunc func(sessionToken, refreshToken string) (*user.Session, error)
+	GetSessionFromSessionTokensFunc func(sessionToken, refreshToken string) (*session.Session, error)
 	DeleteSessionWhenNewCreatedFunc func(ctx context.Context, sessionID string, userID string) error
 }
 
-func (m *MockSessionManager) GetSession(sessionID string) (*user.Session, error) {
+func (m *MockSessionManager) GetSession(sessionID string) (*session.Session, error) {
 	if m.GetSessionFunc != nil {
 		return m.GetSessionFunc(sessionID)
 	}
@@ -90,7 +91,7 @@ func (m *MockSessionManager) GetUserFromSession(sessionID string) (*user.User, e
 	return nil, ErrTest
 }
 
-func (m *MockSessionManager) CreateSession(_ context.Context, userID string) (*user.Session, error) {
+func (m *MockSessionManager) CreateSession(_ context.Context, userID string) (*session.Session, error) {
 	if m.CreateSessionFunc != nil {
 		return m.CreateSessionFunc(userID)
 	}
@@ -127,7 +128,7 @@ func (m *MockSessionManager) NewSessionCookie(token string) *http.Cookie {
 	}
 }
 
-func (m *MockSessionManager) GetSessionFromSessionTokens(sessionToken, refreshToken string) (*user.Session, error) {
+func (m *MockSessionManager) GetSessionFromSessionTokens(sessionToken, refreshToken string) (*session.Session, error) {
 	if m.GetSessionFromSessionTokensFunc != nil {
 		return m.GetSessionFromSessionTokensFunc(sessionToken, refreshToken)
 	}

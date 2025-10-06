@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/arnald/forum/internal/domain/session"
 	"github.com/arnald/forum/internal/domain/user"
 	testhelpers "github.com/arnald/forum/internal/pkg/testing"
 )
@@ -56,8 +57,8 @@ func newOptionalAuthorizationTestCases() []optionalAuthorizationTestCase {
 						Username: "Test User",
 					}, nil
 				}
-				sm.GetSessionFromSessionTokensFunc = func(sessionToken string, refreshToken string) (*user.Session, error) {
-					return &user.Session{
+				sm.GetSessionFromSessionTokensFunc = func(sessionToken string, refreshToken string) (*session.Session, error) {
+					return &session.Session{
 						UserID:             "test-user-id",
 						AccessToken:        "valid-session",
 						RefreshToken:       "valid-refresh",
@@ -80,9 +81,9 @@ func newOptionalAuthorizationTestCases() []optionalAuthorizationTestCase {
 				Value: "valid-refresh",
 			},
 			setupMockSession: func(sm *testhelpers.MockSessionManager) {
-				sm.GetSessionFromSessionTokensFunc = func(sessionToken string, refreshToken string) (*user.Session, error) {
+				sm.GetSessionFromSessionTokensFunc = func(sessionToken string, refreshToken string) (*session.Session, error) {
 					if sessionToken == "invalid-session" && refreshToken == "valid-refresh" {
-						return &user.Session{
+						return &session.Session{
 							UserID:             "test-user-id",
 							AccessToken:        "valid-session",
 							RefreshToken:       "valid-refresh",
@@ -95,8 +96,8 @@ func newOptionalAuthorizationTestCases() []optionalAuthorizationTestCase {
 				sm.DeleteSessionFunc = func(sessionID string) error {
 					return nil
 				}
-				sm.CreateSessionFunc = func(userID string) (*user.Session, error) {
-					return &user.Session{
+				sm.CreateSessionFunc = func(userID string) (*session.Session, error) {
+					return &session.Session{
 						UserID:             userID,
 						AccessToken:        "new-access-token",
 						RefreshToken:       "new-refresh-token",
@@ -128,7 +129,7 @@ func newOptionalAuthorizationTestCases() []optionalAuthorizationTestCase {
 				Value: "invalid-refresh",
 			},
 			setupMockSession: func(sm *testhelpers.MockSessionManager) {
-				sm.GetSessionFromSessionTokensFunc = func(sessionToken string, refreshToken string) (*user.Session, error) {
+				sm.GetSessionFromSessionTokensFunc = func(sessionToken string, refreshToken string) (*session.Session, error) {
 					if sessionToken == "invalid-session" && refreshToken == "invalid-refresh" {
 						return nil, testhelpers.ErrTest
 					}
@@ -149,9 +150,9 @@ func newOptionalAuthorizationTestCases() []optionalAuthorizationTestCase {
 				Value: "valid-refresh",
 			},
 			setupMockSession: func(sm *testhelpers.MockSessionManager) {
-				sm.GetSessionFromSessionTokensFunc = func(sessionToken, refreshToken string) (*user.Session, error) {
+				sm.GetSessionFromSessionTokensFunc = func(sessionToken, refreshToken string) (*session.Session, error) {
 					if sessionToken == "valid-session" && refreshToken == "valid-refresh" {
-						return &user.Session{
+						return &session.Session{
 							UserID:             "test-user-id",
 							AccessToken:        "valid-session",
 							RefreshToken:       "valid-refresh",
@@ -182,9 +183,9 @@ func newOptionalAuthorizationTestCases() []optionalAuthorizationTestCase {
 				Value: "valid-refresh",
 			},
 			setupMockSession: func(sm *testhelpers.MockSessionManager) {
-				sm.GetSessionFromSessionTokensFunc = func(sessionToken, refreshToken string) (*user.Session, error) {
+				sm.GetSessionFromSessionTokensFunc = func(sessionToken, refreshToken string) (*session.Session, error) {
 					if sessionToken == "valid-session" && refreshToken == "valid-refresh" {
-						return &user.Session{
+						return &session.Session{
 							UserID:             "test-user-id",
 							AccessToken:        "valid-session",
 							RefreshToken:       "valid-refresh",

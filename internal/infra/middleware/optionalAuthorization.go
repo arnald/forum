@@ -4,18 +4,18 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/arnald/forum/internal/domain/user"
+	"github.com/arnald/forum/internal/domain/session"
 )
 
 type optionalAuthMiddleware struct {
-	sessionManager user.SessionManager
+	sessionManager session.Manager
 }
 
 type OptionalAuthMiddleware interface {
 	OptionalAuth(next http.HandlerFunc) http.HandlerFunc
 }
 
-func NewOptionalAuthMiddleware(sessionManager user.SessionManager) OptionalAuthMiddleware {
+func NewOptionalAuthMiddleware(sessionManager session.Manager) OptionalAuthMiddleware {
 	return optionalAuthMiddleware{
 		sessionManager: sessionManager,
 	}

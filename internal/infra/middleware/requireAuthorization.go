@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/arnald/forum/internal/domain/user"
+	"github.com/arnald/forum/internal/domain/session"
 	"github.com/arnald/forum/internal/pkg/helpers"
 )
 
@@ -15,14 +15,14 @@ const (
 )
 
 type requireAuthMiddleware struct {
-	sessionManager user.SessionManager
+	sessionManager session.Manager
 }
 
 type RequireAuthMiddleware interface {
 	RequireAuth(next http.HandlerFunc) http.HandlerFunc
 }
 
-func NewRequireAuthMiddleware(sessionManager user.SessionManager) RequireAuthMiddleware {
+func NewRequireAuthMiddleware(sessionManager session.Manager) RequireAuthMiddleware {
 	return requireAuthMiddleware{
 		sessionManager: sessionManager,
 	}

@@ -4,10 +4,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/arnald/forum/internal/domain/user"
+	"github.com/arnald/forum/internal/domain/session"
 )
 
-func CheckTokenExpiration(session *user.Session) (sessionExpired, refreshTokenExpired bool) {
+func CheckTokenExpiration(session *session.Session) (sessionExpired, refreshTokenExpired bool) {
 	if session.Expiry.Before(time.Now()) {
 		sessionExpired = true
 	}

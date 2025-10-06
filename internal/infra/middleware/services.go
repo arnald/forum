@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"github.com/arnald/forum/internal/domain/user"
+	"github.com/arnald/forum/internal/domain/session"
 )
 
 type Middleware struct {
@@ -9,7 +9,7 @@ type Middleware struct {
 	OptionalAuth  OptionalAuthMiddleware
 }
 
-func NewMiddleware(sessionManager user.SessionManager) *Middleware {
+func NewMiddleware(sessionManager session.Manager) *Middleware {
 	return &Middleware{
 		Authorization: NewRequireAuthMiddleware(sessionManager),
 		OptionalAuth:  NewOptionalAuthMiddleware(sessionManager),
