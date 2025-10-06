@@ -26,9 +26,8 @@ func (h *Handler) AdminPanel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Verify user has admin or moderator privileges
-	// Return 404 instead of 403 to hide admin panel existence from regular users
 	if user.Role != models.RoleAdmin && user.Role != models.RoleModerator {
-		h.NotFound(w, r)
+		h.Forbidden(w, r, "You don't have permission to access the admin panel. Only admins and moderators can access this area.")
 		return
 	}
 
@@ -163,7 +162,7 @@ func (h *Handler) UpdateUserRole(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if user.Role != models.RoleAdmin {
-		h.NotFound(w, r)
+		h.Forbidden(w, r, "You don't have permission to change user roles. Only admins can modify user roles.")
 		return
 	}
 
@@ -212,7 +211,7 @@ func (h *Handler) ApprovePost(w http.ResponseWriter, r *http.Request) {
 	// Verify user has moderation privileges (admin OR moderator)
 	// This allows both roles to approve posts for efficient content moderation
 	if user.Role != models.RoleAdmin && user.Role != models.RoleModerator {
-		h.NotFound(w, r)
+		h.Forbidden(w, r, "You don't have permission to approve posts. Only admins and moderators can approve posts.")
 		return
 	}
 
@@ -271,7 +270,7 @@ func (h *Handler) RejectPost(w http.ResponseWriter, r *http.Request) {
 	// Verify user has moderation privileges (admin OR moderator)
 	// Both roles can reject posts to maintain content quality standards
 	if user.Role != models.RoleAdmin && user.Role != models.RoleModerator {
-		h.NotFound(w, r)
+		h.Forbidden(w, r, "You don't have permission to reject posts. Only admins and moderators can reject posts.")
 		return
 	}
 
@@ -323,7 +322,7 @@ func (h *Handler) CreateCategory(w http.ResponseWriter, r *http.Request) {
 
 	// Allow both admins and moderators to create categories for content organization
 	if user.Role != models.RoleAdmin && user.Role != models.RoleModerator {
-		h.NotFound(w, r)
+		h.Forbidden(w, r, "You don't have permission to create categories. Only admins and moderators can create categories.")
 		return
 	}
 
@@ -357,7 +356,7 @@ func (h *Handler) DeleteCategory(w http.ResponseWriter, r *http.Request) {
 
 	// Allow both admins and moderators to delete categories for content organization
 	if user.Role != models.RoleAdmin && user.Role != models.RoleModerator {
-		h.NotFound(w, r)
+		h.Forbidden(w, r, "You don't have permission to delete categories. Only admins and moderators can delete categories.")
 		return
 	}
 

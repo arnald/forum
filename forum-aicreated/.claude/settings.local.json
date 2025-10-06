@@ -15,7 +15,9 @@
       "Bash(do echo \"=== $file ===\")",
       "Bash(head:*)",
       "Bash(done)",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "Bash(claude doctor)",
+      "Bash(sqlite3:*)"
     ],
     "deny": [],
     "ask": []

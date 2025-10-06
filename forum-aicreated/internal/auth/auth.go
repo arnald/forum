@@ -258,9 +258,24 @@ func (a *Auth) UsernameExists(username string) (bool, error) {
 
 // UpdateUserRole changes a user's role (admin/moderator/user)
 // Only accessible by administrators for user management
+// Automatically invalidates all user sessions to force re-login with new permissions
 func (a *Auth) UpdateUserRole(userID int, role models.UserRole) error {
 	query := `UPDATE users SET role = ? WHERE id = ?`
 	_, err := a.db.Exec(query, role, userID)
+	if err != nil {
+		return err
+	}
+
+	// Invalidate all sessions for this user to force them to log back in
+	// This ensures they get the new role immediately without cached permissions
+	return a.InvalidateUserSessions(userID)
+}
+
+// InvalidateUserSessions deletes all active sessions for a specific user
+// Used when user roles change or for security purposes
+func (a *Auth) InvalidateUserSessions(userID int) error {
+	query := `DELETE FROM sessions WHERE user_id = ?`
+	_, err := a.db.Exec(query, userID)
 	return err
 }
 

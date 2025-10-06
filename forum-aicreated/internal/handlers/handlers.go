@@ -455,6 +455,13 @@ func (h *Handler) NotFound(w http.ResponseWriter, r *http.Request) {
 	h.render(w, "404.html", nil)
 }
 
+// Forbidden renders a 403 error page for authorization failures.
+// Used when a user is authenticated but lacks permission for the requested action.
+func (h *Handler) Forbidden(w http.ResponseWriter, r *http.Request, message string) {
+	w.WriteHeader(http.StatusForbidden)
+	h.render(w, "400.html", map[string]string{"Message": message})
+}
+
 // InternalServerError renders a 500 error page for server errors.
 // Logs the error details for debugging while showing user-friendly message.
 func (h *Handler) InternalServerError(w http.ResponseWriter, r *http.Request, err error) {
