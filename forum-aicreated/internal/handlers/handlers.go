@@ -56,14 +56,23 @@ func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Fetch categories for the filter bar
+	categories, err := h.GetCategories()
+	if err != nil {
+		h.InternalServerError(w, r, err)
+		return
+	}
+
 	// Prepare data structure for template rendering
 	// Using anonymous struct for simple data passing to template
 	data := struct {
-		Posts []models.Post
-		User  *models.User
+		Posts      []models.Post
+		User       *models.User
+		Categories []models.Category
 	}{
-		Posts: posts,
-		User:  user,
+		Posts:      posts,
+		User:       user,
+		Categories: categories,
 	}
 
 	// Render the homepage template with posts and user data

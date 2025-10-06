@@ -15,7 +15,12 @@
                 <div class="posts-grid">
                     {{range .Activity.CreatedPosts}}
                         <div class="activity-post">
-                            <h4><a href="/post/{{.ID}}">{{.Title}}</a></h4>
+                            <h4>
+                                <a href="/post/{{.ID}}">{{.Title}}</a>
+                                {{if ne .Status "approved"}}
+                                    <span class="status-badge status-{{.Status}}">{{.Status}}</span>
+                                {{end}}
+                            </h4>
                             <p>{{.Content | truncate 150}}</p>
                             {{if .ImagePath}}
                                 <div class="post-image-small">
