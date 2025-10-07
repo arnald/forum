@@ -19,7 +19,8 @@
       "Bash(claude doctor)",
       "Bash(sqlite3:*)",
       "Bash(./forum-app)",
-      "Bash(go get:*)"
+      "Bash(go get:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []

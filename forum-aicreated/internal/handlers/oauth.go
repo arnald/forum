@@ -6,7 +6,6 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
-	"forum/internal/models"
 	"forum/internal/oauth"
 	"net/http"
 	"time"
