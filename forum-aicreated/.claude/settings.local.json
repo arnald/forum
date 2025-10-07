@@ -18,7 +18,8 @@
       "Bash(timeout:*)",
       "Bash(claude doctor)",
       "Bash(sqlite3:*)",
-      "Bash(./forum-app)"
+      "Bash(./forum-app)",
+      "Bash(go get:*)"
     ],
     "deny": [],
     "ask": []

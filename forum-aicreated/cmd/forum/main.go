@@ -42,6 +42,9 @@ func main() {
 	// The handler contains all business logic and database operations
 	h := handlers.NewHandler(db)
 
+	// Initialize OAuth configuration
+	handlers.InitOAuth()
+
 	// === PUBLIC ROUTES ===
 	// Home page - displays all approved posts
 	http.HandleFunc("/", h.Home)
@@ -55,6 +58,15 @@ func main() {
 	http.HandleFunc("/register", h.RateLimitedHandler(h.Register)) // User registration
 	http.HandleFunc("/login", h.RateLimitedHandler(h.Login))       // User login
 	http.HandleFunc("/logout", h.Logout)                          // User logout
+
+	// === OAUTH AUTHENTICATION ROUTES ===
+	// OAuth login and callback handlers for third-party authentication
+	http.HandleFunc("/auth/google", h.GoogleLogin)           // Redirect to Google OAuth
+	http.HandleFunc("/auth/google/callback", h.GoogleCallback) // Handle Google OAuth callback
+	http.HandleFunc("/auth/github", h.GitHubLogin)           // Redirect to GitHub OAuth
+	http.HandleFunc("/auth/github/callback", h.GitHubCallback) // Handle GitHub OAuth callback
+	http.HandleFunc("/auth/facebook", h.FacebookLogin)       // Redirect to Facebook OAuth
+	http.HandleFunc("/auth/facebook/callback", h.FacebookCallback) // Handle Facebook OAuth callback
 
 	// === POST MANAGEMENT ROUTES ===
 	http.HandleFunc("/create-post", h.RateLimitedHandler(h.CreatePost)) // Create new post (rate limited)

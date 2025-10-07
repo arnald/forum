@@ -308,3 +308,36 @@ func (a *Auth) HasPermission(user *models.User, permission string) bool {
 func (a *Auth) IsOwner(user *models.User, ownerID int) bool {
 	return user != nil && user.ID == ownerID
 }
+
+// ===== OAUTH METHODS =====
+
+// FindUserByProvider finds a user by OAuth provider and provider ID
+// Used during OAuth callback to check if a user has already logged in with this provider before
+// Returns the user if found, or an error if no matching OAuth account exists
+func (a *Auth) FindUserByProvider(provider, providerID string) (*models.User, error) {
+	// Query database for user with matching OAuth provider and provider-specific ID
+	query := `SELECT id, email, username, password, role, provider, provider_id, created_at
+	          FROM users WHERE provider = ? AND provider_id = ?`
+
+	var user models.User
+	err := a.db.QueryRow(query, provider, providerID).Scan(
+		&user.ID, &user.Email, &user.Username, &user.Password,
+		&user.Role, &user.Provider, &user.ProviderID, &user.CreatedAt,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+// UserExists checks if a user with the given email or username already exists
+// Used during OAuth registration to prevent duplicate accounts and handle username conflicts
+// Returns true if a user with matching email OR username exists (from any auth method)
+func (a *Auth) UserExists(email, username string) bool {
+	var count int
+	query := `SELECT COUNT(*) FROM users WHERE email = ? OR username = ?`
+	err := a.db.QueryRow(query, email, username).Scan(&count)
+	return err == nil && count > 0
+}

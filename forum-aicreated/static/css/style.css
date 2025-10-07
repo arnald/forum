@@ -460,6 +460,55 @@ body {
     text-decoration: underline;
 }
 
+/* ===== OAUTH BUTTONS ===== */
+/* OAuth provider button container with vertical stacking */
+.oauth-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+/* Base OAuth button styling */
+.btn-oauth {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.3s;
+    background-color: white;
+    color: #333;
+}
+
+/* Google button styling with brand colors */
+.btn-google:hover {
+    background-color: #f8f8f8;
+    border-color: #EA4335;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* GitHub button styling with brand colors */
+.btn-github:hover {
+    background-color: #24292e;
+    color: white;
+    border-color: #24292e;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Facebook button styling with brand colors */
+.btn-facebook:hover {
+    background-color: #1877f2;
+    color: white;
+    border-color: #1877f2;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
 .form-container {
     background: white;
     padding: 2rem;
