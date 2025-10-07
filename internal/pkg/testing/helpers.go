@@ -40,3 +40,38 @@ func CompareUserFields(t *testing.T, got, want *user.User) {
 		t.Errorf("Handle() got Password = %v, want %v", got.Password, want.Password)
 	}
 }
+
+func AssertTopicMatch(t *testing.T, got, want *user.Topic) {
+	t.Helper()
+
+	if want == nil {
+		if got != nil {
+			t.Error("Handle() expected nil topic, got non-nil")
+		}
+		return
+	}
+
+	if got == nil {
+		t.Fatalf("Handle() got nil topic, want topic with ID %d", want.ID)
+		return
+	}
+
+	CompareCreateTopicFields(t, got, want)
+}
+
+func CompareCreateTopicFields(t *testing.T, got, want *user.Topic) {
+	t.Helper()
+
+	if got.ID != want.ID {
+		t.Errorf("Handle() got ID = %v, want %v", got.ID, want.ID)
+	}
+	if got.Title != want.Title {
+		t.Errorf("Handle() got Title = %v, want %v", got.Title, want.Title)
+	}
+	if got.Content != want.Content {
+		t.Errorf("Handle() got Content = %v, want %v", got.Content, want.Content)
+	}
+	if got.ImagePath != want.ImagePath {
+		t.Errorf("Handle() got ImagePath = %v, want %v", got.ImagePath, want.ImagePath)
+	}
+}

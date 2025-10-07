@@ -2,6 +2,7 @@ package validator
 
 import (
 	"fmt"
+	"path/filepath"
 	"reflect"
 	"regexp"
 	"slices"
@@ -84,11 +85,29 @@ func ValidateStruct(v *Validator, data any, rules []ValidationRule) {
 }
 
 func required(value any) (bool, string) {
-	str, ok := value.(string)
-	if !ok {
+	switch v := value.(type) {
+	case string:
+		return v != "", "must be provided"
+	case int:
+		return true, ""
+	default:
 		return false, InvalidType
 	}
-	return str != "", "must be provided"
+}
+
+func optional(validationFunc func(any) (bool, string)) func(any) (bool, string) {
+	return func(value any) (bool, string) {
+		str, ok := value.(string)
+		if !ok {
+			return false, "field must be a string"
+		}
+
+		if str == "" {
+			return true, ""
+		}
+
+		return validationFunc(value)
+	}
 }
 
 func minLength(minimumLenght int) func(any) (bool, string) {
@@ -111,6 +130,24 @@ func maxLength(maximumLenght int) func(any) (bool, string) {
 	}
 }
 
+func isPositiveInt(value any) (bool, string) {
+	num, ok := value.(int)
+	if !ok {
+		return false, InvalidType
+	}
+	return num > 0, "must be a positive integer"
+}
+
+func maxInt(limit int) func(any) (bool, string) {
+	return func(value any) (bool, string) {
+		num, ok := value.(int)
+		if !ok {
+			return false, InvalidType
+		}
+		return num <= limit, fmt.Sprintf("must be less than or equal to %d", limit)
+	}
+}
+
 func validEmail(value any) (bool, string) {
 	str, ok := value.(string)
 	if !ok {
@@ -125,4 +162,54 @@ func (v *Validator) ToStringErrors() string {
 		strError += key + ": " + value + " "
 	}
 	return strings.TrimSpace(strError)
+}
+
+func validImagePath(value any) (bool, string) {
+	validImageExtensions := map[string]bool{
+		".png":  true,
+		".jpg":  true,
+		".jpeg": true,
+		".gif":  true,
+	}
+
+	str, ok := value.(string)
+	if !ok {
+		return false, InvalidType
+	}
+	ext := strings.ToLower(filepath.Ext(str))
+	return validImageExtensions[ext], "must be a valid image file"
+}
+
+// var validCategories = map[string]bool{
+// 	"General Discussion": true,
+// 	"Feedback":           true,
+// 	"Off-Topic":          true,
+// }
+
+// func validCategory(value any) (bool, string) {
+// 	str, ok := value.(string)
+// 	if !ok {
+// 		return false, InvalidType
+// 	}
+// 	return validCategories[str], "must be a valid category"
+// }
+
+func validOrderBy(value any) (bool, string) {
+	orderByWhitelist := map[string]bool{
+		"created_at ASC":  true,
+		"created_at DESC": true,
+		"updated_at ASC":  true,
+		"updated_at DESC": true,
+		"title ASC":       true,
+		"title DESC":      true,
+	}
+
+	str, ok := value.(string)
+	if !ok {
+		return false, InvalidType
+	}
+	if str == "" {
+		return true, ""
+	}
+	return orderByWhitelist[str], "must be a valid order by field"
 }

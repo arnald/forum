@@ -1,20 +1,31 @@
 package app
 
 import (
-	"github.com/arnald/forum/internal/app/user/queries"
+	topicCommands "github.com/arnald/forum/internal/app/topics/commands"
+	topicQueries "github.com/arnald/forum/internal/app/topics/queries"
+	userQueries "github.com/arnald/forum/internal/app/user/queries"
 	"github.com/arnald/forum/internal/domain/user"
 	"github.com/arnald/forum/internal/pkg/bcrypt"
 	"github.com/arnald/forum/internal/pkg/uuid"
 )
 
 type Queries struct {
-	UserRegister      queries.UserRegisterRequestHandler
-	UserLoginEmail    queries.UserLoginEmailRequestHandler
-	UserLoginUsername queries.UserLoginUsernameRequestHandler
+	UserRegister      userQueries.UserRegisterRequestHandler
+	UserLoginEmail    userQueries.UserLoginEmailRequestHandler
+	UserLoginUsername userQueries.UserLoginUsernameRequestHandler
+	GetTopic          topicQueries.GetTopicRequestHandler
+	GetAllTopics      topicQueries.GetAllTopicsRequestHandler
+}
+
+type Commands struct {
+	CreateTopic topicCommands.CreateTopicRequestHandler
+	UpdateTopic topicCommands.UpdateTopicRequestHandler
+	DeleteTopic topicCommands.DeleteTopicRequestHandler
 }
 
 type UserServices struct {
-	Queries Queries
+	Queries  Queries
+	Commands Commands
 }
 
 type Services struct {
@@ -27,9 +38,16 @@ func NewServices(repo user.Repository) Services {
 	return Services{
 		UserServices: UserServices{
 			Queries: Queries{
-				queries.NewUserRegisterHandler(repo, uuidProvider, encryption),
-				queries.NewUserLoginEmailHandler(repo, encryption),
-				queries.NewUserLoginUsernameHandler(repo, encryption),
+				userQueries.NewUserRegisterHandler(repo, uuidProvider, encryption),
+				userQueries.NewUserLoginEmailHandler(repo, encryption),
+				userQueries.NewUserLoginUsernameHandler(repo, encryption),
+				topicQueries.NewGetTopicHandler(repo),
+				topicQueries.NewGetAllTopicsHandler(repo),
+			},
+			Commands: Commands{
+				topicCommands.NewCreateTopicHandler(repo),
+				topicCommands.NewUpdateTopicHandler(repo),
+				topicCommands.NewDeleteTopicHandler(repo),
 			},
 		},
 	}

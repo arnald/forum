@@ -8,12 +8,6 @@ import (
 	"github.com/arnald/forum/internal/pkg/helpers"
 )
 
-type Key string
-
-const (
-	userIDKey Key = "user"
-)
-
 type requireAuthMiddleware struct {
 	sessionManager session.Manager
 }

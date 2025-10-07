@@ -12,10 +12,16 @@ import (
 var ErrTest = errors.New("test error")
 
 type MockRepository struct {
-	UserRegisterFunc      func(ctx context.Context, user *user.User) error
-	GetUserByEmailFunc    func(ctx context.Context, email string) (*user.User, error)
-	GetUserByUsernameFunc func(ctx context.Context, username string) (*user.User, error)
-	GetAllFunc            func(ctx context.Context) ([]user.User, error)
+	UserRegisterFunc        func(ctx context.Context, user *user.User) error
+	GetUserByEmailFunc      func(ctx context.Context, email string) (*user.User, error)
+	GetUserByUsernameFunc   func(ctx context.Context, username string) (*user.User, error)
+	GetAllFunc              func(ctx context.Context) ([]user.User, error)
+	CreateTopicFunc         func(ctx context.Context, topic *user.Topic) error
+	UpdateTopicFunc         func(ctx context.Context, topic *user.Topic) error
+	DeleteTopicFunc         func(ctx context.Context, userID string, topicID int) error
+	GetTopicByIDFunc        func(ctx context.Context, topicID int) (*user.Topic, error)
+	GetAllTopicsFunc        func(ctx context.Context, page, size int, orderBy, filter string) ([]user.Topic, error)
+	GetTotalTopicsCountFunc func(ctx context.Context, filter string) (int, error)
 }
 
 func (m *MockRepository) UserRegister(ctx context.Context, user *user.User) error {
@@ -41,6 +47,48 @@ func (m *MockRepository) GetAll(ctx context.Context) ([]user.User, error) {
 		return m.GetAllFunc(ctx)
 	}
 	return nil, ErrTest
+}
+
+func (m *MockRepository) CreateTopic(ctx context.Context, topic *user.Topic) error {
+	if m.CreateTopicFunc != nil {
+		return m.CreateTopicFunc(ctx, topic)
+	}
+	return ErrTest
+}
+
+func (m *MockRepository) UpdateTopic(ctx context.Context, topic *user.Topic) error {
+	if m.UpdateTopicFunc != nil {
+		return m.UpdateTopicFunc(ctx, topic)
+	}
+	return ErrTest
+}
+
+func (m *MockRepository) DeleteTopic(ctx context.Context, userID string, topicID int) error {
+	if m.DeleteTopicFunc != nil {
+		return m.DeleteTopicFunc(ctx, userID, topicID)
+	}
+	return ErrTest
+}
+
+func (m *MockRepository) GetTopicByID(ctx context.Context, topicID int) (*user.Topic, error) {
+	if m.GetTopicByIDFunc != nil {
+		return m.GetTopicByIDFunc(ctx, topicID)
+	}
+	return nil, ErrTest
+}
+
+func (m *MockRepository) GetAllTopics(ctx context.Context, page, size int, orderBy, filter string) ([]user.Topic, error) {
+	if m.GetAllTopicsFunc != nil {
+		return m.GetAllTopicsFunc(ctx, page, size, orderBy, filter)
+	}
+	return nil, ErrTest
+}
+
+func (m *MockRepository) GetTotalTopicsCount(ctx context.Context, filter string) (int, error) {
+	if m.GetTotalTopicsCountFunc != nil {
+		return m.GetTotalTopicsCountFunc(ctx, filter)
+	}
+	return 0, ErrTest
 }
 
 type MockUUIDProvider struct {

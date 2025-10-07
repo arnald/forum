@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/arnald/forum/internal/app/user/queries"
+	userQueries "github.com/arnald/forum/internal/app/user/queries"
 	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/pkg/helpers"
 	"github.com/arnald/forum/internal/pkg/validator"
@@ -64,7 +64,7 @@ func (h Handler) UserLoginUsername(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.UserServices.UserServices.Queries.UserLoginUsername.Handle(ctx, queries.UserLoginUsernameRequest{
+	user, err := h.UserServices.UserServices.Queries.UserLoginUsername.Handle(ctx, userQueries.UserLoginUsernameRequest{
 		Username: userToLogin.Username,
 		Password: userToLogin.Password,
 	})
