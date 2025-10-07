@@ -29,7 +29,7 @@ func main() {
 	userRepo := sqlite.NewRepo(db)
 	logger := logger.New(os.Stdout, logger.LevelInfo)
 	infraProviders := infra.NewInfraProviders(userRepo.DB)
-	appServices := app.NewServices(infraProviders.UserRepository)
+	appServices := app.NewServices(infraProviders.UserRepository, infraProviders.CategoryRepository)
 	infraHTTPServer := infra.NewHTTPServer(cfg, db, logger, appServices)
 	infraHTTPServer.ListenAndServe()
 }

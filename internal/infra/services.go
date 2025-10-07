@@ -5,6 +5,7 @@ import (
 
 	"github.com/arnald/forum/internal/app"
 	"github.com/arnald/forum/internal/config"
+	"github.com/arnald/forum/internal/domain/categories"
 	"github.com/arnald/forum/internal/domain/user"
 	"github.com/arnald/forum/internal/infra/http"
 	"github.com/arnald/forum/internal/infra/logger"
@@ -12,13 +13,15 @@ import (
 )
 
 type Services struct {
-	UserRepository user.Repository
-	Server         *http.Server
+	UserRepository     user.Repository
+	CategoryRepository categories.Repository
+	Server             *http.Server
 }
 
 func NewInfraProviders(db *sql.DB) Services {
 	return Services{
-		UserRepository: sqlite.NewRepo(db),
+		UserRepository:     sqlite.NewRepo(db),
+		CategoryRepository: sqlite.NewCategoryRepo(db),
 	}
 }
 
