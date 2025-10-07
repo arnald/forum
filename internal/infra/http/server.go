@@ -8,13 +8,13 @@ import (
 
 	"github.com/arnald/forum/internal/app"
 	"github.com/arnald/forum/internal/config"
-	"github.com/arnald/forum/internal/domain/user"
+	"github.com/arnald/forum/internal/domain/session"
 	"github.com/arnald/forum/internal/infra/http/health"
 	userLogin "github.com/arnald/forum/internal/infra/http/user/login"
 	userRegister "github.com/arnald/forum/internal/infra/http/user/register"
 	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/infra/middleware"
-	"github.com/arnald/forum/internal/infra/session"
+	"github.com/arnald/forum/internal/infra/storage/sessionstore"
 )
 
 const (
@@ -28,7 +28,8 @@ type Server struct {
 	appServices    app.Services
 	config         *config.ServerConfig
 	router         *http.ServeMux
-	sessionManager user.SessionManager
+	sessionManager session.Manager
+	middleware     *middleware.Middleware
 	db             *sql.DB
 	logger         logger.Logger
 }
@@ -42,23 +43,35 @@ func NewServer(cfg *config.ServerConfig, db *sql.DB, logger logger.Logger, appSe
 		logger:      logger,
 	}
 	httpServer.initSessionManager()
+	httpServer.initMiddleware(httpServer.sessionManager)
 	httpServer.AddHTTPRoutes()
 	return httpServer
 }
 
+// FOR MIDDLEWARE CHAINING.
+func middlewareChain(handler http.HandlerFunc, middlewares ...func(http.HandlerFunc) http.HandlerFunc) http.HandlerFunc {
+	for _, m := range middlewares {
+		handler = m(handler)
+	}
+	return handler
+}
+
 func (server *Server) AddHTTPRoutes() {
-	// server.router.HandleFunc(apiContext+"/users", user.NewHandler(server.appServices.UserServices).GetAllUsers)
-	server.router.HandleFunc(apiContext+"/health", health.NewHandler(server.logger).HealthCheck)
-	server.router.HandleFunc(
-		apiContext+"/login/username",
-		userLogin.NewHandler(server.config, server.appServices, server.sessionManager, server.logger).UserLoginUsername,
-	)
-	server.router.HandleFunc(
-		apiContext+"/login/email",
+	server.router.HandleFunc(apiContext+"/health",
+		middlewareChain(
+			health.NewHandler(server.logger).HealthCheck,
+			server.middleware.Authorization.RequireAuth,
+		))
+
+	server.router.HandleFunc(apiContext+"/login/email",
 		userLogin.NewHandler(server.config, server.appServices, server.sessionManager, server.logger).UserLoginEmail,
 	)
-	server.router.HandleFunc(
-		apiContext+"/register",
+
+	server.router.HandleFunc(apiContext+"/login/username",
+		userLogin.NewHandler(server.config, server.appServices, server.sessionManager, server.logger).UserLoginUsername,
+	)
+
+	server.router.HandleFunc(apiContext+"/register",
 		userRegister.NewHandler(server.config, server.appServices, server.sessionManager, server.logger).UserRegister,
 	)
 }
@@ -85,5 +98,9 @@ func (server *Server) ListenAndServe() {
 }
 
 func (server *Server) initSessionManager() {
-	server.sessionManager = session.NewSessionManager(server.db, server.config.SessionManager)
+	server.sessionManager = sessionstore.NewSessionManager(server.db, server.config.SessionManager)
+}
+
+func (server *Server) initMiddleware(sessionManager session.Manager) {
+	server.middleware = middleware.NewMiddleware(sessionManager)
 }

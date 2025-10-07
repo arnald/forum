@@ -1,4 +1,4 @@
-package session
+package sessionstore
 
 import (
 	"context"
@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/arnald/forum/internal/config"
+	"github.com/arnald/forum/internal/domain/session"
 	"github.com/arnald/forum/internal/domain/user"
 	"github.com/arnald/forum/internal/pkg/uuid"
 )
@@ -27,7 +28,7 @@ type Manager struct {
 	sessionConfig  config.SessionManagerConfig
 }
 
-func NewSessionManager(db *sql.DB, sessionConfig config.SessionManagerConfig) user.SessionManager {
+func NewSessionManager(db *sql.DB, sessionConfig config.SessionManagerConfig) session.Manager {
 	return &Manager{
 		db:             db,
 		sessionConfig:  sessionConfig,
@@ -39,7 +40,7 @@ type tokenGenerator interface {
 	NewUUID() string
 }
 
-func (sm *Manager) CreateSession(ctx context.Context, userID string) (*user.Session, error) {
+func (sm *Manager) CreateSession(ctx context.Context, userID string) (*session.Session, error) {
 	query := `
 	INSERT INTO sessions (token, user_id, expires_at, refresh_token, refresh_token_expires_at)
 	VALUES (?, ?, ?, ?, ?)`
@@ -74,7 +75,7 @@ func (sm *Manager) CreateSession(ctx context.Context, userID string) (*user.Sess
 		return nil, err
 	}
 
-	session := &user.Session{
+	session := &session.Session{
 		AccessToken:        newSessionToken,
 		UserID:             userID,
 		Expiry:             expiry,
@@ -85,11 +86,11 @@ func (sm *Manager) CreateSession(ctx context.Context, userID string) (*user.Sess
 	return session, nil
 }
 
-func (sm *Manager) GetSession(sessionID string) (*user.Session, error) {
+func (sm *Manager) GetSession(sessionID string) (*session.Session, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), contextTimeout)
 	defer cancel()
 
-	query := `SELECT token, user_id, expires_at, ip_address FROM sessions WHERE id = ?`
+	query := `SELECT token, user_id, expires_at FROM sessions WHERE token = ?`
 
 	stmt, err := sm.db.PrepareContext(ctx, query)
 	if err != nil {
@@ -99,7 +100,7 @@ func (sm *Manager) GetSession(sessionID string) (*user.Session, error) {
 
 	row := stmt.QueryRowContext(ctx, sessionID)
 
-	var session user.Session
+	var session session.Session
 
 	err = row.Scan(&session.AccessToken, &session.UserID, &session.Expiry)
 	if err != nil {
@@ -116,11 +117,87 @@ func (sm *Manager) GetSession(sessionID string) (*user.Session, error) {
 	return &session, nil
 }
 
+func (sm *Manager) GetSessionFromSessionTokens(sessionToken, refreshToken string) (*session.Session, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), contextTimeout)
+	defer cancel()
+
+	query := `
+	SELECT token, user_id, expires_at, refresh_token, refresh_token_expires_at
+	FROM sessions
+	WHERE token = ? AND refresh_token = ?`
+
+	stmt, err := sm.db.PrepareContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("prepare failed: %w", err)
+	}
+	defer stmt.Close()
+
+	row := stmt.QueryRowContext(ctx, sessionToken, refreshToken)
+
+	var session session.Session
+
+	err = row.Scan(&session.AccessToken, &session.UserID, &session.Expiry,
+		&session.RefreshToken, &session.RefreshTokenExpiry)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrSessionNotFound
+		}
+		return nil, err
+	}
+
+	return &session, nil
+}
+
+func (sm *Manager) GetUserFromSession(sessionID string) (*user.User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), contextTimeout)
+	defer cancel()
+
+	query := `
+    SELECT 
+        u.id,
+        u.email,
+        u.username,
+        u.created_at,
+        u.avatar_url,
+        u.password_hash
+    FROM users u
+    INNER JOIN sessions s ON s.user_id = u.id
+    WHERE s.token = ?
+	`
+
+	stmt, err := sm.db.PrepareContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("prepare failed: %w", err)
+	}
+	defer stmt.Close()
+
+	row := stmt.QueryRowContext(ctx, sessionID)
+
+	var User user.User
+
+	err = row.Scan(
+		&User.ID,
+		&User.Email,
+		&User.Username,
+		&User.CreatedAt,
+		&User.AvatarURL,
+		&User.Password,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrUserNotFound
+		}
+		return nil, err
+	}
+
+	return &User, nil
+}
+
 func (sm *Manager) DeleteSession(sessionID string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), contextTimeout)
 	defer cancel()
 
-	query := `DELETE FROM sessions WHERE id = ?`
+	query := `DELETE FROM sessions WHERE token = ?`
 
 	stmt, err := sm.db.PrepareContext(ctx, query)
 	if err != nil {
@@ -156,6 +233,39 @@ func (sm *Manager) NewSessionCookie(token string) *http.Cookie {
 		SameSite: parseSameSite(sm.sessionConfig.SameSite),
 		MaxAge:   int(sm.sessionConfig.DefaultExpiry.Seconds()),
 	}
+}
+
+func (sm *Manager) ValidateSession(sessionID string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), contextTimeout)
+	defer cancel()
+
+	query := `
+        SELECT expires_at 
+        FROM sessions 
+        WHERE token = ?
+    `
+
+	stmt, err := sm.db.PrepareContext(ctx, query)
+	if err != nil {
+		return fmt.Errorf("prepare failed: %w", err)
+	}
+	defer stmt.Close()
+
+	var expiresAt time.Time
+	err = stmt.QueryRowContext(ctx, sessionID).Scan(&expiresAt)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return ErrSessionNotFound
+		}
+		return fmt.Errorf("scanning session failed: %w", err)
+	}
+
+	if expiresAt.Before(time.Now()) {
+		_ = sm.DeleteSession(sessionID)
+		return ErrSessionExpired
+	}
+
+	return nil
 }
 
 func parseSameSite(s string) http.SameSite {

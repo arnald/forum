@@ -3,7 +3,9 @@ package testhelpers
 import (
 	"context"
 	"errors"
+	"net/http"
 
+	"github.com/arnald/forum/internal/domain/session"
 	"github.com/arnald/forum/internal/domain/user"
 )
 
@@ -63,4 +65,79 @@ func (m *MockEncryptionProvider) Matches(hashedPassword string, plaintextPasswor
 		return m.MatchesFunc(hashedPassword, plaintextPassword)
 	}
 	return nil
+}
+
+type MockSessionManager struct {
+	GetSessionFunc                  func(sessionID string) (*session.Session, error)
+	CreateSessionFunc               func(userID string) (*session.Session, error)
+	DeleteSessionFunc               func(sessionID string) error
+	NewSessionCookieFunc            func(token string) *http.Cookie
+	GetUserFromSessionFunc          func(sessionID string) (*user.User, error)
+	GetSessionFromSessionTokensFunc func(sessionToken, refreshToken string) (*session.Session, error)
+	DeleteSessionWhenNewCreatedFunc func(ctx context.Context, sessionID string, userID string) error
+}
+
+func (m *MockSessionManager) GetSession(sessionID string) (*session.Session, error) {
+	if m.GetSessionFunc != nil {
+		return m.GetSessionFunc(sessionID)
+	}
+	return nil, ErrTest
+}
+
+func (m *MockSessionManager) GetUserFromSession(sessionID string) (*user.User, error) {
+	if m.GetUserFromSessionFunc != nil {
+		return m.GetUserFromSessionFunc(sessionID)
+	}
+	return nil, ErrTest
+}
+
+func (m *MockSessionManager) CreateSession(_ context.Context, userID string) (*session.Session, error) {
+	if m.CreateSessionFunc != nil {
+		return m.CreateSessionFunc(userID)
+	}
+	return nil, ErrTest
+}
+
+func (m *MockSessionManager) ValidateSession(sessionID string) error {
+	if m.GetSessionFunc != nil {
+		_, err := m.GetSessionFunc(sessionID)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+	return ErrTest
+}
+
+func (m *MockSessionManager) DeleteSession(sessionID string) error {
+	if m.DeleteSessionFunc != nil {
+		return m.DeleteSessionFunc(sessionID)
+	}
+	return ErrTest
+}
+
+func (m *MockSessionManager) NewSessionCookie(token string) *http.Cookie {
+	if m.NewSessionCookieFunc != nil {
+		return m.NewSessionCookieFunc(token)
+	}
+	return &http.Cookie{
+		Name:     "session_token",
+		Value:    token,
+		Path:     "/",
+		HttpOnly: true,
+	}
+}
+
+func (m *MockSessionManager) GetSessionFromSessionTokens(sessionToken, refreshToken string) (*session.Session, error) {
+	if m.GetSessionFromSessionTokensFunc != nil {
+		return m.GetSessionFromSessionTokensFunc(sessionToken, refreshToken)
+	}
+	return nil, ErrTest
+}
+
+func (m *MockSessionManager) DeleteSessionWhenNewCreated(ctx context.Context, sessionID string, userID string) error {
+	if m.DeleteSessionWhenNewCreatedFunc != nil {
+		return m.DeleteSessionWhenNewCreatedFunc(ctx, sessionID, userID)
+	}
+	return ErrTest
 }
