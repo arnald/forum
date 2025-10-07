@@ -12,13 +12,19 @@ import (
 	"time"
 )
 
+// EditPost handles post editing requests (GET and POST /edit-post/{id}).
+// GET: Displays the edit form with current post data
+// POST: Processes the edit and updates the post in the database
+// Requires ownership or moderator/admin privileges
 func (h *Handler) EditPost(w http.ResponseWriter, r *http.Request) {
+	// Verify user is authenticated
 	user, err := h.auth.GetUserFromRequest(r)
 	if err != nil {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
 
+	// Extract post ID from URL path (/edit-post/123 -> "123")
 	postIDStr := strings.TrimPrefix(r.URL.Path, "/edit-post/")
 	postID, err := strconv.Atoi(postIDStr)
 	if err != nil {
@@ -26,12 +32,15 @@ func (h *Handler) EditPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Retrieve post with any status (not just approved)
 	post, err := h.GetPostByIDWithStatus(postID)
 	if err != nil {
 		h.NotFound(w, r)
 		return
 	}
 
+	// Authorization check: must be owner, admin, or moderator
+	// Returns 404 instead of 403 to avoid revealing post existence
 	if !h.auth.HasPermission(user, "edit_own") || (!h.auth.IsOwner(user, post.UserID) && user.Role != models.RoleAdmin && user.Role != models.RoleModerator) {
 		h.NotFound(w, r)
 		return
@@ -39,23 +48,26 @@ func (h *Handler) EditPost(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case "GET":
+		// Display edit form with current post data
 		categories, err := h.GetCategories()
 		if err != nil {
 			h.InternalServerError(w, r, err)
 			return
 		}
 
+		// Get currently selected categories for this post
 		postCategories, err := h.GetPostCategoryIDs(postID)
 		if err != nil {
 			h.InternalServerError(w, r, err)
 			return
 		}
 
+		// Prepare data for template rendering
 		data := struct {
 			User           *models.User
 			Post           *models.Post
 			Categories     []models.Category
-			PostCategories []int
+			PostCategories []int // IDs of categories currently assigned
 		}{
 			User:           user,
 			Post:           post,
@@ -65,22 +77,30 @@ func (h *Handler) EditPost(w http.ResponseWriter, r *http.Request) {
 
 		h.render(w, "edit-post.html", data)
 	case "POST":
+		// Process edit form submission
 		h.handleEditPost(w, r, user, postID)
 	default:
 		h.MethodNotAllowed(w, r)
 	}
 }
 
+// handleEditPost processes the post edit form submission.
+// Updates post content and categories, maintains updated_at timestamp.
+// Uses a delete-and-reinsert strategy for category associations.
 func (h *Handler) handleEditPost(w http.ResponseWriter, r *http.Request, user *models.User, postID int) {
+	// Extract and sanitize form data
 	title := strings.TrimSpace(r.FormValue("title"))
 	content := strings.TrimSpace(r.FormValue("content"))
-	categories := r.Form["categories"]
+	categories := r.Form["categories"] // Array of selected category IDs
 
+	// Validate required fields
 	if title == "" || content == "" {
 		h.BadRequest(w, r, "Title and content are required")
 		return
 	}
 
+	// Update post content and timestamp
+	// updated_at tracks when content was last modified
 	query := `UPDATE posts SET title = ?, content = ?, updated_at = ? WHERE id = ?`
 	_, err := h.db.Exec(query, title, content, time.Now(), postID)
 	if err != nil {
@@ -88,39 +108,48 @@ func (h *Handler) handleEditPost(w http.ResponseWriter, r *http.Request, user *m
 		return
 	}
 
-	// Update categories
+	// Update category associations
+	// First, remove all existing category associations
 	_, err = h.db.Exec(`DELETE FROM post_categories WHERE post_id = ?`, postID)
 	if err != nil {
 		h.InternalServerError(w, r, err)
 		return
 	}
 
+	// Then insert the new category associations
 	for _, categoryStr := range categories {
 		categoryID, err := strconv.Atoi(categoryStr)
 		if err != nil {
-			continue
+			continue // Skip invalid category IDs
 		}
 		_, err = h.db.Exec(`INSERT INTO post_categories (post_id, category_id) VALUES (?, ?)`, postID, categoryID)
 		if err != nil {
-			continue
+			continue // Continue with other categories if one fails
 		}
 	}
 
+	// Redirect to the updated post page
 	http.Redirect(w, r, "/post/"+strconv.Itoa(postID), http.StatusSeeOther)
 }
 
+// DeletePost handles post deletion requests (POST /delete-post/{id}).
+// Only the post owner, admins, or moderators can delete posts.
+// Cascading deletes automatically remove associated comments, likes, and notifications.
 func (h *Handler) DeletePost(w http.ResponseWriter, r *http.Request) {
+	// Ensure POST method for data modification
 	if r.Method != "POST" {
 		h.MethodNotAllowed(w, r)
 		return
 	}
 
+	// Verify user is authenticated
 	user, err := h.auth.GetUserFromRequest(r)
 	if err != nil {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
 
+	// Extract post ID from URL path (/delete-post/123 -> "123")
 	postIDStr := strings.TrimPrefix(r.URL.Path, "/delete-post/")
 	postID, err := strconv.Atoi(postIDStr)
 	if err != nil {
@@ -128,23 +157,33 @@ func (h *Handler) DeletePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Retrieve post to check ownership
 	post, err := h.GetPostByIDWithStatus(postID)
 	if err != nil {
 		h.NotFound(w, r)
 		return
 	}
 
+	// Authorization check: must be owner, admin, or moderator
+	// Returns 404 instead of 403 to avoid revealing post existence
 	if !h.auth.IsOwner(user, post.UserID) && user.Role != models.RoleAdmin && user.Role != models.RoleModerator {
 		h.NotFound(w, r)
 		return
 	}
 
+	// Delete post from database
+	// Foreign key constraints with CASCADE will automatically delete:
+	// - Associated comments
+	// - Post likes/dislikes
+	// - Post-category relationships
+	// - Related notifications
 	_, err = h.db.Exec(`DELETE FROM posts WHERE id = ?`, postID)
 	if err != nil {
 		h.InternalServerError(w, r, err)
 		return
 	}
 
+	// Redirect to homepage after successful deletion
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
