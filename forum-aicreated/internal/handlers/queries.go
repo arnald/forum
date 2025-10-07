@@ -6,7 +6,6 @@ package handlers
 
 import (
 	"database/sql"
-	"fmt"
 	"forum/internal/models"
 )
 
