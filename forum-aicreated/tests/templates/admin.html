@@ -92,7 +92,7 @@ function showAdminTab(tabName, clickedButton) {
                             <span class="post-author">by {{.Username}}</span>
                         </div>
                         <div class="post-content">
-                            <p>{{.Content | truncate 200}}</p>
+                            <p>{{truncate .Content 200}}</p>
                             {{if .ImagePath}}
                                 <div class="post-image-small">
                                     <img src="{{.ImagePath}}" alt="Post image" class="post-img-small">
