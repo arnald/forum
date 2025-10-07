@@ -20,7 +20,9 @@
       "Bash(sqlite3:*)",
       "Bash(./forum-app)",
       "Bash(go get:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(lsof:*)",
+      "Bash(kill:*)"
     ],
     "deny": [],
     "ask": []
