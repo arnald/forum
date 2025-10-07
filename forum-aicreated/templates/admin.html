@@ -1,4 +1,28 @@
 {{define "content"}}
+<script>
+function showAdminTab(tabName, clickedButton) {
+    // Hide all tab contents
+    var contents = document.getElementsByClassName('admin-tab-content');
+    for (var i = 0; i < contents.length; i++) {
+        contents[i].classList.remove('active');
+    }
+
+    // Remove active class from all buttons
+    var buttons = document.getElementsByClassName('tab-button');
+    for (var i = 0; i < buttons.length; i++) {
+        buttons[i].classList.remove('active');
+    }
+
+    // Show selected tab content
+    document.getElementById(tabName).classList.add('active');
+
+    // Add active class to clicked button
+    if (clickedButton) {
+        clickedButton.classList.add('active');
+    }
+}
+</script>
+
 <div class="container">
     <div class="admin-panel">
         <h2>Admin Panel</h2>
@@ -182,28 +206,4 @@
         </div>
     </div>
 </div>
-
-<script>
-function showAdminTab(tabName, clickedButton) {
-    // Hide all tab contents
-    var contents = document.getElementsByClassName('admin-tab-content');
-    for (var i = 0; i < contents.length; i++) {
-        contents[i].classList.remove('active');
-    }
-
-    // Remove active class from all buttons
-    var buttons = document.getElementsByClassName('tab-button');
-    for (var i = 0; i < buttons.length; i++) {
-        buttons[i].classList.remove('active');
-    }
-
-    // Show selected tab content
-    document.getElementById(tabName).classList.add('active');
-
-    // Add active class to clicked button
-    if (clickedButton) {
-        clickedButton.classList.add('active');
-    }
-}
-</script>
 {{end}}

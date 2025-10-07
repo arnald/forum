@@ -6,6 +6,7 @@ package handlers
 
 import (
 	"database/sql"
+	"fmt"
 	"forum/internal/models"
 )
 
@@ -37,13 +38,9 @@ func (h *Handler) GetPostsForUserInternalWithCategory(filter string, userID int,
 	// Complex query that JOINs posts, users, and aggregates likes/dislikes
 	// COALESCE ensures we get 0 instead of NULL for posts with no votes
 	baseQuery := `
-		SELECT p.id, p.user_id, p.title, p.content, p.image_path, p.created_at, u.username,
-		       COALESCE(SUM(CASE WHEN pl.is_like = 1 THEN 1 ELSE 0 END), 0) as likes,
-		       COALESCE(SUM(CASE WHEN pl.is_like = 0 THEN 1 ELSE 0 END), 0) as dislikes,
-		       p.status
+		SELECT DISTINCT p.id, p.user_id, p.title, p.content, p.image_path, p.created_at, u.username, p.status
 		FROM posts p
-		JOIN users u ON p.user_id = u.id                    -- Get author username
-		LEFT JOIN post_likes pl ON p.id = pl.post_id        -- Get vote counts (LEFT JOIN for posts with no votes)`
+		JOIN users u ON p.user_id = u.id`
 
 	// Add category JOIN if filtering by category
 	if categoryID > 0 {
@@ -83,7 +80,7 @@ func (h *Handler) GetPostsForUserInternalWithCategory(filter string, userID int,
 		args = append(args, currentUser.ID)
 	}
 
-	finalQuery := baseQuery + whereClause + " GROUP BY p.id ORDER BY p.created_at DESC"
+	finalQuery := baseQuery + whereClause + " ORDER BY p.created_at DESC"
 
 	// Execute the query
 	rows, err := h.db.Query(finalQuery, args...)
@@ -92,23 +89,42 @@ func (h *Handler) GetPostsForUserInternalWithCategory(filter string, userID int,
 	}
 	defer rows.Close()
 
-	// Process each row into a Post struct
+	// Collect all posts first (don't do nested queries while iterating)
 	var posts []models.Post
 	for rows.Next() {
 		var post models.Post
-		err := rows.Scan(&post.ID, &post.UserID, &post.Title, &post.Content, &post.ImagePath, &post.CreatedAt, &post.Username, &post.Likes, &post.Dislikes, &post.Status)
+		err := rows.Scan(&post.ID, &post.UserID, &post.Title, &post.Content, &post.ImagePath, &post.CreatedAt, &post.Username, &post.Status)
 		if err != nil {
 			return nil, err
 		}
-
-		// Fetch categories for this post (separate query for many-to-many relationship)
-		categories, err := h.GetPostCategories(post.ID)
-		if err != nil {
-			return nil, err
-		}
-		post.Categories = categories
-
 		posts = append(posts, post)
+	}
+
+	// Check for errors from iterating over rows
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	// Close the rows before doing nested queries
+	rows.Close()
+
+	// Now fetch categories and like counts for each post
+	for i := range posts {
+		categories, err := h.GetPostCategories(posts[i].ID)
+		if err != nil {
+			return nil, err
+		}
+		posts[i].Categories = categories
+
+		// Get like/dislike counts
+		likeQuery := `SELECT
+			COALESCE(SUM(CASE WHEN is_like = 1 THEN 1 ELSE 0 END), 0) as likes,
+			COALESCE(SUM(CASE WHEN is_like = 0 THEN 1 ELSE 0 END), 0) as dislikes
+			FROM post_likes WHERE post_id = ?`
+		err = h.db.QueryRow(likeQuery, posts[i].ID).Scan(&posts[i].Likes, &posts[i].Dislikes)
+		if err != nil && err != sql.ErrNoRows {
+			return nil, err
+		}
 	}
 
 	return posts, nil

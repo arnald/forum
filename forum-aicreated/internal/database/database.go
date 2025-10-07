@@ -26,6 +26,11 @@ func NewDB(dataSourceName string) (*DB, error) {
 		return nil, err
 	}
 
+	// Configure connection pool to allow multiple concurrent queries
+	// This is important for SQLite to avoid connection sharing issues
+	db.SetMaxOpenConns(25)
+	db.SetMaxIdleConns(5)
+
 	// Verify the connection actually works
 	// Ping sends a simple query to check connectivity
 	if err = db.Ping(); err != nil {
