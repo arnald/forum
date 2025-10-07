@@ -34,9 +34,9 @@ func (h *Handler) GetPostsForUserInternal(filter string, userID int, currentUser
 }
 
 // GetPostsForUserInternalWithCategory retrieves posts based on filter, user permissions, and optional category
+// Like/dislike counts are fetched separately for each post to avoid GROUP BY issues
 func (h *Handler) GetPostsForUserInternalWithCategory(filter string, userID int, currentUser *models.User, categoryID int) ([]models.Post, error) {
-	// Complex query that JOINs posts, users, and aggregates likes/dislikes
-	// COALESCE ensures we get 0 instead of NULL for posts with no votes
+	// Query to retrieve posts with user information
 	baseQuery := `
 		SELECT DISTINCT p.id, p.user_id, p.title, p.content, p.image_path, p.created_at, u.username, p.status
 		FROM posts p
@@ -141,16 +141,13 @@ func (h *Handler) GetPostByID(id int) (*models.Post, error) {
 // - Anonymous users: only approved posts
 // - Regular users: approved posts + their own posts (any status)
 // - Admins/Moderators: all posts regardless of status
+// Like/dislike counts are fetched separately to avoid GROUP BY issues
 func (h *Handler) GetPostByIDWithUser(id int, currentUser *models.User) (*models.Post, error) {
-	// Same complex query as GetPosts but filtered by specific ID
+	// Query to retrieve post with user information
 	baseQuery := `
-		SELECT p.id, p.user_id, p.title, p.content, p.image_path, p.created_at, u.username,
-		       COALESCE(SUM(CASE WHEN pl.is_like = 1 THEN 1 ELSE 0 END), 0) as likes,
-		       COALESCE(SUM(CASE WHEN pl.is_like = 0 THEN 1 ELSE 0 END), 0) as dislikes,
-		       p.status
+		SELECT p.id, p.user_id, p.title, p.content, p.image_path, p.created_at, u.username, p.status
 		FROM posts p
 		JOIN users u ON p.user_id = u.id
-		LEFT JOIN post_likes pl ON p.id = pl.post_id
 		WHERE p.id = ? AND `
 
 	// Build WHERE clause based on user role and permissions
@@ -170,11 +167,11 @@ func (h *Handler) GetPostByIDWithUser(id int, currentUser *models.User) (*models
 		args = append(args, currentUser.ID)
 	}
 
-	finalQuery := baseQuery + whereClause + " GROUP BY p.id"
+	finalQuery := baseQuery + whereClause
 
 	var post models.Post
 	// QueryRow for single result - will return sql.ErrNoRows if not found
-	err := h.db.QueryRow(finalQuery, args...).Scan(&post.ID, &post.UserID, &post.Title, &post.Content, &post.ImagePath, &post.CreatedAt, &post.Username, &post.Likes, &post.Dislikes, &post.Status)
+	err := h.db.QueryRow(finalQuery, args...).Scan(&post.ID, &post.UserID, &post.Title, &post.Content, &post.ImagePath, &post.CreatedAt, &post.Username, &post.Status)
 	if err != nil {
 		return nil, err
 	}
@@ -185,6 +182,16 @@ func (h *Handler) GetPostByIDWithUser(id int, currentUser *models.User) (*models
 		return nil, err
 	}
 	post.Categories = categories
+
+	// Get like/dislike counts separately
+	likeQuery := `SELECT
+		COALESCE(SUM(CASE WHEN is_like = 1 THEN 1 ELSE 0 END), 0) as likes,
+		COALESCE(SUM(CASE WHEN is_like = 0 THEN 1 ELSE 0 END), 0) as dislikes
+		FROM post_likes WHERE post_id = ?`
+	err = h.db.QueryRow(likeQuery, post.ID).Scan(&post.Likes, &post.Dislikes)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, err
+	}
 
 	return &post, nil
 }
@@ -250,20 +257,16 @@ func (h *Handler) GetCategories() ([]models.Category, error) {
 // ===== COMMENT QUERIES =====
 
 // GetCommentsByPostID retrieves all comments for a specific post.
-// Similar to post queries, includes computed like/dislike counts and usernames.
+// Like/dislike counts are fetched separately for each comment to avoid GROUP BY issues.
 // Comments are ordered chronologically (oldest first) for natural reading flow.
 func (h *Handler) GetCommentsByPostID(postID int) ([]models.Comment, error) {
-	// Complex query similar to posts but for comments
+	// Query to retrieve comments with user information
 	query := `
-		SELECT c.id, c.post_id, c.user_id, c.content, c.created_at, u.username,
-		       COALESCE(SUM(CASE WHEN cl.is_like = 1 THEN 1 ELSE 0 END), 0) as likes,
-		       COALESCE(SUM(CASE WHEN cl.is_like = 0 THEN 1 ELSE 0 END), 0) as dislikes
+		SELECT c.id, c.post_id, c.user_id, c.content, c.created_at, u.username
 		FROM comments c
-		JOIN users u ON c.user_id = u.id                    -- Get commenter username
-		LEFT JOIN comment_likes cl ON c.id = cl.comment_id  -- Get vote counts
-		WHERE c.post_id = ?                                 -- Filter by specific post
-		GROUP BY c.id
-		ORDER BY c.created_at ASC                           -- Chronological order (oldest first)
+		JOIN users u ON c.user_id = u.id
+		WHERE c.post_id = ?
+		ORDER BY c.created_at ASC
 	`
 
 	rows, err := h.db.Query(query, postID)
@@ -275,11 +278,26 @@ func (h *Handler) GetCommentsByPostID(postID int) ([]models.Comment, error) {
 	var comments []models.Comment
 	for rows.Next() {
 		var comment models.Comment
-		err := rows.Scan(&comment.ID, &comment.PostID, &comment.UserID, &comment.Content, &comment.CreatedAt, &comment.Username, &comment.Likes, &comment.Dislikes)
+		err := rows.Scan(&comment.ID, &comment.PostID, &comment.UserID, &comment.Content, &comment.CreatedAt, &comment.Username)
 		if err != nil {
 			return nil, err
 		}
 		comments = append(comments, comment)
+	}
+
+	// Close rows before fetching like counts
+	rows.Close()
+
+	// Get like/dislike counts for each comment
+	for i := range comments {
+		likeQuery := `SELECT
+			COALESCE(SUM(CASE WHEN is_like = 1 THEN 1 ELSE 0 END), 0) as likes,
+			COALESCE(SUM(CASE WHEN is_like = 0 THEN 1 ELSE 0 END), 0) as dislikes
+			FROM comment_likes WHERE comment_id = ?`
+		err = h.db.QueryRow(likeQuery, comments[i].ID).Scan(&comments[i].Likes, &comments[i].Dislikes)
+		if err != nil && err != sql.ErrNoRows {
+			return nil, err
+		}
 	}
 
 	return comments, nil
@@ -358,18 +376,14 @@ func (h *Handler) ToggleCommentLike(commentID, userID int, isLike bool) error {
 // ===== FILTERING QUERIES =====
 
 // GetPostsByCategory retrieves posts filtered by a specific category.
-// Similar to GetPosts but adds category filtering through the junction table.
+// Like/dislike counts are fetched separately for each post to avoid GROUP BY issues.
 func (h *Handler) GetPostsByCategory(categoryID int) ([]models.Post, error) {
 	query := `
-		SELECT p.id, p.user_id, p.title, p.content, p.image_path, p.created_at, u.username,
-		       COALESCE(SUM(CASE WHEN pl.is_like = 1 THEN 1 ELSE 0 END), 0) as likes,
-		       COALESCE(SUM(CASE WHEN pl.is_like = 0 THEN 1 ELSE 0 END), 0) as dislikes
+		SELECT DISTINCT p.id, p.user_id, p.title, p.content, p.image_path, p.created_at, u.username, p.status
 		FROM posts p
 		JOIN users u ON p.user_id = u.id
 		JOIN post_categories pc ON p.id = pc.post_id
-		LEFT JOIN post_likes pl ON p.id = pl.post_id
 		WHERE pc.category_id = ? AND p.status = 'approved'
-		GROUP BY p.id
 		ORDER BY p.created_at DESC
 	`
 
@@ -382,18 +396,33 @@ func (h *Handler) GetPostsByCategory(categoryID int) ([]models.Post, error) {
 	var posts []models.Post
 	for rows.Next() {
 		var post models.Post
-		err := rows.Scan(&post.ID, &post.UserID, &post.Title, &post.Content, &post.ImagePath, &post.CreatedAt, &post.Username, &post.Likes, &post.Dislikes)
+		err := rows.Scan(&post.ID, &post.UserID, &post.Title, &post.Content, &post.ImagePath, &post.CreatedAt, &post.Username, &post.Status)
 		if err != nil {
 			return nil, err
 		}
-
-		categories, err := h.GetPostCategories(post.ID)
-		if err != nil {
-			return nil, err
-		}
-		post.Categories = categories
-
 		posts = append(posts, post)
+	}
+
+	// Close rows before fetching categories and likes
+	rows.Close()
+
+	// Fetch categories and like counts for each post
+	for i := range posts {
+		categories, err := h.GetPostCategories(posts[i].ID)
+		if err != nil {
+			return nil, err
+		}
+		posts[i].Categories = categories
+
+		// Get like/dislike counts
+		likeQuery := `SELECT
+			COALESCE(SUM(CASE WHEN is_like = 1 THEN 1 ELSE 0 END), 0) as likes,
+			COALESCE(SUM(CASE WHEN is_like = 0 THEN 1 ELSE 0 END), 0) as dislikes
+			FROM post_likes WHERE post_id = ?`
+		err = h.db.QueryRow(likeQuery, posts[i].ID).Scan(&posts[i].Likes, &posts[i].Dislikes)
+		if err != nil && err != sql.ErrNoRows {
+			return nil, err
+		}
 	}
 
 	return posts, nil
