@@ -87,12 +87,15 @@ func main() {
 
 	// === ADMIN PANEL ROUTES ===
 	// These routes are protected and only accessible by admins/moderators
-	http.HandleFunc("/admin", h.AdminPanel)                      // Main admin dashboard
-	http.HandleFunc("/admin/update-role", h.UpdateUserRole)      // Change user roles
-	http.HandleFunc("/admin/approve-post/", h.ApprovePost)       // Approve pending posts
-	http.HandleFunc("/admin/reject-post/", h.RejectPost)         // Reject pending posts
-	http.HandleFunc("/admin/create-category", h.CreateCategory)  // Create new categories
-	http.HandleFunc("/admin/delete-category/", h.DeleteCategory) // Delete categories
+	http.HandleFunc("/admin", h.AdminPanel)                                    // Main admin dashboard
+	http.HandleFunc("/admin/update-role", h.UpdateUserRole)                    // Change user roles
+	http.HandleFunc("/admin/approve-post/", h.ApprovePost)                     // Approve pending posts
+	http.HandleFunc("/admin/reject-post/", h.RejectPost)                       // Reject pending posts
+	http.HandleFunc("/admin/create-category", h.CreateCategory)                // Create new categories
+	http.HandleFunc("/admin/delete-category/", h.DeleteCategory)               // Delete categories
+	http.HandleFunc("/admin/approve-moderator-posts", h.ApproveModeratorPosts) // Bulk approve moderator posts
+	http.HandleFunc("/admin/bulk-approve-all", h.BulkApproveAllPending)        // Bulk approve all pending posts
+	http.HandleFunc("/admin/bulk-reject-all", h.BulkRejectAllPending)          // Bulk reject all pending posts
 
 	// Start HTTP server on port 8080
 	// The server will handle all incoming requests and route them to appropriate handlers

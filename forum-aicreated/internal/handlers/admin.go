@@ -376,3 +376,111 @@ func (h *Handler) DeleteCategory(w http.ResponseWriter, r *http.Request) {
 
 	http.Redirect(w, r, "/admin", http.StatusSeeOther)
 }
+
+// ===== BULK MODERATION ACTIONS =====
+
+// ApproveModeratorPosts automatically approves all pending posts created by users who are now moderators or admins
+// This is useful when users are promoted to moderator/admin roles and their old pending posts should be approved
+func (h *Handler) ApproveModeratorPosts(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		h.MethodNotAllowed(w, r)
+		return
+	}
+
+	user, err := h.auth.GetUserFromRequest(r)
+	if err != nil {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	// Only admins can perform bulk operations
+	if user.Role != models.RoleAdmin {
+		h.Forbidden(w, r, "You don't have permission to perform bulk operations. Only admins can do this.")
+		return
+	}
+
+	// Update all pending posts created by moderators or admins to approved status
+	query := `
+		UPDATE posts
+		SET status = 'approved'
+		WHERE status = 'pending'
+		AND user_id IN (SELECT id FROM users WHERE role IN ('moderator', 'admin'))
+	`
+	result, err := h.db.Exec(query)
+	if err != nil {
+		h.InternalServerError(w, r, err)
+		return
+	}
+
+	// Get number of rows affected for user feedback
+	rowsAffected, _ := result.RowsAffected()
+
+	// Log or notify about the bulk action
+	if rowsAffected > 0 {
+		// You could add a success message here via session flash or query parameter
+		// For now, just redirect back to admin panel
+	}
+
+	http.Redirect(w, r, "/admin", http.StatusSeeOther)
+}
+
+// BulkApproveAllPending approves ALL pending posts (use with caution)
+// This is a nuclear option for clearing the pending queue
+func (h *Handler) BulkApproveAllPending(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		h.MethodNotAllowed(w, r)
+		return
+	}
+
+	user, err := h.auth.GetUserFromRequest(r)
+	if err != nil {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	// Only admins can perform bulk operations
+	if user.Role != models.RoleAdmin {
+		h.Forbidden(w, r, "You don't have permission to perform bulk operations. Only admins can do this.")
+		return
+	}
+
+	// Approve all pending posts
+	query := `UPDATE posts SET status = 'approved' WHERE status = 'pending'`
+	_, err = h.db.Exec(query)
+	if err != nil {
+		h.InternalServerError(w, r, err)
+		return
+	}
+
+	http.Redirect(w, r, "/admin", http.StatusSeeOther)
+}
+
+// BulkRejectAllPending rejects ALL pending posts (use with extreme caution)
+func (h *Handler) BulkRejectAllPending(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		h.MethodNotAllowed(w, r)
+		return
+	}
+
+	user, err := h.auth.GetUserFromRequest(r)
+	if err != nil {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	// Only admins can perform bulk operations
+	if user.Role != models.RoleAdmin {
+		h.Forbidden(w, r, "You don't have permission to perform bulk operations. Only admins can do this.")
+		return
+	}
+
+	// Reject all pending posts
+	query := `UPDATE posts SET status = 'rejected' WHERE status = 'pending'`
+	_, err = h.db.Exec(query)
+	if err != nil {
+		h.InternalServerError(w, r, err)
+		return
+	}
+
+	http.Redirect(w, r, "/admin", http.StatusSeeOther)
+}

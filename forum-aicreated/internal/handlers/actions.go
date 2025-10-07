@@ -235,13 +235,17 @@ func (h *Handler) FilterPosts(w http.ResponseWriter, r *http.Request) {
 	var posts []models.Post
 	var err error
 
-	// Get current user for filtering and visibility
-	user, _ := h.auth.GetUserFromRequest(r)
+	// Get current user - redirect to login if not authenticated
+	user, err := h.auth.GetUserFromRequest(r)
+	if err != nil {
+		// User not logged in - redirect to login page
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
 
 	// Parse category ID if provided
 	var categoryID int
 	if categoryStr != "" {
-		var err error
 		categoryID, err = strconv.Atoi(categoryStr)
 		if err != nil {
 			h.BadRequest(w, r, "Invalid category ID")
@@ -251,11 +255,7 @@ func (h *Handler) FilterPosts(w http.ResponseWriter, r *http.Request) {
 
 	// Determine which filtering logic to apply based on parameters
 	if filter == "my-posts" || filter == "liked-posts" {
-		// Filter by user-specific criteria (requires authentication)
-		if user == nil {
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
-			return
-		}
+		// Filter by user-specific criteria
 		posts, err = h.GetPostsForUserInternalWithCategory(filter, user.ID, user, categoryID)
 	} else {
 		// Show posts with user-specific visibility (optionally filtered by category)

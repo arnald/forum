@@ -44,12 +44,16 @@ func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get current user if logged in (optional - doesn't fail if not logged in)
-	// This allows the template to show different content for logged-in users
-	user, _ := h.auth.GetUserFromRequest(r)
+	// Get current user - redirect to login if not authenticated
+	user, err := h.auth.GetUserFromRequest(r)
+	if err != nil {
+		// User not logged in - redirect to login page
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
 
 	// Fetch posts based on user's role and permissions
-	// Uses role-based visibility: anonymous see approved, users see approved + own, admins see all
+	// Uses role-based visibility: users see approved + own, admins/moderators see all
 	posts, err := h.GetPostsWithUser(user)
 	if err != nil {
 		h.InternalServerError(w, r, err)
@@ -385,8 +389,13 @@ func (h *Handler) ViewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get current user context (optional - for showing user-specific content)
-	user, _ := h.auth.GetUserFromRequest(r)
+	// Get current user - redirect to login if not authenticated
+	user, err := h.auth.GetUserFromRequest(r)
+	if err != nil {
+		// User not logged in - redirect to login page
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
 
 	// Fetch post details from database with user-specific visibility
 	post, err := h.GetPostByIDWithUser(postID, user)

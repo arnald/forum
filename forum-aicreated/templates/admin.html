@@ -4,10 +4,10 @@
         <h2>Admin Panel</h2>
 
         <div class="admin-tabs">
-            <button class="tab-button active" onclick="showAdminTab('users')">Users ({{len .Users}})</button>
-            <button class="tab-button" onclick="showAdminTab('pending-posts')">Pending Posts ({{len .PendingPosts}})</button>
-            <button class="tab-button" onclick="showAdminTab('categories')">Categories ({{len .Categories}})</button>
-            <button class="tab-button" onclick="showAdminTab('reports')">Reports ({{len .Reports}})</button>
+            <button class="tab-button active" onclick="showAdminTab('users', this)">Users ({{len .Users}})</button>
+            <button class="tab-button" onclick="showAdminTab('pending-posts', this)">Pending Posts ({{len .PendingPosts}})</button>
+            <button class="tab-button" onclick="showAdminTab('categories', this)">Categories ({{len .Categories}})</button>
+            <button class="tab-button" onclick="showAdminTab('reports', this)">Reports ({{len .Reports}})</button>
         </div>
 
         <!-- Users Tab -->
@@ -60,6 +60,30 @@
         <div id="pending-posts" class="admin-tab-content">
             <h3>Pending Posts</h3>
             {{if .PendingPosts}}
+                <!-- Bulk Actions for Admins -->
+                {{if eq .User.Role "admin"}}
+                <div class="bulk-actions" style="margin-bottom: 20px; padding: 15px; background: #f5f5f5; border-radius: 5px;">
+                    <h4>Bulk Actions (Admin Only)</h4>
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <form method="POST" action="/admin/approve-moderator-posts" style="display: inline;">
+                            <button type="submit" class="btn-approve" onclick="return confirm('Approve all pending posts from moderators and admins?')">
+                                Approve Moderator Posts
+                            </button>
+                        </form>
+                        <form method="POST" action="/admin/bulk-approve-all" style="display: inline;">
+                            <button type="submit" class="btn-approve" onclick="return confirm('WARNING: This will approve ALL pending posts. Continue?')">
+                                Approve All Pending
+                            </button>
+                        </form>
+                        <form method="POST" action="/admin/bulk-reject-all" style="display: inline;">
+                            <button type="submit" class="btn-reject" onclick="return confirm('WARNING: This will reject ALL pending posts. Continue?')">
+                                Reject All Pending
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {{end}}
+
                 <div class="pending-posts-grid">
                     {{range .PendingPosts}}
                     <div class="pending-post-card">
@@ -160,7 +184,7 @@
 </div>
 
 <script>
-function showAdminTab(tabName) {
+function showAdminTab(tabName, clickedButton) {
     // Hide all tab contents
     var contents = document.getElementsByClassName('admin-tab-content');
     for (var i = 0; i < contents.length; i++) {
@@ -177,7 +201,9 @@ function showAdminTab(tabName) {
     document.getElementById(tabName).classList.add('active');
 
     // Add active class to clicked button
-    event.target.classList.add('active');
+    if (clickedButton) {
+        clickedButton.classList.add('active');
+    }
 }
 </script>
 {{end}}
