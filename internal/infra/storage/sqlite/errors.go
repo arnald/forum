@@ -17,6 +17,7 @@ var (
 	ErrUserNotFound          = errors.New("user not found")
 	ErrTopicNotFound         = errors.New("topic not found")
 	ErrCategoryAlreadyExists = errors.New("category already exists")
+	ErrCategoryNotFound      = errors.New("category not found")
 )
 
 func MapSQLiteError(err error) error {
