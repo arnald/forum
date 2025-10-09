@@ -10,11 +10,19 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
 // main is the application entry point that sets up the database,
 // initializes handlers, configures routes, and starts the HTTP server.
 func main() {
+	// Load environment variables from .env file
+	// Ignore error if .env doesn't exist (allow production deployments with system env vars)
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found, using system environment variables")
+	}
+
 	// Get database path from environment or use default location
 	dbPath := database.GetDBPath()
 

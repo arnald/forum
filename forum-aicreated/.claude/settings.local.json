@@ -22,7 +22,9 @@
       "Bash(go get:*)",
       "Bash(curl:*)",
       "Bash(lsof:*)",
-      "Bash(kill:*)"
+      "Bash(kill:*)",
+      "Bash(npm i:*)",
+      "Bash(sudo npm i -g @anthropic-ai/claude-code)"
     ],
     "deny": [],
     "ask": []
