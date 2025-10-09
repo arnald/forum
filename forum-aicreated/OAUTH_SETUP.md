@@ -27,8 +27,10 @@ This guide will help you configure third-party authentication (Google, GitHub, a
    - Go to "APIs & Services" > "Credentials"
    - Click "Create Credentials" > "OAuth client ID"
    - Choose "Web application"
-   - Add authorized redirect URI: `http://localhost:8080/auth/google/callback`
-   - For production, also add: `https://yourdomain.com/auth/google/callback`
+   - Add authorized redirect URIs (you can add multiple):
+     - `http://localhost:8080/auth/google/callback` (for local access)
+     - `http://192.168.56.103:8080/auth/google/callback` (for network access)
+     - For production, also add: `https://yourdomain.com/auth/google/callback`
 5. **Copy credentials to `.env`**:
    ```
    GOOGLE_CLIENT_ID=your-client-id-here.apps.googleusercontent.com
@@ -43,6 +45,9 @@ This guide will help you configure third-party authentication (Google, GitHub, a
    - Application name: `Your Forum Name`
    - Homepage URL: `http://localhost:8080`
    - Authorization callback URL: `http://localhost:8080/auth/github/callback`
+4. **After creating the app, add additional callback URLs**:
+   - Go to your OAuth App settings
+   - Add: `http://192.168.56.103:8080/auth/github/callback` (for network access)
    - For production: `https://yourdomain.com/auth/github/callback`
 4. **Register the application**
 5. **Copy credentials to `.env`**:
@@ -62,8 +67,9 @@ This guide will help you configure third-party authentication (Google, GitHub, a
    - Choose "Facebook Login" and click "Set Up"
 6. **Configure OAuth settings**:
    - Go to "Facebook Login" > "Settings"
-   - Add Valid OAuth Redirect URIs:
-     - `http://localhost:8080/auth/facebook/callback`
+   - Add Valid OAuth Redirect URIs (you can add multiple):
+     - `http://localhost:8080/auth/facebook/callback` (for local access)
+     - `http://192.168.56.103:8080/auth/facebook/callback` (for network access)
      - For production: `https://yourdomain.com/auth/facebook/callback`
 7. **Get your credentials**:
    - Go to "Settings" > "Basic"

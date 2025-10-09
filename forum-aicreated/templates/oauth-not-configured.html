@@ -1,0 +1,35 @@
+{{define "content"}}
+<div class="auth-container">
+    <div class="auth-form" style="text-align: center;">
+        <h2>⚠️ OAuth Not Configured</h2>
+
+        <div style="margin: 2rem 0; padding: 1.5rem; background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px;">
+            <p style="color: #856404; font-size: 1.1rem; line-height: 1.6;">
+                {{.Message}}
+            </p>
+        </div>
+
+        <div style="margin: 2rem 0;">
+            <h3 style="margin-bottom: 1rem;">Alternative Options:</h3>
+            <div style="text-align: left; max-width: 400px; margin: 0 auto;">
+                <p style="margin: 0.5rem 0;"><strong>✓</strong> Use email and password to login</p>
+                <p style="margin: 0.5rem 0;"><strong>✓</strong> Create a new account with email</p>
+                <p style="margin: 0.5rem 0;"><strong>✓</strong> Try another OAuth provider</p>
+            </div>
+        </div>
+
+        <div style="margin-top: 2rem;">
+            <a href="/login" class="btn-primary" style="display: inline-block; margin: 0.5rem;">
+                Go to Login
+            </a>
+            <a href="/register" class="btn-primary" style="display: inline-block; margin: 0.5rem;">
+                Create Account
+            </a>
+        </div>
+
+        <p style="margin-top: 2rem; color: #7f8c8d; font-size: 0.9rem;">
+            If you believe this is an error, please contact the forum administrator.
+        </p>
+    </div>
+</div>
+{{end}}

@@ -24,7 +24,13 @@
       "Bash(lsof:*)",
       "Bash(kill:*)",
       "Bash(npm i:*)",
-      "Bash(sudo npm i -g @anthropic-ai/claude-code)"
+      "Bash(sudo npm i -g @anthropic-ai/claude-code)",
+      "Bash(awk:*)",
+      "Bash(do echo \"Testing $provider:\")",
+      "Bash(cat:*)",
+      "Bash(chmod:*)",
+      "Bash(sudo chown:*)",
+      "Bash(pkill:*)"
     ],
     "deny": [],
     "ask": []

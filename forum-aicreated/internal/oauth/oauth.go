@@ -25,10 +25,11 @@ type Config struct {
 // UserInfo represents user information from OAuth providers
 // This standardizes data from different providers into a common format
 type UserInfo struct {
-	ID       string // Provider-specific user ID
-	Email    string // User's email address
-	Username string // User's display name
-	Provider string // OAuth provider name (google, github, facebook)
+	ID        string // Provider-specific user ID
+	Email     string // User's email address
+	Username  string // User's display name
+	Provider  string // OAuth provider name (google, github, facebook)
+	AvatarURL string // Profile picture URL from provider
 }
 
 // NewConfig creates OAuth configurations for all providers
@@ -94,9 +95,10 @@ func GetGoogleUserInfo(ctx context.Context, token *oauth2.Token, config *oauth2.
 
 	// Parse JSON response into struct
 	var result struct {
-		ID    string `json:"id"`    // Google user ID
-		Email string `json:"email"` // User email
-		Name  string `json:"name"`  // User display name
+		ID      string `json:"id"`      // Google user ID
+		Email   string `json:"email"`   // User email
+		Name    string `json:"name"`    // User display name
+		Picture string `json:"picture"` // Profile picture URL
 	}
 
 	if err := json.Unmarshal(data, &result); err != nil {
@@ -105,10 +107,11 @@ func GetGoogleUserInfo(ctx context.Context, token *oauth2.Token, config *oauth2.
 
 	// Return standardized user info
 	return &UserInfo{
-		ID:       result.ID,
-		Email:    result.Email,
-		Username: result.Name,
-		Provider: "google",
+		ID:        result.ID,
+		Email:     result.Email,
+		Username:  result.Name,
+		Provider:  "google",
+		AvatarURL: result.Picture,
 	}, nil
 }
 
@@ -134,9 +137,10 @@ func GetGitHubUserInfo(ctx context.Context, token *oauth2.Token, config *oauth2.
 
 	// Parse JSON response
 	var result struct {
-		ID    int    `json:"id"`    // GitHub user ID (numeric)
-		Login string `json:"login"` // GitHub username
-		Email string `json:"email"` // User email (may be empty if private)
+		ID        int    `json:"id"`         // GitHub user ID (numeric)
+		Login     string `json:"login"`      // GitHub username
+		Email     string `json:"email"`      // User email (may be empty if private)
+		AvatarURL string `json:"avatar_url"` // Profile picture URL
 	}
 
 	if err := json.Unmarshal(data, &result); err != nil {
@@ -175,10 +179,11 @@ func GetGitHubUserInfo(ctx context.Context, token *oauth2.Token, config *oauth2.
 
 	// Return standardized user info (convert numeric ID to string)
 	return &UserInfo{
-		ID:       fmt.Sprintf("%d", result.ID),
-		Email:    email,
-		Username: result.Login,
-		Provider: "github",
+		ID:        fmt.Sprintf("%d", result.ID),
+		Email:     email,
+		Username:  result.Login,
+		Provider:  "github",
+		AvatarURL: result.AvatarURL,
 	}, nil
 }
 
@@ -190,7 +195,8 @@ func GetFacebookUserInfo(ctx context.Context, token *oauth2.Token, config *oauth
 	client := config.Client(ctx, token)
 
 	// Request user information from Facebook Graph API with specific fields
-	resp, err := client.Get("https://graph.facebook.com/me?fields=id,name,email")
+	// Include picture field to get profile picture URL
+	resp, err := client.Get("https://graph.facebook.com/me?fields=id,name,email,picture")
 	if err != nil {
 		return nil, err
 	}
@@ -207,6 +213,11 @@ func GetFacebookUserInfo(ctx context.Context, token *oauth2.Token, config *oauth
 		ID    string `json:"id"`    // Facebook user ID
 		Email string `json:"email"` // User email
 		Name  string `json:"name"`  // User display name
+		Picture struct {
+			Data struct {
+				URL string `json:"url"` // Profile picture URL
+			} `json:"data"`
+		} `json:"picture"`
 	}
 
 	if err := json.Unmarshal(data, &result); err != nil {
@@ -215,10 +226,11 @@ func GetFacebookUserInfo(ctx context.Context, token *oauth2.Token, config *oauth
 
 	// Return standardized user info
 	return &UserInfo{
-		ID:       result.ID,
-		Email:    result.Email,
-		Username: result.Name,
-		Provider: "facebook",
+		ID:        result.ID,
+		Email:     result.Email,
+		Username:  result.Name,
+		Provider:  "facebook",
+		AvatarURL: result.Picture.Data.URL,
 	}, nil
 }
 

@@ -79,10 +79,13 @@ func (a *Auth) CreateUser(email, username, password string) (*models.User, error
 
 // CreateOAuthUser creates a new user account from OAuth provider (Google, GitHub, etc.)
 // These users don't have local passwords since they authenticate via external providers
-func (a *Auth) CreateOAuthUser(email, username, provider, providerID string) (*models.User, error) {
-	// Insert OAuth user with empty password and provider information
-	query := `INSERT INTO users (email, username, password, role, provider, provider_id) VALUES (?, ?, '', ?, ?, ?)`
-	result, err := a.db.Exec(query, email, username, models.RoleUser, provider, providerID)
+// OAuth users are automatically marked as email_verified since providers verify emails
+func (a *Auth) CreateOAuthUser(email, username, provider, providerID, avatarURL string) (*models.User, error) {
+	// Insert OAuth user with empty password, provider information, avatar, and verified email
+	// email_verified is set to TRUE because OAuth providers verify email addresses
+	query := `INSERT INTO users (email, username, password, role, provider, provider_id, avatar_url, email_verified)
+	          VALUES (?, ?, '', ?, ?, ?, ?, TRUE)`
+	result, err := a.db.Exec(query, email, username, models.RoleUser, provider, providerID, avatarURL)
 	if err != nil {
 		return nil, err
 	}
@@ -95,12 +98,14 @@ func (a *Auth) CreateOAuthUser(email, username, provider, providerID string) (*m
 
 	// Return the complete OAuth user object
 	user := &models.User{
-		ID:         int(id),
-		Email:      email,
-		Username:   username,
-		Role:       models.RoleUser,
-		Provider:   provider,
-		ProviderID: providerID,
+		ID:            int(id),
+		Email:         email,
+		Username:      username,
+		Role:          models.RoleUser,
+		Provider:      provider,
+		ProviderID:    providerID,
+		AvatarURL:     avatarURL,
+		EmailVerified: true, // OAuth users have verified emails
 	}
 
 	return user, nil
@@ -112,8 +117,10 @@ func (a *Auth) CreateOAuthUser(email, username, provider, providerID string) (*m
 // Used during login to find the user account for authentication
 func (a *Auth) GetUserByEmail(email string) (*models.User, error) {
 	user := &models.User{}
-	query := `SELECT id, email, username, password, role, provider, provider_id, created_at FROM users WHERE email = ?`
-	err := a.db.QueryRow(query, email).Scan(&user.ID, &user.Email, &user.Username, &user.Password, &user.Role, &user.Provider, &user.ProviderID, &user.CreatedAt)
+	query := `SELECT id, email, username, password, role, provider, provider_id, avatar_url, email_verified, created_at
+	          FROM users WHERE email = ?`
+	err := a.db.QueryRow(query, email).Scan(&user.ID, &user.Email, &user.Username, &user.Password,
+		&user.Role, &user.Provider, &user.ProviderID, &user.AvatarURL, &user.EmailVerified, &user.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -124,8 +131,10 @@ func (a *Auth) GetUserByEmail(email string) (*models.User, error) {
 // Used for session validation and retrieving current user information
 func (a *Auth) GetUserByID(id int) (*models.User, error) {
 	user := &models.User{}
-	query := `SELECT id, email, username, password, role, provider, provider_id, created_at FROM users WHERE id = ?`
-	err := a.db.QueryRow(query, id).Scan(&user.ID, &user.Email, &user.Username, &user.Password, &user.Role, &user.Provider, &user.ProviderID, &user.CreatedAt)
+	query := `SELECT id, email, username, password, role, provider, provider_id, avatar_url, email_verified, created_at
+	          FROM users WHERE id = ?`
+	err := a.db.QueryRow(query, id).Scan(&user.ID, &user.Email, &user.Username, &user.Password,
+		&user.Role, &user.Provider, &user.ProviderID, &user.AvatarURL, &user.EmailVerified, &user.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -316,13 +325,13 @@ func (a *Auth) IsOwner(user *models.User, ownerID int) bool {
 // Returns the user if found, or an error if no matching OAuth account exists
 func (a *Auth) FindUserByProvider(provider, providerID string) (*models.User, error) {
 	// Query database for user with matching OAuth provider and provider-specific ID
-	query := `SELECT id, email, username, password, role, provider, provider_id, created_at
+	query := `SELECT id, email, username, password, role, provider, provider_id, avatar_url, email_verified, created_at
 	          FROM users WHERE provider = ? AND provider_id = ?`
 
 	var user models.User
 	err := a.db.QueryRow(query, provider, providerID).Scan(
 		&user.ID, &user.Email, &user.Username, &user.Password,
-		&user.Role, &user.Provider, &user.ProviderID, &user.CreatedAt,
+		&user.Role, &user.Provider, &user.ProviderID, &user.AvatarURL, &user.EmailVerified, &user.CreatedAt,
 	)
 
 	if err != nil {

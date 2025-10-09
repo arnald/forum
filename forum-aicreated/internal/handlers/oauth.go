@@ -28,7 +28,7 @@ func InitOAuth() {
 func (h *Handler) GoogleLogin(w http.ResponseWriter, r *http.Request) {
 	// Check if Google OAuth is configured
 	if OAuthConfig.Google.ClientID == "" {
-		http.Error(w, "Google OAuth not configured", http.StatusInternalServerError)
+		h.OAuthNotConfigured(w, r, "Google")
 		return
 	}
 
@@ -87,7 +87,7 @@ func (h *Handler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) GitHubLogin(w http.ResponseWriter, r *http.Request) {
 	// Check if GitHub OAuth is configured
 	if OAuthConfig.GitHub.ClientID == "" {
-		http.Error(w, "GitHub OAuth not configured", http.StatusInternalServerError)
+		h.OAuthNotConfigured(w, r, "GitHub")
 		return
 	}
 
@@ -146,7 +146,7 @@ func (h *Handler) GitHubCallback(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) FacebookLogin(w http.ResponseWriter, r *http.Request) {
 	// Check if Facebook OAuth is configured
 	if OAuthConfig.Facebook.ClientID == "" {
-		http.Error(w, "Facebook OAuth not configured", http.StatusInternalServerError)
+		h.OAuthNotConfigured(w, r, "Facebook")
 		return
 	}
 
@@ -217,8 +217,9 @@ func (h *Handler) handleOAuthUser(w http.ResponseWriter, r *http.Request, userIn
 			username = fmt.Sprintf("%s_%s", username, userInfo.Provider)
 		}
 
-		// Create new OAuth user account in database
-		user, err = h.auth.CreateOAuthUser(email, username, userInfo.Provider, userInfo.ID)
+		// Create new OAuth user account in database with profile picture
+		// OAuth users are automatically marked as email_verified
+		user, err = h.auth.CreateOAuthUser(email, username, userInfo.Provider, userInfo.ID, userInfo.AvatarURL)
 		if err != nil {
 			h.InternalServerError(w, r, err)
 			return

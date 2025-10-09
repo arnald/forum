@@ -61,6 +61,8 @@ func (db *DB) createTables() error {
 		role TEXT DEFAULT 'user',               -- User role: 'user', 'moderator', 'admin'
 		provider TEXT DEFAULT '',               -- OAuth provider ('google', 'github', or empty for local)
 		provider_id TEXT DEFAULT '',            -- OAuth provider user ID
+		avatar_url TEXT DEFAULT '',             -- Profile picture URL (from OAuth or upload)
+		email_verified BOOLEAN DEFAULT FALSE,   -- Whether email has been verified
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	);
 

@@ -24,14 +24,16 @@ const (
 // The Password field is tagged with `json:"-"` to exclude it from JSON responses
 // for security reasons
 type User struct {
-	ID         int       `json:"id"`                      // Unique user identifier
-	Email      string    `json:"email"`                   // User's email address
-	Username   string    `json:"username"`                // Display name
-	Password   string    `json:"-"`                       // Bcrypt hashed password (never sent to frontend)
-	Role       UserRole  `json:"role"`                    // User's permission level
-	Provider   string    `json:"provider,omitempty"`      // OAuth provider ('google', 'github', empty for local)
-	ProviderID string    `json:"provider_id,omitempty"`   // OAuth provider user ID
-	CreatedAt  time.Time `json:"created_at"`              // Account creation timestamp
+	ID            int       `json:"id"`                      // Unique user identifier
+	Email         string    `json:"email"`                   // User's email address
+	Username      string    `json:"username"`                // Display name
+	Password      string    `json:"-"`                       // Bcrypt hashed password (never sent to frontend)
+	Role          UserRole  `json:"role"`                    // User's permission level
+	Provider      string    `json:"provider,omitempty"`      // OAuth provider ('google', 'github', empty for local)
+	ProviderID    string    `json:"provider_id,omitempty"`   // OAuth provider user ID
+	AvatarURL     string    `json:"avatar_url,omitempty"`    // Profile picture URL (from OAuth or uploaded)
+	EmailVerified bool      `json:"email_verified"`          // Whether email has been verified
+	CreatedAt     time.Time `json:"created_at"`              // Account creation timestamp
 }
 
 // Session represents a user authentication session

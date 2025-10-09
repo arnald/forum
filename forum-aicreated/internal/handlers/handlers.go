@@ -498,3 +498,14 @@ func (h *Handler) MethodNotAllowed(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusMethodNotAllowed)
 	fmt.Fprintf(w, "Method not allowed")
 }
+
+// OAuthNotConfigured renders a user-friendly error page when OAuth is not set up.
+// Provides clear guidance on alternative login methods and admin contact information.
+func (h *Handler) OAuthNotConfigured(w http.ResponseWriter, r *http.Request, provider string) {
+	w.WriteHeader(http.StatusServiceUnavailable)
+	data := map[string]string{
+		"Provider": provider,
+		"Message":  fmt.Sprintf("%s authentication is not yet configured on this forum. Please use email/password login or contact the administrator to enable %s authentication.", provider, provider),
+	}
+	h.render(w, "oauth-not-configured.html", data)
+}
