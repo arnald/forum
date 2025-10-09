@@ -26,6 +26,8 @@ type Commands struct {
 	UpdateTopic    topicCommands.UpdateTopicRequestHandler
 	DeleteTopic    topicCommands.DeleteTopicRequestHandler
 	CreateCategory categoryCommands.CreateCategoryRequestHandler
+	DeleteCategory categoryCommands.DeleteCategoryRequestHandler
+	UpdateCategory categoryCommands.UpdateCategoryRequestHandler
 }
 
 type UserServices struct {
@@ -54,6 +56,8 @@ func NewServices(userRepo user.Repository, categoryRepo category.Repository, top
 				topicCommands.NewUpdateTopicHandler(topicRepo),
 				topicCommands.NewDeleteTopicHandler(topicRepo),
 				categoryCommands.NewCreateCategoryHandler(categoryRepo),
+				categoryCommands.NewDeleteCategoryHandler(categoryRepo),
+				categoryCommands.NewUpdateCategoryHandler(categoryRepo),
 			},
 		},
 	}

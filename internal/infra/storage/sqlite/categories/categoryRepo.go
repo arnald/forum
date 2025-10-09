@@ -139,7 +139,7 @@ func (r *Repo) DeleteCategory(ctx context.Context, id int, userID string) error 
 func (r *Repo) UpdateCategory(ctx context.Context, category *category.Category) error {
 	query := `
 	UPDATE categories
-	SET name = ?, description = ?, updated_at = CURRENT_TIMESTAMP
+	SET name = ?, description = ?
 	WHERE id = ?
 	`
 

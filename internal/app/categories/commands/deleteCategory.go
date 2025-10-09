@@ -11,7 +11,7 @@ type DeleteCategoryRequest struct {
 	UserID     string
 }
 
-type DeleteCategoryHandler interface {
+type DeleteCategoryRequestHandler interface {
 	Handle(ctx context.Context, req DeleteCategoryRequest) error
 }
 
@@ -19,7 +19,7 @@ type deleteCategoryRequestHandler struct {
 	repo category.Repository
 }
 
-func NewDeleteCategoryHandler(repo category.Repository) DeleteCategoryHandler {
+func NewDeleteCategoryHandler(repo category.Repository) DeleteCategoryRequestHandler {
 	return &deleteCategoryRequestHandler{
 		repo: repo,
 	}
