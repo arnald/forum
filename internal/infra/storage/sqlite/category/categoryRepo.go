@@ -1,4 +1,4 @@
-package sqlite
+package category
 
 import (
 	"context"
@@ -9,15 +9,15 @@ import (
 	"github.com/arnald/forum/internal/domain/categories"
 )
 
-type categoryRepo struct {
+type Repo struct {
 	DB *sql.DB
 }
 
-func NewCategoryRepo(db *sql.DB) *categoryRepo {
-	return &categoryRepo{DB: db}
+func NewRepo(db *sql.DB) *Repo {
+	return &Repo{DB: db}
 }
 
-func (r *categoryRepo) CreateCategory(ctx context.Context, category *categories.Category) error {
+func (r *Repo) CreateCategory(ctx context.Context, category *categories.Category) error {
 	query := `
 	INSERT INTO categories (name, description, created_by)
 	VALUES (?,?,?)`
@@ -47,7 +47,7 @@ func (r *categoryRepo) CreateCategory(ctx context.Context, category *categories.
 	return nil
 }
 
-func (r *categoryRepo) GetAllCategories(ctx context.Context) ([]*categories.Category, error) {
+func (r *Repo) GetAllCategories(ctx context.Context) ([]*categories.Category, error) {
 	query := `
 	SELECT id, name, description, created_by, created_at
 	FROM categories
@@ -80,7 +80,7 @@ func (r *categoryRepo) GetAllCategories(ctx context.Context) ([]*categories.Cate
 	}
 	return categoriesList, nil
 }
-func (r *categoryRepo) GetCategoryByID(ctx context.Context, id int) (*categories.Category, error) {
+func (r *Repo) GetCategoryByID(ctx context.Context, id int) (*categories.Category, error) {
 	query := `
 	SELECT id, name, description, created_by, created_at
 	FROM categories
@@ -109,10 +109,10 @@ func (r *categoryRepo) GetCategoryByID(ctx context.Context, id int) (*categories
 	return &category, nil
 }
 
-func (r *categoryRepo) DeleteCategory(ctx context.Context, id int) error {
+func (r *Repo) DeleteCategory(ctx context.Context, id int, userID string) error {
 	query := `
 	DELETE FROM categories
-	WHERE id = ?
+	WHERE id = ? AND created_by = ?
 	`
 
 	stmt, err := r.DB.PrepareContext(ctx, query)
@@ -121,7 +121,7 @@ func (r *categoryRepo) DeleteCategory(ctx context.Context, id int) error {
 	}
 	defer stmt.Close()
 
-	result, err := stmt.ExecContext(ctx, id)
+	result, err := stmt.ExecContext(ctx, id, userID)
 	if err != nil {
 		return fmt.Errorf("exec failed: %w", err)
 	}
@@ -136,7 +136,7 @@ func (r *categoryRepo) DeleteCategory(ctx context.Context, id int) error {
 	return nil
 }
 
-func (r *categoryRepo) UpdateCategory(ctx context.Context, category *categories.Category) error {
+func (r *Repo) UpdateCategory(ctx context.Context, category *categories.Category) error {
 	query := `
 	UPDATE categories
 	SET name = ?, description = ?, updated_at = CURRENT_TIMESTAMP
