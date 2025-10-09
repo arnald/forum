@@ -6,9 +6,9 @@ A comprehensive forum web application built with Go's standard library, featurin
 
 ### 🔐 User System
 - **Registration & Login**: Secure user accounts with bcrypt password hashing
+- **OAuth Authentication**: Fully implemented Google, GitHub, and Facebook login
 - **Session Management**: UUID-based sessions with automatic expiration
 - **Role-Based Access**: Guest, User, Moderator, and Admin roles
-- **OAuth Ready**: Prepared for Google/GitHub integration (implementation pending)
 
 ### 📝 Content Management
 - **Posts**: Create, edit, delete posts with optional image uploads
@@ -150,7 +150,17 @@ go test ./tests/ -run TestCreateUser
 ## 🔧 Configuration
 
 ### Environment Variables
+Create a `.env` file in the project root (see `.env.example` for reference):
+
+- `BASE_URL`: Application base URL (default: `http://localhost:8080`)
 - `DB_PATH`: Custom database file location (default: `./data/forum.db`)
+
+**OAuth Credentials** (optional - leave empty to disable):
+- `GOOGLE_CLIENT_ID` & `GOOGLE_CLIENT_SECRET`: Google OAuth credentials
+- `GITHUB_CLIENT_ID` & `GITHUB_CLIENT_SECRET`: GitHub OAuth credentials
+- `FACEBOOK_CLIENT_ID` & `FACEBOOK_CLIENT_SECRET`: Facebook OAuth credentials
+
+📖 **See [OAUTH_SETUP.md](OAUTH_SETUP.md) for detailed OAuth configuration guide**
 
 ### Application Settings
 - **Server Port**: 8080
@@ -163,6 +173,8 @@ go test ./tests/ -run TestCreateUser
 
 1. **Authentication Security**
    - Bcrypt password hashing with cost 10
+   - OAuth 2.0 integration with Google, GitHub, and Facebook
+   - CSRF protection for OAuth flows using state tokens
    - UUID-based session IDs
    - HttpOnly cookies to prevent XSS
    - Automatic session expiration
@@ -186,13 +198,13 @@ go test ./tests/ -run TestCreateUser
 
 Planned features for educational extension:
 
-- **OAuth Integration**: Google and GitHub login
-- **HTTPS Support**: SSL/TLS certificates
-- **Email System**: Verification and notifications
-- **Search**: Full-text search across content
-- **REST API**: Mobile app support
-- **Real-time**: WebSocket notifications
-- **Advanced Moderation**: Auto-moderation tools
+- **HTTPS Support**: SSL/TLS certificates for production deployment
+- **Email System**: Email verification and notification emails
+- **Search**: Full-text search across posts and comments
+- **REST API**: JSON API for mobile app support
+- **Real-time**: WebSocket notifications for instant updates
+- **Advanced Moderation**: Auto-moderation tools and content filtering
+- **Two-Factor Authentication**: Additional security layer for accounts
 
 ## 🛠️ Troubleshooting
 

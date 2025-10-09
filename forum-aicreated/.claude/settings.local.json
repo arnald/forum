@@ -30,7 +30,11 @@
       "Bash(cat:*)",
       "Bash(chmod:*)",
       "Bash(sudo chown:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(while read line)",
+      "Bash(do if [[ \"$line\" == *\"=\"* ]])",
+      "Bash(then key=\"$line%%=*\" value=\"$line#*=\" if [ -z \"$value\" ])",
+      "Bash(then echo \"❌ $key = <EMPTY - NEEDS CONFIGURATION>\" else echo \"✅ $key = <configured>\" fi fi done echo \"\" echo \"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\")"
     ],
     "deny": [],
     "ask": []
