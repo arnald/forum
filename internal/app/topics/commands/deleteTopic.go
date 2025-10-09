@@ -3,6 +3,7 @@ package topiccommands
 import (
 	"context"
 
+	"github.com/arnald/forum/internal/domain/topic"
 	"github.com/arnald/forum/internal/domain/user"
 )
 
@@ -16,10 +17,10 @@ type DeleteTopicRequestHandler interface {
 }
 
 type deleteTopicRequestHandler struct {
-	repo user.Repository
+	repo topic.Repository
 }
 
-func NewDeleteTopicHandler(repo user.Repository) DeleteTopicRequestHandler {
+func NewDeleteTopicHandler(repo topic.Repository) DeleteTopicRequestHandler {
 	return &deleteTopicRequestHandler{
 		repo: repo,
 	}

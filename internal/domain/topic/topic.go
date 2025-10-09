@@ -1,4 +1,4 @@
-package user
+package topic
 
 import "github.com/arnald/forum/internal/domain/comments"
 

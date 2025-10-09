@@ -3,6 +3,7 @@ package testhelpers
 import (
 	"testing"
 
+	"github.com/arnald/forum/internal/domain/topic"
 	"github.com/arnald/forum/internal/domain/user"
 )
 
@@ -41,7 +42,7 @@ func CompareUserFields(t *testing.T, got, want *user.User) {
 	}
 }
 
-func AssertTopicMatch(t *testing.T, got, want *user.Topic) {
+func AssertTopicMatch(t *testing.T, got, want *topic.Topic) {
 	t.Helper()
 
 	if want == nil {
@@ -59,7 +60,7 @@ func AssertTopicMatch(t *testing.T, got, want *user.Topic) {
 	CompareCreateTopicFields(t, got, want)
 }
 
-func CompareCreateTopicFields(t *testing.T, got, want *user.Topic) {
+func CompareCreateTopicFields(t *testing.T, got, want *topic.Topic) {
 	t.Helper()
 
 	if got.ID != want.ID {

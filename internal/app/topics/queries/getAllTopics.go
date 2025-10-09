@@ -3,7 +3,7 @@ package topicqueries
 import (
 	"context"
 
-	"github.com/arnald/forum/internal/domain/user"
+	"github.com/arnald/forum/internal/domain/topic"
 )
 
 type GetAllTopicsRequest struct {
@@ -14,20 +14,20 @@ type GetAllTopicsRequest struct {
 }
 
 type GetAllTopicsRequestHandler interface {
-	Handle(ctx context.Context, req GetAllTopicsRequest) ([]user.Topic, int, error)
+	Handle(ctx context.Context, req GetAllTopicsRequest) ([]topic.Topic, int, error)
 }
 
 type getAllTopicsRequestHandler struct {
-	repo user.Repository
+	repo topic.Repository
 }
 
-func NewGetAllTopicsHandler(repo user.Repository) GetAllTopicsRequestHandler {
+func NewGetAllTopicsHandler(repo topic.Repository) GetAllTopicsRequestHandler {
 	return getAllTopicsRequestHandler{
 		repo: repo,
 	}
 }
 
-func (h getAllTopicsRequestHandler) Handle(ctx context.Context, req GetAllTopicsRequest) ([]user.Topic, int, error) {
+func (h getAllTopicsRequestHandler) Handle(ctx context.Context, req GetAllTopicsRequest) ([]topic.Topic, int, error) {
 	topics, err := h.repo.GetAllTopics(ctx, req.Page, req.Size, req.OrderBy, req.Filter)
 	if err != nil {
 		return nil, 0, err

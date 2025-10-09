@@ -3,6 +3,7 @@ package topiccommands
 import (
 	"context"
 
+	"github.com/arnald/forum/internal/domain/topic"
 	"github.com/arnald/forum/internal/domain/user"
 )
 
@@ -15,21 +16,21 @@ type CreateTopicRequest struct {
 }
 
 type CreateTopicRequestHandler interface {
-	Handle(ctx context.Context, req CreateTopicRequest) (*user.Topic, error)
+	Handle(ctx context.Context, req CreateTopicRequest) (*topic.Topic, error)
 }
 
 type createTopicRequestHandler struct {
-	repo user.Repository
+	repo topic.Repository
 }
 
-func NewCreateTopicHandler(repo user.Repository) CreateTopicRequestHandler {
+func NewCreateTopicHandler(repo topic.Repository) CreateTopicRequestHandler {
 	return &createTopicRequestHandler{
 		repo: repo,
 	}
 }
 
-func (h *createTopicRequestHandler) Handle(ctx context.Context, req CreateTopicRequest) (*user.Topic, error) {
-	topic := &user.Topic{
+func (h *createTopicRequestHandler) Handle(ctx context.Context, req CreateTopicRequest) (*topic.Topic, error) {
+	topic := &topic.Topic{
 		UserID:     req.User.ID,
 		CategoryID: req.CategoryID,
 		Title:      req.Title,
