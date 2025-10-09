@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/arnald/forum/internal/domain/comments"
+	"github.com/arnald/forum/internal/domain/comment"
 	"github.com/arnald/forum/internal/domain/topic"
 )
 
@@ -157,7 +157,7 @@ func (r Repo) GetTopicByID(ctx context.Context, topicID int) (*topic.Topic, erro
 	defer rows.Close()
 
 	topic := &topic.Topic{}
-	commentsList := make([]comments.Comment, 0)
+	commentsList := make([]comment.Comment, 0)
 	found := false
 
 	for rows.Next() {
@@ -189,7 +189,7 @@ func (r Repo) GetTopicByID(ctx context.Context, topicID int) (*topic.Topic, erro
 		}
 
 		if commentID.Valid {
-			comment := comments.Comment{
+			comment := comment.Comment{
 				ID:        int(commentID.Int64),
 				UserID:    commentUserID.String,
 				TopicID:   topicID,

@@ -9,7 +9,7 @@ import (
 	"github.com/arnald/forum/internal/app"
 	topicQueries "github.com/arnald/forum/internal/app/topics/queries"
 	"github.com/arnald/forum/internal/config"
-	"github.com/arnald/forum/internal/domain/comments"
+	"github.com/arnald/forum/internal/domain/comment"
 	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/pkg/helpers"
 )
@@ -19,15 +19,15 @@ type RequestModel struct {
 }
 
 type ResponseModel struct {
-	Title      string             `json:"title"`
-	Content    string             `json:"content"`
-	ImagePath  string             `json:"imagePath"`
-	UserID     string             `json:"userId"`
-	CreatedAt  string             `json:"createdAt"`
-	UpdatedAt  string             `json:"updatedAt"`
-	Comments   []comments.Comment `json:"comments,omitempty"`
-	TopicID    int                `json:"topicId"`
-	CategoryID int                `json:"categoryId"`
+	Title      string            `json:"title"`
+	Content    string            `json:"content"`
+	ImagePath  string            `json:"imagePath"`
+	UserID     string            `json:"userId"`
+	CreatedAt  string            `json:"createdAt"`
+	UpdatedAt  string            `json:"updatedAt"`
+	Comments   []comment.Comment `json:"comments,omitempty"`
+	TopicID    int               `json:"topicId"`
+	CategoryID int               `json:"categoryId"`
 }
 
 type Handler struct {

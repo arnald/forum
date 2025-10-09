@@ -1,6 +1,6 @@
 package topic
 
-import "github.com/arnald/forum/internal/domain/comments"
+import "github.com/arnald/forum/internal/domain/comment"
 
 type Topic struct {
 	UserID        string
@@ -10,7 +10,7 @@ type Topic struct {
 	ImagePath     string
 	CreatedAt     string
 	UpdatedAt     string
-	Comments      []comments.Comment
+	Comments      []comment.Comment
 	ID            int
 	CategoryID    int
 }

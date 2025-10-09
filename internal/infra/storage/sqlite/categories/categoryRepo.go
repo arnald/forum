@@ -1,4 +1,4 @@
-package category
+package categories
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/arnald/forum/internal/domain/categories"
+	"github.com/arnald/forum/internal/domain/category"
 )
 
 type Repo struct {
@@ -17,7 +17,7 @@ func NewRepo(db *sql.DB) *Repo {
 	return &Repo{DB: db}
 }
 
-func (r *Repo) CreateCategory(ctx context.Context, category *categories.Category) error {
+func (r *Repo) CreateCategory(ctx context.Context, category *category.Category) error {
 	query := `
 	INSERT INTO categories (name, description, created_by)
 	VALUES (?,?,?)`
@@ -47,7 +47,7 @@ func (r *Repo) CreateCategory(ctx context.Context, category *categories.Category
 	return nil
 }
 
-func (r *Repo) GetAllCategories(ctx context.Context) ([]*categories.Category, error) {
+func (r *Repo) GetAllCategories(ctx context.Context) ([]*category.Category, error) {
 	query := `
 	SELECT id, name, description, created_by, created_at
 	FROM categories
@@ -64,9 +64,9 @@ func (r *Repo) GetAllCategories(ctx context.Context) ([]*categories.Category, er
 	}
 	defer rows.Close()
 
-	var categoriesList []*categories.Category
+	var categoriesList []*category.Category
 	for rows.Next() {
-		var category categories.Category
+		var category category.Category
 		err := rows.Scan(
 			&category.ID,
 			&category.Name,
@@ -80,7 +80,7 @@ func (r *Repo) GetAllCategories(ctx context.Context) ([]*categories.Category, er
 	}
 	return categoriesList, nil
 }
-func (r *Repo) GetCategoryByID(ctx context.Context, id int) (*categories.Category, error) {
+func (r *Repo) GetCategoryByID(ctx context.Context, id int) (*category.Category, error) {
 	query := `
 	SELECT id, name, description, created_by, created_at
 	FROM categories
@@ -93,7 +93,7 @@ func (r *Repo) GetCategoryByID(ctx context.Context, id int) (*categories.Categor
 	}
 	defer stmt.Close()
 
-	var category categories.Category
+	var category category.Category
 	err = stmt.QueryRowContext(ctx, id).Scan(
 		&category.ID,
 		&category.Name,
@@ -136,7 +136,7 @@ func (r *Repo) DeleteCategory(ctx context.Context, id int, userID string) error 
 	return nil
 }
 
-func (r *Repo) UpdateCategory(ctx context.Context, category *categories.Category) error {
+func (r *Repo) UpdateCategory(ctx context.Context, category *category.Category) error {
 	query := `
 	UPDATE categories
 	SET name = ?, description = ?, updated_at = CURRENT_TIMESTAMP

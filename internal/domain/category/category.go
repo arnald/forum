@@ -1,4 +1,4 @@
-package categories
+package category
 
 import "github.com/arnald/forum/internal/domain/topic"
 

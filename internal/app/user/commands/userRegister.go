@@ -1,4 +1,4 @@
-package userqueries
+package usercommands
 
 import (
 	"context"

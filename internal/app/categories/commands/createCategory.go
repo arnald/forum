@@ -3,7 +3,7 @@ package categorycommands
 import (
 	"context"
 
-	"github.com/arnald/forum/internal/domain/categories"
+	"github.com/arnald/forum/internal/domain/category"
 )
 
 type CreateCategoryRequest struct {
@@ -17,17 +17,17 @@ type CreateCategoryRequestHandler interface {
 }
 
 type createCategoryRequestHandler struct {
-	repo categories.Repository
+	repo category.Repository
 }
 
-func NewCreateCategoryHandler(repo categories.Repository) CreateCategoryRequestHandler {
+func NewCreateCategoryHandler(repo category.Repository) CreateCategoryRequestHandler {
 	return &createCategoryRequestHandler{
 		repo: repo,
 	}
 }
 
 func (h *createCategoryRequestHandler) Handle(ctx context.Context, req CreateCategoryRequest) error {
-	category := &categories.Category{
+	category := &category.Category{
 		Name:        req.Name,
 		Description: req.Description,
 		CreatedBy:   req.CreatedBy,

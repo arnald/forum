@@ -3,7 +3,7 @@ package categorycommands
 import (
 	"context"
 
-	"github.com/arnald/forum/internal/domain/categories"
+	"github.com/arnald/forum/internal/domain/category"
 )
 
 type DeleteCategoryRequest struct {
@@ -16,10 +16,10 @@ type DeleteCategoryHandler interface {
 }
 
 type deleteCategoryRequestHandler struct {
-	repo categories.Repository
+	repo category.Repository
 }
 
-func NewDeleteCategoryHandler(repo categories.Repository) DeleteCategoryHandler {
+func NewDeleteCategoryHandler(repo category.Repository) DeleteCategoryHandler {
 	return &deleteCategoryRequestHandler{
 		repo: repo,
 	}
