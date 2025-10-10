@@ -194,6 +194,66 @@ func validImagePath(value any) (bool, string) {
 // 	return validCategories[str], "must be a valid category"
 // }
 
+// ValidateCreateComment validates the create comment request
+func ValidateCreateComment(v *Validator, comment any) {
+	commentMap, ok := comment.(map[string]interface{})
+	if !ok {
+		v.AddError("comment", "Invalid comment format")
+		return
+	}
+
+	// Validate TopicID
+	topicID, ok := commentMap["topicId"].(float64)
+	if !ok || topicID <= 0 {
+		v.AddError("topicId", "Topic ID must be a positive number")
+	}
+
+	// Validate Content
+	content, ok := commentMap["content"].(string)
+	if !ok {
+		v.AddError("content", "Content is required")
+	} else {
+		content = strings.TrimSpace(content)
+		if content == "" {
+			v.AddError("content", "Content cannot be empty")
+		} else if len(content) < 3 {
+			v.AddError("content", "Content must be at least 3 characters long")
+		} else if len(content) > 2000 {
+			v.AddError("content", "Content must not exceed 2000 characters")
+		}
+	}
+}
+
+// ValidateUpdateComment validates the update comment request
+func ValidateUpdateComment(v *Validator, comment any) {
+	commentMap, ok := comment.(map[string]interface{})
+	if !ok {
+		v.AddError("comment", "Invalid comment format")
+		return
+	}
+
+	// Validate CommentID
+	commentID, ok := commentMap["commentId"].(float64)
+	if !ok || commentID <= 0 {
+		v.AddError("commentId", "Comment ID must be a positive number")
+	}
+
+	// Validate Content
+	content, ok := commentMap["content"].(string)
+	if !ok {
+		v.AddError("content", "Content is required")
+	} else {
+		content = strings.TrimSpace(content)
+		if content == "" {
+			v.AddError("content", "Content cannot be empty")
+		} else if len(content) < 3 {
+			v.AddError("content", "Content must be at least 3 characters long")
+		} else if len(content) > 2000 {
+			v.AddError("content", "Content must not exceed 2000 characters")
+		}
+	}
+}
+
 func validOrderBy(value any) (bool, string) {
 	orderByWhitelist := map[string]bool{
 		"created_at ASC":  true,
