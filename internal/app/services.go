@@ -2,6 +2,7 @@ package app
 
 import (
 	categoryCommands "github.com/arnald/forum/internal/app/categories/commands"
+	categoryQueries "github.com/arnald/forum/internal/app/categories/queries"
 	topicCommands "github.com/arnald/forum/internal/app/topics/commands"
 	topicQueries "github.com/arnald/forum/internal/app/topics/queries"
 	userCommands "github.com/arnald/forum/internal/app/user/commands"
@@ -18,6 +19,7 @@ type Queries struct {
 	GetAllTopics      topicQueries.GetAllTopicsRequestHandler
 	UserLoginEmail    userQueries.UserLoginEmailRequestHandler
 	UserLoginUsername userQueries.UserLoginUsernameRequestHandler
+	GetCategoryByID   categoryQueries.GetCategoryByIDHandler
 }
 
 type Commands struct {
@@ -49,6 +51,7 @@ func NewServices(userRepo user.Repository, categoryRepo category.Repository, top
 				topicQueries.NewGetAllTopicsHandler(topicRepo),
 				userQueries.NewUserLoginEmailHandler(userRepo, encryption),
 				userQueries.NewUserLoginUsernameHandler(userRepo, encryption),
+				categoryQueries.NewGetCategoryByIDHandler(categoryRepo),
 			},
 			Commands: Commands{
 				userCommands.NewUserRegisterHandler(userRepo, uuidProvider, encryption),

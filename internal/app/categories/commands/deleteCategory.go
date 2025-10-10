@@ -7,8 +7,8 @@ import (
 )
 
 type DeleteCategoryRequest struct {
-	CategoryID int
 	UserID     string
+	CategoryID int
 }
 
 type DeleteCategoryRequestHandler interface {

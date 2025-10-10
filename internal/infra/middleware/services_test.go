@@ -11,16 +11,9 @@ func TestServices(t *testing.T) {
 
 	middleware := NewMiddleware(mockSessionManager)
 
-	var (
-		auth     = middleware.Authorization
-		optional = middleware.OptionalAuth
-	)
+	auth := middleware.Authorization
 
 	if auth == nil {
 		t.Error("Authorization middleware is nil")
-	}
-
-	if optional == nil {
-		t.Error("OptionalAuth middleware is nil")
 	}
 }

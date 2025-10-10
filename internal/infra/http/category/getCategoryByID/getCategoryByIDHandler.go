@@ -1,4 +1,4 @@
-package deletecategory
+package getcategorybyid
 
 import (
 	"context"
@@ -6,10 +6,9 @@ import (
 	"strconv"
 
 	"github.com/arnald/forum/internal/app"
-	categorycommands "github.com/arnald/forum/internal/app/categories/commands"
+	categoryqueries "github.com/arnald/forum/internal/app/categories/queries"
 	"github.com/arnald/forum/internal/config"
 	"github.com/arnald/forum/internal/infra/logger"
-	"github.com/arnald/forum/internal/infra/middleware"
 	"github.com/arnald/forum/internal/pkg/helpers"
 )
 
@@ -18,8 +17,8 @@ type RequestModel struct {
 }
 
 type ResponseModel struct {
-	Message    string `json:"message"`
-	CategoryID int    `json:"categoryId"`
+	CategoryName string `json:"categoryName"`
+	CategoryID   int    `json:"categoryId"`
 }
 
 type Handler struct {
@@ -36,8 +35,8 @@ func NewHandler(userServices app.Services, config *config.ServerConfig, logger l
 	}
 }
 
-func (h *Handler) DeleteCategory(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodDelete {
+func (h *Handler) GetCategoryByID(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
 		h.Logger.PrintError(logger.ErrInvalidRequestMethod, nil)
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
@@ -46,23 +45,20 @@ func (h *Handler) DeleteCategory(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), h.Config.Timeouts.HandlerTimeouts.UserRegister)
 	defer cancel()
 
-	user := middleware.GetUserFromContext(r)
+	var categoryToGet RequestModel
 
-	var categoryToDelete RequestModel
-
-	_, err := helpers.ParseBodyRequest(r, &categoryToDelete)
+	_, err := helpers.ParseBodyRequest(r, &categoryToGet)
 	if err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
 
-	err = h.UserServices.UserServices.Commands.DeleteCategory.Handle(ctx, categorycommands.DeleteCategoryRequest{
-		CategoryID: categoryToDelete.CategoryID,
-		UserID:     user.ID,
+	category, err := h.UserServices.UserServices.Queries.GetCategoryByID.Handle(ctx, categoryqueries.GetCategoryByIDRequest{
+		ID: categoryToGet.CategoryID,
 	})
 	if err != nil {
 		h.Logger.PrintError(err, nil)
-		helpers.RespondWithError(w, http.StatusInternalServerError, "Error deleting category")
+		helpers.RespondWithError(w, http.StatusInternalServerError, "Error getting category")
 		return
 	}
 
@@ -70,14 +66,16 @@ func (h *Handler) DeleteCategory(w http.ResponseWriter, r *http.Request) {
 		http.StatusOK,
 		nil,
 		ResponseModel{
-			CategoryID: categoryToDelete.CategoryID,
-			Message:    "Category deleted successfully",
-		})
+			CategoryID:   category.ID,
+			CategoryName: category.Name,
+		},
+	)
 
 	h.Logger.PrintInfo(
-		"Category deleted successfully",
+		"Category retrieved successfully",
 		map[string]string{
-			"cat_id":  strconv.Itoa(categoryToDelete.CategoryID),
-			"user_id": user.ID,
-		})
+			"category_id": strconv.Itoa(category.ID),
+			"name":        category.Name,
+		},
+	)
 }

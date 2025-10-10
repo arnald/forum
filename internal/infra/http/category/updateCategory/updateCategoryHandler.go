@@ -14,15 +14,15 @@ import (
 )
 
 type RequestModel struct {
-	ID          int    `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
+	ID          int    `json:"id"`
 }
 
 type ResponseModel struct {
-	CategoryID   int    `json:"category_id"`
-	CategoryName string `json:"category_name"`
+	CategoryName string `json:"categoryName"`
 	Message      string `json:"message"`
+	CategoryID   int    `json:"categoryId"`
 }
 
 type Handler struct {

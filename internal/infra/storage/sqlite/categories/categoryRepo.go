@@ -3,6 +3,7 @@ package categories
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -64,10 +65,10 @@ func (r *Repo) GetAllCategories(ctx context.Context) ([]*category.Category, erro
 	}
 	defer rows.Close()
 
-	var categoriesList []*category.Category
+	categoriesList := make([]*category.Category, 0)
 	for rows.Next() {
 		var category category.Category
-		err := rows.Scan(
+		err = rows.Scan(
 			&category.ID,
 			&category.Name,
 			&category.Description,
@@ -78,8 +79,15 @@ func (r *Repo) GetAllCategories(ctx context.Context) ([]*category.Category, erro
 		}
 		categoriesList = append(categoriesList, &category)
 	}
+
+	err = rows.Err()
+	if err != nil {
+		return nil, fmt.Errorf("rows iteration failed: %w", err)
+	}
+
 	return categoriesList, nil
 }
+
 func (r *Repo) GetCategoryByID(ctx context.Context, id int) (*category.Category, error) {
 	query := `
 	SELECT id, name, description, created_by, created_at
@@ -101,7 +109,7 @@ func (r *Repo) GetCategoryByID(ctx context.Context, id int) (*category.Category,
 		&category.CreatedBy,
 		&category.CreatedAt)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("category with ID %d not found: %w", id, ErrCategoryNotFound)
 		}
 		return nil, fmt.Errorf("query failed: %w", err)
@@ -154,7 +162,6 @@ func (r *Repo) UpdateCategory(ctx context.Context, category *category.Category) 
 		category.Description,
 		category.ID,
 	)
-
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE constraint failed: categories.name") {
 			return fmt.Errorf("category with name %s already exists: %w", category.Name, ErrCategoryAlreadyExists)

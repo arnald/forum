@@ -18,7 +18,7 @@ type RequestModel struct {
 }
 
 type ResponseModel struct {
-	CategoryName string `json:"category_name"`
+	CategoryName string `json:"categoryName"`
 	Message      string `json:"message"`
 }
 
