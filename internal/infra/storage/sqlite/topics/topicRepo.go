@@ -190,13 +190,13 @@ func (r Repo) GetTopicByID(ctx context.Context, topicID int) (*topic.Topic, erro
 
 		if commentID.Valid {
 			comment := comment.Comment{
-				ID:        int(commentID.Int64),
-				UserID:    commentUserID.String,
-				TopicID:   topicID,
-				Content:   commentContent.String,
-				CreatedAt: commentCreatedAt.Time,
-				UpdatedAt: commentUpdatedAt.Time,
-				Username:  commentUsername.String,
+				ID:            int(commentID.Int64),
+				UserID:        commentUserID.String,
+				TopicID:       topicID,
+				Content:       commentContent.String,
+				CreatedAt:     commentCreatedAt.Time,
+				UpdatedAt:     commentUpdatedAt.Time,
+				OwnerUsername: commentUsername.String,
 			}
 			commentsList = append(commentsList, comment)
 		}
