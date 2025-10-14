@@ -213,7 +213,7 @@ func runOptionalAuthorizationTest(tt optionalAuthorizationTestCase) func(t *test
 		mockSessionManager := &testhelpers.MockSessionManager{}
 		tt.setupMockSession(mockSessionManager)
 
-		middleware := NewOptionalAuthMiddleware(mockSessionManager)
+		middleware := NewAuthorizationMiddleware(mockSessionManager)
 
 		req := httptest.NewRequest(http.MethodGet, "/", nil)
 		if tt.accessToken != nil {
@@ -237,7 +237,7 @@ func runOptionalAuthorizationTest(tt optionalAuthorizationTestCase) func(t *test
 			}
 		})
 
-		handler := middleware.OptionalAuth(next)
+		handler := middleware.Optional(next)
 		handler.ServeHTTP(rr, req)
 
 		if nextCalled != tt.wantNextCalled {
@@ -248,7 +248,7 @@ func runOptionalAuthorizationTest(tt optionalAuthorizationTestCase) func(t *test
 
 func TestNewOptionalAuthMiddleware(t *testing.T) {
 	mockSessionManager := &testhelpers.MockSessionManager{}
-	middleware := NewOptionalAuthMiddleware(mockSessionManager)
+	middleware := NewAuthorizationMiddleware(mockSessionManager)
 
 	if middleware == nil {
 		t.Fatal("NewOptionalAuthMiddleware returned nil")

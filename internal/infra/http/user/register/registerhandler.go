@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/arnald/forum/internal/app"
-	userQueries "github.com/arnald/forum/internal/app/user/queries"
+	usercommands "github.com/arnald/forum/internal/app/user/commands"
 	"github.com/arnald/forum/internal/config"
 	"github.com/arnald/forum/internal/domain/session"
 	"github.com/arnald/forum/internal/infra/logger"
@@ -21,7 +21,7 @@ type RegisterUserReguestModel struct {
 }
 
 type RegisterUserResponse struct {
-	UserID  string `json:"userdId"`
+	UserID  string `json:"userId"`
 	Message string `json:"message"`
 }
 
@@ -82,7 +82,7 @@ func (h Handler) UserRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.UserServices.UserServices.Queries.UserRegister.Handle(ctx, userQueries.UserRegisterRequest{
+	user, err := h.UserServices.UserServices.Commands.UserRegister.Handle(ctx, usercommands.UserRegisterRequest{
 		Name:     userToRegister.Username,
 		Password: userToRegister.Password,
 		Email:    strings.ToLower(userToRegister.Email),

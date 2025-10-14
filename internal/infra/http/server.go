@@ -9,6 +9,10 @@ import (
 	"github.com/arnald/forum/internal/app"
 	"github.com/arnald/forum/internal/config"
 	"github.com/arnald/forum/internal/domain/session"
+	createcategory "github.com/arnald/forum/internal/infra/http/category/createCategory"
+	deletecategory "github.com/arnald/forum/internal/infra/http/category/deleteCategory"
+	getcategorybyid "github.com/arnald/forum/internal/infra/http/category/getCategoryByID"
+	updatecategory "github.com/arnald/forum/internal/infra/http/category/updateCategory"
 	"github.com/arnald/forum/internal/infra/http/health"
 	createtopic "github.com/arnald/forum/internal/infra/http/topic/createTopic"
 	deletetopic "github.com/arnald/forum/internal/infra/http/topic/deleteTopic"
@@ -65,48 +69,70 @@ func (server *Server) AddHTTPRoutes() {
 	server.router.HandleFunc(apiContext+"/health",
 		middlewareChain(
 			health.NewHandler(server.logger).HealthCheck,
-			server.middleware.Authorization.RequireAuth,
+			server.middleware.Authorization.Required,
 		))
 
+	// User routes
 	server.router.HandleFunc(apiContext+"/login/email",
 		userLogin.NewHandler(server.config, server.appServices, server.sessionManager, server.logger).UserLoginEmail,
 	)
-
 	server.router.HandleFunc(apiContext+"/login/username",
 		userLogin.NewHandler(server.config, server.appServices, server.sessionManager, server.logger).UserLoginUsername,
 	)
-
 	server.router.HandleFunc(apiContext+"/register",
 		userRegister.NewHandler(server.config, server.appServices, server.sessionManager, server.logger).UserRegister,
 	)
 
+	// Topic routes
 	server.router.HandleFunc(apiContext+"/topics/create",
 		middlewareChain(
 			createtopic.NewHandler(server.appServices, server.config, server.logger).CreateTopic,
-			server.middleware.Authorization.RequireAuth,
+			server.middleware.Authorization.Required,
 		),
 	)
-
 	server.router.HandleFunc(apiContext+"/topics/update",
 		middlewareChain(
 			updatetopic.NewHandler(server.appServices, server.config, server.logger).UpdateTopic,
-			server.middleware.Authorization.RequireAuth,
+			server.middleware.Authorization.Required,
 		),
 	)
-
 	server.router.HandleFunc(apiContext+"/topics/delete",
 		middlewareChain(
 			deletetopic.NewHandler(server.appServices, server.config, server.logger).DeleteTopic,
-			server.middleware.Authorization.RequireAuth,
+			server.middleware.Authorization.Required,
 		),
 	)
-
 	server.router.HandleFunc(apiContext+"/topics/get",
 		gettopic.NewHandler(server.appServices, server.config, server.logger).GetTopic,
 	)
-
 	server.router.HandleFunc(apiContext+"/topics/all",
 		getalltopics.NewHandler(server.appServices, server.config, server.logger).GetAllTopics,
+	)
+
+	// Category routes
+	server.router.HandleFunc(apiContext+"/categories/create",
+		middlewareChain(
+			createcategory.NewHandler(server.appServices, server.config, server.logger).CreateCategory,
+			server.middleware.Authorization.Required,
+		),
+	)
+	server.router.HandleFunc(apiContext+"/categories/delete",
+		middlewareChain(
+			deletecategory.NewHandler(server.appServices, server.config, server.logger).DeleteCategory,
+			server.middleware.Authorization.Required,
+		),
+	)
+	server.router.HandleFunc(apiContext+"/categories/update",
+		middlewareChain(
+			updatecategory.NewHandler(server.appServices, server.config, server.logger).UpdateCategory,
+			server.middleware.Authorization.Required,
+		),
+	)
+	server.router.HandleFunc(apiContext+"/categories/get",
+		middlewareChain(
+			getcategorybyid.NewHandler(server.appServices, server.config, server.logger).GetCategoryByID,
+			server.middleware.Authorization.Optional,
+		),
 	)
 }
 

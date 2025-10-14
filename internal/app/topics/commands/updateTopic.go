@@ -3,6 +3,7 @@ package topiccommands
 import (
 	"context"
 
+	"github.com/arnald/forum/internal/domain/topic"
 	"github.com/arnald/forum/internal/domain/user"
 )
 
@@ -16,21 +17,21 @@ type UpdateTopicRequest struct {
 }
 
 type UpdateTopicRequestHandler interface {
-	Handle(ctx context.Context, req UpdateTopicRequest) (*user.Topic, error)
+	Handle(ctx context.Context, req UpdateTopicRequest) (*topic.Topic, error)
 }
 
 type updateTopicRequestHandler struct {
-	repo user.Repository
+	repo topic.Repository
 }
 
-func NewUpdateTopicHandler(repo user.Repository) UpdateTopicRequestHandler {
+func NewUpdateTopicHandler(repo topic.Repository) UpdateTopicRequestHandler {
 	return &updateTopicRequestHandler{
 		repo: repo,
 	}
 }
 
-func (h *updateTopicRequestHandler) Handle(ctx context.Context, req UpdateTopicRequest) (*user.Topic, error) {
-	topic := &user.Topic{
+func (h *updateTopicRequestHandler) Handle(ctx context.Context, req UpdateTopicRequest) (*topic.Topic, error) {
+	topic := &topic.Topic{
 		UserID:     req.User.ID,
 		CategoryID: req.CategoryID,
 		ID:         req.TopicID,

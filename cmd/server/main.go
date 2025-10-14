@@ -26,10 +26,9 @@ func main() {
 	defer db.Close()
 
 	// 3. Create repository with injected DB
-	userRepo := sqlite.NewRepo(db)
 	logger := logger.New(os.Stdout, logger.LevelInfo)
-	infraProviders := infra.NewInfraProviders(userRepo.DB)
-	appServices := app.NewServices(infraProviders.UserRepository)
+	infraProviders := infra.NewInfraProviders(db)
+	appServices := app.NewServices(infraProviders.Repositories.UserRepo, infraProviders.Repositories.CategoryRepo, infraProviders.Repositories.TopicRepo)
 	infraHTTPServer := infra.NewHTTPServer(cfg, db, logger, appServices)
 	infraHTTPServer.ListenAndServe()
 }

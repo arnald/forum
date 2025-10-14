@@ -8,7 +8,7 @@ import (
 	"github.com/arnald/forum/internal/app"
 	topicQueries "github.com/arnald/forum/internal/app/topics/queries"
 	"github.com/arnald/forum/internal/config"
-	"github.com/arnald/forum/internal/domain/user"
+	"github.com/arnald/forum/internal/domain/topic"
 	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/pkg/helpers"
 	"github.com/arnald/forum/internal/pkg/validator"
@@ -22,10 +22,10 @@ type RequestModel struct {
 }
 
 type ResponseModel struct {
-	Topics      []user.Topic `json:"topics"`
-	TotalCount  int          `json:"totalCount"`
-	CurrentPage int          `json:"currentPage"`
-	PageSize    int          `json:"pageSize"`
+	Topics      []topic.Topic `json:"topics"`
+	TotalCount  int           `json:"totalCount"`
+	CurrentPage int           `json:"currentPage"`
+	PageSize    int           `json:"pageSize"`
 }
 
 type Handler struct {

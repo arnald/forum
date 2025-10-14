@@ -5,6 +5,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/arnald/forum/internal/domain/topic"
 	"github.com/arnald/forum/internal/domain/user"
 	testhelpers "github.com/arnald/forum/internal/pkg/testing"
 )
@@ -22,7 +23,7 @@ type updateTopicTestCase struct {
 	name       string
 	request    UpdateTopicRequest
 	setupMocks func(*testhelpers.MockRepository)
-	wantTopic  *user.Topic
+	wantTopic  *topic.Topic
 	wantError  error
 }
 
@@ -44,11 +45,11 @@ func newUpdateTopicTestCases() []updateTopicTestCase {
 				ImagePath:  "",
 			},
 			setupMocks: func(repo *testhelpers.MockRepository) {
-				repo.UpdateTopicFunc = func(ctx context.Context, topic *user.Topic) error {
+				repo.UpdateTopicFunc = func(ctx context.Context, topic *topic.Topic) error {
 					return nil
 				}
 			},
-			wantTopic: &user.Topic{
+			wantTopic: &topic.Topic{
 				UserID:     "test-user-id",
 				CategoryID: 10,
 				ID:         1,
@@ -72,7 +73,7 @@ func newUpdateTopicTestCases() []updateTopicTestCase {
 				ImagePath: "",
 			},
 			setupMocks: func(repo *testhelpers.MockRepository) {
-				repo.CreateTopicFunc = func(ctx context.Context, topic *user.Topic) error {
+				repo.CreateTopicFunc = func(ctx context.Context, topic *topic.Topic) error {
 					return testhelpers.ErrTest
 				}
 			},

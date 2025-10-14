@@ -11,10 +11,10 @@ INSERT OR IGNORE INTO sessions (token, user_id, expires_at, refresh_token, refre
 ('dev_session_token_3', 'f1433622-9c10-44e5-94b1-1f6a148c9131', DATETIME('now', '+7 days'), 'dev_refresh_token_3', DATETIME('now', '+30 days'));
 
 -- Categories
-INSERT OR IGNORE INTO categories (name, description) VALUES
-('General Discussion', 'Topics that don''t fit into other categories'),
-('Feedback', 'Suggestions and feedback about the forum'),
-('Off-Topic', 'Anything not related to the forum');
+INSERT OR IGNORE INTO categories (name, description, created_by) VALUES
+('General Discussion', 'Topics that don''t fit into other categories', 'df16d238-e4dd-4645-9101-54aed9c0fbf4'),
+('Feedback', 'Suggestions and feedback about the forum', '000dec3a-51af-4e7c-ae0c-21436a0a2395'),
+('Off-Topic', 'Anything not related to the forum', 'f1433622-9c10-44e5-94b1-1f6a148c9131');
 
 -- Topics
 INSERT OR IGNORE INTO topics (user_id, category_id, title, content) VALUES

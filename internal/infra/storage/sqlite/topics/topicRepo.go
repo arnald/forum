@@ -1,4 +1,4 @@
-package sqlite
+package topics
 
 import (
 	"context"
@@ -6,8 +6,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/arnald/forum/internal/domain/comments"
-	"github.com/arnald/forum/internal/domain/user"
+	"github.com/arnald/forum/internal/domain/comment"
+	"github.com/arnald/forum/internal/domain/topic"
 )
 
 type Repo struct {
@@ -20,118 +20,7 @@ func NewRepo(db *sql.DB) *Repo {
 	}
 }
 
-// TODO: retrieves all users from the repository.
-func (r Repo) GetAll(_ context.Context) ([]user.User, error) {
-	return nil, nil
-}
-
-func (r Repo) UserRegister(ctx context.Context, user *user.User) error {
-	query := `
-	INSERT INTO users (username, password_hash, email, id)
-	VALUES (?, ?, ?, ?)`
-
-	stmt, err := r.DB.PrepareContext(ctx, query)
-	if err != nil {
-		return fmt.Errorf("prepare failed: %w", err)
-	}
-	defer stmt.Close()
-
-	_, err = r.DB.ExecContext(
-		ctx,
-		query,
-		user.Username,
-		user.Password,
-		user.Email,
-		user.ID,
-	)
-
-	mapErr := MapSQLiteError(err)
-	if mapErr != nil {
-		return mapErr
-	}
-
-	return nil
-}
-
-func (r Repo) GetUserByIdentifier(ctx context.Context, identifier string) (*user.User, error) {
-	query := `
-	SELECT id, username, email, password_hash, created_at, avatar_url
-	FROM users
-	WHERE email = ? OR username = ?
-	`
-	var user user.User
-	err := r.DB.QueryRowContext(ctx, query, identifier, identifier).Scan(
-		&user.ID,
-		&user.Username,
-		&user.Email,
-		&user.Password,
-		&user.CreatedAt,
-		&user.AvatarURL,
-	)
-
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, fmt.Errorf("user with identifier %s not found: %w", identifier, ErrUserNotFound)
-	}
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to get user by identifier: %w", err)
-	}
-
-	return &user, nil
-}
-
-func (r Repo) GetUserByEmail(ctx context.Context, email string) (*user.User, error) {
-	query := `
-	SELECT id, username, password_hash
-	FROM users
-	WHERE email = ?
-	`
-	var user user.User
-	err := r.DB.QueryRowContext(ctx, query, email).Scan(
-		&user.ID,
-		&user.Username,
-		&user.Password,
-	)
-
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, fmt.Errorf("user with email %s not found: %w", email, ErrUserNotFound)
-	}
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to get user by email: %w", err)
-	}
-
-	return &user, nil
-}
-
-func (r Repo) GetUserByUsername(ctx context.Context, username string) (*user.User, error) {
-	query := `
-	SELECT id, username, email, password_hash, created_at, avatar_url
-	FROM users
-	WHERE username = ?
-	`
-	var user user.User
-	err := r.DB.QueryRowContext(ctx, query, username).Scan(
-		&user.ID,
-		&user.Username,
-		&user.Email,
-		&user.Password,
-		&user.CreatedAt,
-		&user.AvatarURL,
-	)
-
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, fmt.Errorf("user with username %s not found: %w", username, ErrUserNotFound)
-	}
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to get user by username: %w", err)
-	}
-
-	return &user, nil
-}
-
-func (r Repo) CreateTopic(ctx context.Context, topic *user.Topic) error {
+func (r Repo) CreateTopic(ctx context.Context, topic *topic.Topic) error {
 	query := `
 	INSERT INTO topics (user_id, title, content, image_path, category_id)
 	VALUES (?, ?, ?, ?, ?)`
@@ -162,7 +51,7 @@ func (r Repo) CreateTopic(ctx context.Context, topic *user.Topic) error {
 	return nil
 }
 
-func (r Repo) UpdateTopic(ctx context.Context, topic *user.Topic) error {
+func (r Repo) UpdateTopic(ctx context.Context, topic *topic.Topic) error {
 	tx, err := r.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
@@ -244,7 +133,7 @@ func (r Repo) DeleteTopic(ctx context.Context, userID string, topicID int) error
 	return nil
 }
 
-func (r Repo) GetTopicByID(ctx context.Context, topicID int) (*user.Topic, error) {
+func (r Repo) GetTopicByID(ctx context.Context, topicID int) (*topic.Topic, error) {
 	query := `
 	SELECT 
 		t.id, t.user_id, u.username, t.title, t.content, t.image_path, t.category_id, t.created_at, t.updated_at,
@@ -267,8 +156,8 @@ func (r Repo) GetTopicByID(ctx context.Context, topicID int) (*user.Topic, error
 	}
 	defer rows.Close()
 
-	topic := &user.Topic{}
-	commentsList := make([]comments.Comment, 0)
+	topic := &topic.Topic{}
+	commentsList := make([]comment.Comment, 0)
 	found := false
 
 	for rows.Next() {
@@ -300,7 +189,7 @@ func (r Repo) GetTopicByID(ctx context.Context, topicID int) (*user.Topic, error
 		}
 
 		if commentID.Valid {
-			comment := comments.Comment{
+			comment := comment.Comment{
 				ID:        int(commentID.Int64),
 				UserID:    commentUserID.String,
 				TopicID:   topicID,
@@ -348,7 +237,7 @@ func (r Repo) GetTotalTopicsCount(ctx context.Context, filter string) (int, erro
 	return totalCount, nil
 }
 
-func (r Repo) GetAllTopics(ctx context.Context, page, size int, orderBy, filter string) ([]user.Topic, error) {
+func (r Repo) GetAllTopics(ctx context.Context, page, size int, orderBy, filter string) ([]topic.Topic, error) {
 	query := `
     SELECT 
         t.id, t.user_id, t.title, t.content, t.image_path, t.category_id, t.created_at, t.updated_at,
@@ -380,9 +269,9 @@ func (r Repo) GetAllTopics(ctx context.Context, page, size int, orderBy, filter 
 	}
 	defer rows.Close()
 
-	topics := make([]user.Topic, 0)
+	topics := make([]topic.Topic, 0)
 	for rows.Next() {
-		var topic user.Topic
+		var topic topic.Topic
 		err = rows.Scan(
 			&topic.ID,
 			&topic.UserID,

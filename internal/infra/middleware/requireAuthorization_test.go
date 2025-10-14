@@ -274,7 +274,7 @@ func runRequireAuthorizationTest(tt requireAuthorizationTestCase) func(t *testin
 		mockSessionManager := &testhelpers.MockSessionManager{}
 		tt.setupMockSession(mockSessionManager)
 
-		middleware := NewRequireAuthMiddleware(mockSessionManager)
+		middleware := NewAuthorizationMiddleware(mockSessionManager)
 
 		req := httptest.NewRequest(http.MethodGet, "/", nil)
 		if tt.accessToken != nil {
@@ -298,7 +298,7 @@ func runRequireAuthorizationTest(tt requireAuthorizationTestCase) func(t *testin
 			}
 		})
 
-		handler := middleware.RequireAuth(next)
+		handler := middleware.Required(next)
 		handler.ServeHTTP(rr, req)
 
 		if nextCalled != tt.wantNextCalled {
@@ -311,9 +311,9 @@ func runRequireAuthorizationTest(tt requireAuthorizationTestCase) func(t *testin
 	}
 }
 
-func TestNewRequireAuthMiddleware(t *testing.T) {
+func TestNewAuthorizationMiddleware(t *testing.T) {
 	mockSessionManager := &testhelpers.MockSessionManager{}
-	middleware := NewRequireAuthMiddleware(mockSessionManager)
+	middleware := NewAuthorizationMiddleware(mockSessionManager)
 
 	if middleware == nil {
 		t.Fatal("NewRequireAuthMiddleware returned nil")
