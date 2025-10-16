@@ -2,21 +2,18 @@ package gettopic
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/arnald/forum/internal/app"
 	topicQueries "github.com/arnald/forum/internal/app/topics/queries"
 	"github.com/arnald/forum/internal/config"
 	"github.com/arnald/forum/internal/domain/comment"
 	"github.com/arnald/forum/internal/infra/logger"
+	"github.com/arnald/forum/internal/infra/storage/sqlite/topics"
 	"github.com/arnald/forum/internal/pkg/helpers"
 )
-
-type RequestModel struct {
-	TopicID int `json:"topicId"`
-}
 
 type ResponseModel struct {
 	Title      string            `json:"title"`
@@ -51,23 +48,32 @@ func (h *Handler) GetTopic(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), h.Config.Timeouts.HandlerTimeouts.UserRegister)
-	defer cancel()
-
-	var topicToGet RequestModel
-
-	err := json.NewDecoder(r.Body).Decode(&topicToGet)
+	params := r.URL.Query()
+	topicIDstr := params.Get("id")
+	if topicIDstr == "" {
+		h.Logger.PrintError(ErrTopicIDRequired, nil)
+		helpers.RespondWithError(
+			w,
+			http.StatusBadRequest,
+			"Topic ID is required",
+		)
+		return
+	}
+	topicIDint, err := strconv.Atoi(topicIDstr)
 	if err != nil {
 		h.Logger.PrintError(err, nil)
-		helpers.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		helpers.RespondWithError(w, http.StatusBadRequest, "Invalid topic ID")
 		return
 	}
 
+	ctx, cancel := context.WithTimeout(r.Context(), h.Config.Timeouts.HandlerTimeouts.UserRegister)
+	defer cancel()
+
 	topic, err := h.UserServices.UserServices.Queries.GetTopic.Handle(ctx, topicQueries.GetTopicRequest{
-		TopicID: topicToGet.TopicID,
+		TopicID: topicIDint,
 	})
 	if err != nil {
-		if errors.Is(err, topicQueries.ErrTopicNotFound) {
+		if errors.Is(err, topics.ErrTopicNotFound) {
 			helpers.RespondWithError(w, http.StatusNotFound, "Topic not found")
 			return
 		}

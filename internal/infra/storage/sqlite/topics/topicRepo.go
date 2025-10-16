@@ -208,7 +208,7 @@ func (r Repo) GetTopicByID(ctx context.Context, topicID int) (*topic.Topic, erro
 	}
 
 	if !found {
-		return nil, fmt.Errorf("topic with ID %d not found: %w", topicID, ErrTopicNotFound)
+		return nil, ErrTopicNotFound
 	}
 
 	topic.Comments = commentsList

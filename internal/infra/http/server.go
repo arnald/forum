@@ -102,7 +102,7 @@ func (server *Server) AddHTTPRoutes() {
 			server.middleware.Authorization.Required,
 		),
 	)
-	server.router.HandleFunc(apiContext+"/topics/get",
+	server.router.HandleFunc(apiContext+"/topics",
 		gettopic.NewHandler(server.appServices, server.config, server.logger).GetTopic,
 	)
 	server.router.HandleFunc(apiContext+"/topics/all",
