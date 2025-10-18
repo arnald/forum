@@ -48,23 +48,19 @@ func (h *Handler) DeleteTopic(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), h.Config.Timeouts.HandlerTimeouts.UserRegister)
 	defer cancel()
 
-	var topicToDelete RequestModel
-
-	_, err := helpers.ParseBodyRequest(r, &topicToDelete)
+	topicID, err := helpers.GetQueryInt(r, "id")
 	if err != nil {
-		helpers.RespondWithError(w,
-			http.StatusBadRequest,
-			"Invalid request payload",
-		)
-
 		h.Logger.PrintError(err, nil)
-
+		helpers.RespondWithError(
+			w,
+			http.StatusBadRequest,
+			err.Error(),
+		)
 		return
 	}
-	defer r.Body.Close()
 
 	err = h.UserServices.UserServices.Commands.DeleteTopic.Handle(ctx, topicCommands.DeleteTopicRequest{
-		TopicID: topicToDelete.TopicID,
+		TopicID: topicID,
 		User:    user,
 	})
 	if err != nil {
@@ -80,7 +76,7 @@ func (h *Handler) DeleteTopic(w http.ResponseWriter, r *http.Request) {
 
 	topicResponse := ResponseModel{
 		UserID:  user.ID,
-		TopicID: topicToDelete.TopicID,
+		TopicID: topicID,
 		Message: "Topic deleted successfully",
 	}
 

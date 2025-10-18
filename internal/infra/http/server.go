@@ -69,7 +69,7 @@ func (server *Server) AddHTTPRoutes() {
 	server.router.HandleFunc(apiContext+"/health",
 		middlewareChain(
 			health.NewHandler(server.logger).HealthCheck,
-			server.middleware.Authorization.Required,
+			server.middleware.Authorization.Optional,
 		))
 
 	// User routes
@@ -102,7 +102,7 @@ func (server *Server) AddHTTPRoutes() {
 			server.middleware.Authorization.Required,
 		),
 	)
-	server.router.HandleFunc(apiContext+"/topics/",
+	server.router.HandleFunc(apiContext+"/topic",
 		gettopic.NewHandler(server.appServices, server.config, server.logger).GetTopic,
 	)
 	server.router.HandleFunc(apiContext+"/topics/all",
