@@ -49,13 +49,13 @@ func (h *Handler) GetTopic(w http.ResponseWriter, r *http.Request) {
 
 	params := helpers.NewURLParams(r)
 
-	topicID, err := params.GetLastPathInt()
+	topicID, err := params.GetTopicIDStrict()
 	if err != nil {
 		h.Logger.PrintError(err, nil)
 		helpers.RespondWithError(
 			w,
 			http.StatusBadRequest,
-			"Topic ID not found",
+			"Invalid topic ID in path",
 		)
 		return
 	}

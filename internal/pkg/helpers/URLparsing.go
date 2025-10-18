@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -24,6 +25,30 @@ func NewURLParams(r *http.Request) *URLParams {
 		pathParts:   cleanParts,
 		queryParams: r.URL.Query(),
 	}
+}
+
+func (p *URLParams) ValidateTopicPath() error {
+	if len(p.pathParts) < 3 || len(p.pathParts) > 4 {
+		return errors.New("invalid topic path length")
+	}
+	return nil
+}
+
+func (p *URLParams) GetTopicIDStrict() (int, error) {
+	if err := p.ValidateTopicPath(); err != nil {
+		return 0, err
+	}
+
+	if len(p.pathParts) != 4 {
+		return 0, fmt.Errorf("no topic ID in path")
+	}
+
+	topicID, err := strconv.Atoi(p.pathParts[3])
+	if err != nil {
+		return 0, fmt.Errorf("invalid topic ID: %s", p.pathParts[3])
+	}
+
+	return topicID, nil
 }
 
 func (p *URLParams) GetLastPathInt() (int, error) {
