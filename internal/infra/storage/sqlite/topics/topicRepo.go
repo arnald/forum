@@ -134,85 +134,67 @@ func (r Repo) DeleteTopic(ctx context.Context, userID string, topicID int) error
 }
 
 func (r Repo) GetTopicByID(ctx context.Context, topicID int) (*topic.Topic, error) {
-	query := `
-	SELECT 
-		t.id, t.user_id, u.username, t.title, t.content, t.image_path, t.category_id, t.created_at, t.updated_at,
-		c.id, c.user_id, c.content, c.created_at, c.updated_at, u.username
+	topicQuery := `
+	SELECT t.id, t.user_id, t.title, t.content, t.image_path, t.category_id, t.created_at, t.updated_at, u.username
 	FROM topics t
-	LEFT JOIN comments c ON t.id = c.topic_id
-	LEFT JOIN users u ON c.user_id = u.id
+	LEFT JOIN users u ON t.user_id = u.id
 	WHERE t.id = ?
 	`
 
-	stmt, err := r.DB.PrepareContext(ctx, query)
+	topicResult := &topic.Topic{}
+	err := r.DB.QueryRowContext(ctx, topicQuery, topicID).Scan(
+		&topicResult.ID,
+		&topicResult.UserID,
+		&topicResult.Title,
+		&topicResult.Content,
+		&topicResult.ImagePath,
+		&topicResult.CategoryID,
+		&topicResult.CreatedAt,
+		&topicResult.UpdatedAt,
+		&topicResult.OwnerUsername,
+	)
 	if err != nil {
-		return nil, fmt.Errorf("prepare failed: %w", err)
+		if err == sql.ErrNoRows {
+			return nil, ErrTopicNotFound
+		}
+		return nil, fmt.Errorf("failed to scan topic: %w", err)
 	}
-	defer stmt.Close()
 
-	rows, err := stmt.QueryContext(ctx, topicID)
+	commentsQuery := `
+	SELECT c.id, c.user_id, c.content, c.created_at, c.updated_at, u.username
+	FROM comments c
+	LEFT JOIN users u ON c.user_id = u.id
+	WHERE c.topic_id = ?
+	ORDER BY c.created_at ASC
+	`
+
+	commentsList := make([]comment.Comment, 0)
+	rows, err := r.DB.QueryContext(ctx, commentsQuery, topicID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to query topic: %w", err)
+		topicResult.Comments = commentsList
+		return topicResult, nil
 	}
 	defer rows.Close()
 
-	topic := &topic.Topic{}
-	commentsList := make([]comment.Comment, 0)
-	found := false
-
 	for rows.Next() {
-		found = true
-
-		var commentID sql.NullInt64
-		var commentUserID, commentContent, commentUsername sql.NullString
-		var commentCreatedAt, commentUpdatedAt sql.NullTime
-
+		var comment comment.Comment
 		err = rows.Scan(
-			&topic.ID,
-			&topic.UserID,
-			&topic.OwnerUsername,
-			&topic.Title,
-			&topic.Content,
-			&topic.ImagePath,
-			&topic.CategoryID,
-			&topic.CreatedAt,
-			&topic.UpdatedAt,
-			&commentID,
-			&commentUserID,
-			&commentContent,
-			&commentCreatedAt,
-			&commentUpdatedAt,
-			&commentUsername,
+			&comment.ID,
+			&comment.UserID,
+			&comment.Content,
+			&comment.CreatedAt,
+			&comment.UpdatedAt,
+			&comment.Username,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("failed to scan row: %w", err)
+			continue
 		}
-
-		if commentID.Valid {
-			comment := comment.Comment{
-				ID:        int(commentID.Int64),
-				UserID:    commentUserID.String,
-				TopicID:   topicID,
-				Content:   commentContent.String,
-				CreatedAt: commentCreatedAt.Time,
-				UpdatedAt: commentUpdatedAt.Time,
-				Username:  commentUsername.String,
-			}
-			commentsList = append(commentsList, comment)
-		}
+		comment.TopicID = topicID
+		commentsList = append(commentsList, comment)
 	}
 
-	err = rows.Err()
-	if err != nil {
-		return nil, fmt.Errorf("error iterating rows: %w", err)
-	}
-
-	if !found {
-		return nil, ErrTopicNotFound
-	}
-
-	topic.Comments = commentsList
-	return topic, nil
+	topicResult.Comments = commentsList
+	return topicResult, nil
 }
 
 func (r Repo) GetTotalTopicsCount(ctx context.Context, filter string) (int, error) {

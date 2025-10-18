@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"strconv"
 
 	"github.com/arnald/forum/internal/app"
 	topicQueries "github.com/arnald/forum/internal/app/topics/queries"
@@ -22,7 +21,7 @@ type ResponseModel struct {
 	UserID     string            `json:"userId"`
 	CreatedAt  string            `json:"createdAt"`
 	UpdatedAt  string            `json:"updatedAt"`
-	Comments   []comment.Comment `json:"comments,omitempty"`
+	Comments   []comment.Comment `json:"comments"`
 	TopicID    int               `json:"topicId"`
 	CategoryID int               `json:"categoryId"`
 }
@@ -48,21 +47,16 @@ func (h *Handler) GetTopic(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	params := r.URL.Query()
-	topicIDstr := params.Get("id")
-	if topicIDstr == "" {
-		h.Logger.PrintError(ErrTopicIDRequired, nil)
+	params := helpers.NewURLParams(r)
+
+	topicID, err := params.GetLastPathInt()
+	if err != nil {
+		h.Logger.PrintError(err, nil)
 		helpers.RespondWithError(
 			w,
 			http.StatusBadRequest,
-			"Topic ID is required",
+			"Topic ID not found",
 		)
-		return
-	}
-	topicIDint, err := strconv.Atoi(topicIDstr)
-	if err != nil {
-		h.Logger.PrintError(err, nil)
-		helpers.RespondWithError(w, http.StatusBadRequest, "Invalid topic ID")
 		return
 	}
 
@@ -70,7 +64,7 @@ func (h *Handler) GetTopic(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	topic, err := h.UserServices.UserServices.Queries.GetTopic.Handle(ctx, topicQueries.GetTopicRequest{
-		TopicID: topicIDint,
+		TopicID: topicID,
 	})
 	if err != nil {
 		if errors.Is(err, topics.ErrTopicNotFound) {
