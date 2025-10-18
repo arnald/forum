@@ -21,7 +21,7 @@ type MockRepository struct {
 	UpdateTopicFunc         func(ctx context.Context, topic *topic.Topic) error
 	DeleteTopicFunc         func(ctx context.Context, userID string, topicID int) error
 	GetTopicByIDFunc        func(ctx context.Context, topicID int) (*topic.Topic, error)
-	GetAllTopicsFunc        func(ctx context.Context, page, size int, orderBy, filter string) ([]topic.Topic, error)
+	GetAllTopicsFunc        func(ctx context.Context, page, size int, orderBy, order, filter string) ([]topic.Topic, error)
 	GetTotalTopicsCountFunc func(ctx context.Context, filter string) (int, error)
 }
 
@@ -78,9 +78,9 @@ func (m *MockRepository) GetTopicByID(ctx context.Context, topicID int) (*topic.
 	return nil, ErrTest
 }
 
-func (m *MockRepository) GetAllTopics(ctx context.Context, page, size int, orderBy, filter string) ([]topic.Topic, error) {
+func (m *MockRepository) GetAllTopics(ctx context.Context, page, size int, orderBy, order, filter string) ([]topic.Topic, error) {
 	if m.GetAllTopicsFunc != nil {
-		return m.GetAllTopicsFunc(ctx, page, size, orderBy, filter)
+		return m.GetAllTopicsFunc(ctx, page, size, orderBy, order, filter)
 	}
 	return nil, ErrTest
 }

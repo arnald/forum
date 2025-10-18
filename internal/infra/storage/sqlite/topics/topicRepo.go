@@ -154,7 +154,7 @@ func (r Repo) GetTopicByID(ctx context.Context, topicID int) (*topic.Topic, erro
 		&topicResult.OwnerUsername,
 	)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrTopicNotFound
 		}
 		return nil, fmt.Errorf("failed to scan topic: %w", err)
@@ -219,7 +219,7 @@ func (r Repo) GetTotalTopicsCount(ctx context.Context, filter string) (int, erro
 	return totalCount, nil
 }
 
-func (r Repo) GetAllTopics(ctx context.Context, page, size int, orderBy, filter string) ([]topic.Topic, error) {
+func (r Repo) GetAllTopics(ctx context.Context, page, size int, orderBy, order, filter string) ([]topic.Topic, error) {
 	query := `
     SELECT 
         t.id, t.user_id, t.title, t.content, t.image_path, t.category_id, t.created_at, t.updated_at,
@@ -235,7 +235,7 @@ func (r Repo) GetAllTopics(ctx context.Context, page, size int, orderBy, filter 
 		args = append(args, filterParam, filterParam)
 	}
 
-	query += " ORDER BY t." + orderBy + " LIMIT ? OFFSET ?"
+	query += " ORDER BY t." + orderBy + " " + order + " LIMIT ? OFFSET ?"
 	offset := (page - 1) * size
 	args = append(args, size, offset)
 

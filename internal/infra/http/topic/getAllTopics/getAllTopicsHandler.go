@@ -2,8 +2,8 @@ package getalltopics
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/arnald/forum/internal/app"
 	topicQueries "github.com/arnald/forum/internal/app/topics/queries"
@@ -11,21 +11,12 @@ import (
 	"github.com/arnald/forum/internal/domain/topic"
 	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/pkg/helpers"
-	"github.com/arnald/forum/internal/pkg/validator"
 )
 
-type RequestModel struct {
-	OrderBy  string `json:"orderBy,omitempty"`
-	Filter   string `json:"filter,omitempty"`
-	Page     int    `json:"page"`
-	PageSize int    `json:"pageSize"`
-}
-
 type ResponseModel struct {
-	Topics      []topic.Topic `json:"topics"`
-	TotalCount  int           `json:"totalCount"`
-	CurrentPage int           `json:"currentPage"`
-	PageSize    int           `json:"pageSize"`
+	Filters    map[string]interface{}   `json:"filters"`
+	Topics     []topic.Topic            `json:"topics"`
+	Pagination helpers.PaginationParams `json:"pagination"`
 }
 
 type Handler struct {
@@ -49,36 +40,24 @@ func (h *Handler) GetAllTopics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	params := helpers.NewURLParams(r)
+
 	ctx, cancel := context.WithTimeout(r.Context(), h.Config.Timeouts.HandlerTimeouts.UserRegister)
 	defer cancel()
 
-	var req RequestModel
-	err := json.NewDecoder(r.Body).Decode(&req)
-	if err != nil {
-		h.Logger.PrintError(err, nil)
-		helpers.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
-		return
-	}
+	pagination := params.GetPagination()
 
-	v := validator.New()
+	orderBy := params.GetQueryStringOr("order_by", "created_at")
+	order := params.GetQueryStringOr("order", "desc")
+	filter := params.GetQueryStringOr("search", "")
 
-	validator.ValidateGetAllTopics(v, &req)
-	if !v.Valid() {
-		helpers.RespondWithError(
-			w,
-			http.StatusBadRequest,
-			v.ToStringErrors(),
-		)
-
-		h.Logger.PrintError(logger.ErrValidationFailed, v.Errors)
-		return
-	}
-
-	topics, count, err := h.UserServices.UserServices.Queries.GetAllTopics.Handle(ctx, topicQueries.GetAllTopicsRequest{
-		Page:    req.Page,
-		Size:    req.PageSize,
-		OrderBy: req.OrderBy,
-		Filter:  req.Filter,
+	topics, totalCount, err := h.UserServices.UserServices.Queries.GetAllTopics.Handle(ctx, topicQueries.GetAllTopicsRequest{
+		Page:    pagination.Page,
+		Size:    pagination.Limit,
+		Offset:  pagination.Offset,
+		OrderBy: orderBy,
+		Order:   order,
+		Filter:  filter,
 	})
 	if err != nil {
 		h.Logger.PrintError(err, nil)
@@ -86,11 +65,43 @@ func (h *Handler) GetAllTopics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := ResponseModel{
-		Topics:      topics,
-		TotalCount:  count,
-		CurrentPage: req.Page,
-		PageSize:    req.PageSize,
+	totalPages := (totalCount + pagination.Limit - 1) / pagination.Limit
+
+	paginationMeta := map[string]interface{}{
+		"page":        pagination.Page,
+		"limit":       pagination.Limit,
+		"total":       totalCount,
+		"total_pages": totalPages,
+		"has_next":    pagination.Page < totalPages,
+		"has_prev":    pagination.Page > 1,
+		"next_page":   nil,
+		"prev_page":   nil,
 	}
+
+	if pagination.Page < totalPages {
+		paginationMeta["next_page"] = pagination.Page + 1
+	}
+	if pagination.Page > 1 {
+		paginationMeta["prev_page"] = pagination.Page - 1
+	}
+
+	appliedFilters := map[string]interface{}{
+		"search":   filter,
+		"order_by": orderBy,
+		"order":    order,
+	}
+
+	response := map[string]interface{}{
+		"topics":     topics,
+		"pagination": paginationMeta,
+		"filters":    appliedFilters,
+	}
+
 	helpers.RespondWithJSON(w, http.StatusOK, nil, response)
+
+	h.Logger.PrintInfo("Topics retrieved successfully", map[string]string{
+		"page":  strconv.Itoa(pagination.Page),
+		"count": strconv.Itoa(len(topics)),
+		"total": strconv.Itoa(totalCount),
+	})
 }
