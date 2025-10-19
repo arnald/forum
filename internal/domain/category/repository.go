@@ -7,5 +7,6 @@ type Repository interface {
 	DeleteCategory(ctx context.Context, id int, userID string) error
 	UpdateCategory(ctx context.Context, category *Category) error
 	GetCategoryByID(ctx context.Context, id int) (*Category, error)
-	GetAllCategories(ctx context.Context) ([]*Category, error)
+	GetAllCategories(ctx context.Context, page, size int, orderBy, order, filter string) ([]Category, error)
+	GetTotalCategoriesCount(ctx context.Context, filter string) (int, error)
 }

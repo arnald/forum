@@ -20,6 +20,7 @@ type Queries struct {
 	UserLoginEmail    userQueries.UserLoginEmailRequestHandler
 	UserLoginUsername userQueries.UserLoginUsernameRequestHandler
 	GetCategoryByID   categoryQueries.GetCategoryByIDHandler
+	GettAllCategories categoryQueries.GetAllCategoriesHandler
 }
 
 type Commands struct {
@@ -52,6 +53,7 @@ func NewServices(userRepo user.Repository, categoryRepo category.Repository, top
 				userQueries.NewUserLoginEmailHandler(userRepo, encryption),
 				userQueries.NewUserLoginUsernameHandler(userRepo, encryption),
 				categoryQueries.NewGetCategoryByIDHandler(categoryRepo),
+				categoryQueries.NewGetAllCategoriesHandler(categoryRepo),
 			},
 			Commands: Commands{
 				userCommands.NewUserRegisterHandler(userRepo, uuidProvider, encryption),

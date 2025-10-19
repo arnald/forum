@@ -201,7 +201,8 @@ func (r Repo) GetTotalTopicsCount(ctx context.Context, filter string) (int, erro
 	countQuery := `
     SELECT COUNT(*) 
     FROM topics t
-    WHERE 1=1`
+    WHERE 1=1
+	`
 
 	args := make([]interface{}, 0)
 	if filter != "" {

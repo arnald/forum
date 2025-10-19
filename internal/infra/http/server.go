@@ -11,6 +11,7 @@ import (
 	"github.com/arnald/forum/internal/domain/session"
 	createcategory "github.com/arnald/forum/internal/infra/http/category/createCategory"
 	deletecategory "github.com/arnald/forum/internal/infra/http/category/deleteCategory"
+	getallcategories "github.com/arnald/forum/internal/infra/http/category/getAllCategories"
 	getcategorybyid "github.com/arnald/forum/internal/infra/http/category/getCategoryByID"
 	updatecategory "github.com/arnald/forum/internal/infra/http/category/updateCategory"
 	"github.com/arnald/forum/internal/infra/http/health"
@@ -133,6 +134,9 @@ func (server *Server) AddHTTPRoutes() {
 			getcategorybyid.NewHandler(server.appServices, server.config, server.logger).GetCategoryByID,
 			server.middleware.Authorization.Optional,
 		),
+	)
+	server.router.HandleFunc(apiContext+"/categories/all",
+		getallcategories.NewHandler(server.appServices, server.config, server.logger).GetAllCategories,
 	)
 }
 
