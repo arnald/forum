@@ -14,9 +14,9 @@ import (
 )
 
 type ResponseModel struct {
-	Filters    map[string]interface{}   `json"filters"`
-	Categories []category.Category      `json"categories"`
-	Pagenation helpers.PaginationParams `json"pagination"`
+	Filters    map[string]interface{}   `json:"filters"`
+	Categories []category.Category      `json:"categories"`
+	Pagination helpers.PaginationParams `json:"pagination"`
 }
 
 type Handler struct {
