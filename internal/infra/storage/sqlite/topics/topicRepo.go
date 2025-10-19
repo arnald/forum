@@ -219,7 +219,7 @@ func (r Repo) GetTotalTopicsCount(ctx context.Context, filter string) (int, erro
 	return totalCount, nil
 }
 
-func (r Repo) GetAllTopics(ctx context.Context, page, size int, orderBy, order, filter string) ([]topic.Topic, error) {
+func (r Repo) GetAllTopics(ctx context.Context, page, size, categoryID int, orderBy, order, filter string) ([]topic.Topic, error) {
 	query := `
     SELECT 
         t.id, t.user_id, t.title, t.content, t.image_path, t.category_id, t.created_at, t.updated_at,
@@ -233,6 +233,11 @@ func (r Repo) GetAllTopics(ctx context.Context, page, size int, orderBy, order, 
 		query += " AND (t.title LIKE ? OR t.content LIKE ?)"
 		filterParam := "%" + filter + "%"
 		args = append(args, filterParam, filterParam)
+	}
+
+	if categoryID > 0 {
+		query += " AND t.category_id = ?"
+		args = append(args, categoryID)
 	}
 
 	query += " ORDER BY t." + orderBy + " " + order + " LIMIT ? OFFSET ?"

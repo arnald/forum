@@ -13,10 +13,6 @@ import (
 	"github.com/arnald/forum/internal/pkg/helpers"
 )
 
-type RequestModel struct {
-	CategoryID int `json:"categoryId"`
-}
-
 type ResponseModel struct {
 	Message    string `json:"message"`
 	CategoryID int    `json:"categoryId"`
@@ -48,16 +44,18 @@ func (h *Handler) DeleteCategory(w http.ResponseWriter, r *http.Request) {
 
 	user := middleware.GetUserFromContext(r)
 
-	var categoryToDelete RequestModel
-
-	_, err := helpers.ParseBodyRequest(r, &categoryToDelete)
+	categoryID, err := helpers.GetQueryInt(r, "id")
 	if err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
-		return
+		h.Logger.PrintError(err, nil)
+		helpers.RespondWithError(
+			w,
+			http.StatusBadRequest,
+			err.Error(),
+		)
 	}
 
 	err = h.UserServices.UserServices.Commands.DeleteCategory.Handle(ctx, categorycommands.DeleteCategoryRequest{
-		CategoryID: categoryToDelete.CategoryID,
+		CategoryID: categoryID,
 		UserID:     user.ID,
 	})
 	if err != nil {
@@ -70,14 +68,14 @@ func (h *Handler) DeleteCategory(w http.ResponseWriter, r *http.Request) {
 		http.StatusOK,
 		nil,
 		ResponseModel{
-			CategoryID: categoryToDelete.CategoryID,
+			CategoryID: categoryID,
 			Message:    "Category deleted successfully",
 		})
 
 	h.Logger.PrintInfo(
 		"Category deleted successfully",
 		map[string]string{
-			"cat_id":  strconv.Itoa(categoryToDelete.CategoryID),
+			"cat_id":  strconv.Itoa(categoryID),
 			"user_id": user.ID,
 		})
 }

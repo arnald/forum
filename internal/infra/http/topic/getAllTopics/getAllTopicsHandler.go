@@ -50,14 +50,16 @@ func (h *Handler) GetAllTopics(w http.ResponseWriter, r *http.Request) {
 	orderBy := params.GetQueryStringOr("order_by", "created_at")
 	order := params.GetQueryStringOr("order", "desc")
 	filter := params.GetQueryStringOr("search", "")
+	categoryID := params.GetQueryIntOr("category", 0)
 
 	topics, totalCount, err := h.UserServices.UserServices.Queries.GetAllTopics.Handle(ctx, topicQueries.GetAllTopicsRequest{
-		Page:    pagination.Page,
-		Size:    pagination.Limit,
-		Offset:  pagination.Offset,
-		OrderBy: orderBy,
-		Order:   order,
-		Filter:  filter,
+		Page:       pagination.Page,
+		Size:       pagination.Limit,
+		Offset:     pagination.Offset,
+		OrderBy:    orderBy,
+		Order:      order,
+		Filter:     filter,
+		CategoryID: categoryID,
 	})
 	if err != nil {
 		h.Logger.PrintError(err, nil)

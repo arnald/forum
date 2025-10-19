@@ -96,7 +96,7 @@ func (server *Server) AddHTTPRoutes() {
 			server.middleware.Authorization.Required,
 		),
 	)
-	server.router.HandleFunc(apiContext+"/topics/delete",
+	server.router.HandleFunc(apiContext+"/topic/delete",
 		middlewareChain(
 			deletetopic.NewHandler(server.appServices, server.config, server.logger).DeleteTopic,
 			server.middleware.Authorization.Required,
@@ -110,25 +110,25 @@ func (server *Server) AddHTTPRoutes() {
 	)
 
 	// Category routes
-	server.router.HandleFunc(apiContext+"/categories/create",
+	server.router.HandleFunc(apiContext+"/category/create",
 		middlewareChain(
 			createcategory.NewHandler(server.appServices, server.config, server.logger).CreateCategory,
 			server.middleware.Authorization.Required,
 		),
 	)
-	server.router.HandleFunc(apiContext+"/categories/delete",
+	server.router.HandleFunc(apiContext+"/category/delete",
 		middlewareChain(
 			deletecategory.NewHandler(server.appServices, server.config, server.logger).DeleteCategory,
 			server.middleware.Authorization.Required,
 		),
 	)
-	server.router.HandleFunc(apiContext+"/categories/update",
+	server.router.HandleFunc(apiContext+"/category/update",
 		middlewareChain(
 			updatecategory.NewHandler(server.appServices, server.config, server.logger).UpdateCategory,
 			server.middleware.Authorization.Required,
 		),
 	)
-	server.router.HandleFunc(apiContext+"/categories/get",
+	server.router.HandleFunc(apiContext+"/category",
 		middlewareChain(
 			getcategorybyid.NewHandler(server.appServices, server.config, server.logger).GetCategoryByID,
 			server.middleware.Authorization.Optional,

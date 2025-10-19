@@ -12,10 +12,6 @@ import (
 	"github.com/arnald/forum/internal/pkg/helpers"
 )
 
-type RequestModel struct {
-	TopicID int `json:"topicId"`
-}
-
 type ResponseModel struct {
 	UserID  string `json:"userId"`
 	Message string `json:"message"`

@@ -12,10 +12,6 @@ import (
 	"github.com/arnald/forum/internal/pkg/helpers"
 )
 
-type RequestModel struct {
-	CategoryID int `json:"categoryId"`
-}
-
 type ResponseModel struct {
 	CategoryName string `json:"categoryName"`
 	CategoryID   int    `json:"categoryId"`
@@ -45,16 +41,19 @@ func (h *Handler) GetCategoryByID(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), h.Config.Timeouts.HandlerTimeouts.UserRegister)
 	defer cancel()
 
-	var categoryToGet RequestModel
-
-	_, err := helpers.ParseBodyRequest(r, &categoryToGet)
+	categoryID, err := helpers.GetQueryInt(r, "id")
 	if err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		h.Logger.PrintError(err, nil)
+		helpers.RespondWithError(
+			w,
+			http.StatusBadRequest,
+			err.Error(),
+		)
 		return
 	}
 
 	category, err := h.UserServices.UserServices.Queries.GetCategoryByID.Handle(ctx, categoryqueries.GetCategoryByIDRequest{
-		ID: categoryToGet.CategoryID,
+		ID: categoryID,
 	})
 	if err != nil {
 		h.Logger.PrintError(err, nil)
