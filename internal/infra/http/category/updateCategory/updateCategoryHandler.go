@@ -11,6 +11,7 @@ import (
 	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/infra/middleware"
 	"github.com/arnald/forum/internal/pkg/helpers"
+	"github.com/arnald/forum/internal/pkg/validator"
 )
 
 type RequestModel struct {
@@ -62,6 +63,17 @@ func (h *Handler) UpdateCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer r.Body.Close()
+
+	val := validator.New()
+
+	validator.ValidateUpdateCategory(val, categoryToUpdate)
+	if !val.Valid() {
+		h.Logger.PrintError(logger.ErrValidationFailed, val.Errors)
+		helpers.RespondWithError(w,
+			http.StatusBadRequest,
+			val.ToStringErrors())
+		return
+	}
 
 	err = h.UserServices.UserServices.Commands.UpdateCategory.Handle(ctx, categorycommands.UpdateCategoryRequest{
 		ID:          categoryToUpdate.ID,
