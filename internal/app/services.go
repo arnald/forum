@@ -20,7 +20,7 @@ type Queries struct {
 	UserLoginEmail    userQueries.UserLoginEmailRequestHandler
 	UserLoginUsername userQueries.UserLoginUsernameRequestHandler
 	GetCategoryByID   categoryQueries.GetCategoryByIDHandler
-	GettAllCategories categoryQueries.GetAllCategoriesHandler
+	GetAllCategories  categoryQueries.GetAllCategoriesRequestHandler
 }
 
 type Commands struct {

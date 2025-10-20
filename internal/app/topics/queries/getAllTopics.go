@@ -36,7 +36,7 @@ func (h getAllTopicsRequestHandler) Handle(ctx context.Context, req GetAllTopics
 		return nil, 0, err
 	}
 
-	count, err := h.repo.GetTotalTopicsCount(ctx, req.Filter)
+	count, err := h.repo.GetTotalTopicsCount(ctx, req.Filter, req.CategoryID)
 	if err != nil {
 		return nil, 0, err
 	}

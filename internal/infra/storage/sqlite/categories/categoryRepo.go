@@ -124,6 +124,7 @@ func (r *Repo) GetTotalCategoriesCount(ctx context.Context, filter string) (int,
 
 	return totalCount, nil
 }
+
 func (r *Repo) GetCategoryByID(ctx context.Context, id int) (*category.Category, error) {
 	query := `
 	SELECT id, name, description, created_by, created_at

@@ -192,12 +192,17 @@ func (r Repo) GetTopicByID(ctx context.Context, topicID int) (*topic.Topic, erro
 		comment.TopicID = topicID
 		commentsList = append(commentsList, comment)
 	}
+	err = rows.Err()
+	if err != nil {
+		topicResult.Comments = commentsList
+		return topicResult, nil
+	}
 
 	topicResult.Comments = commentsList
 	return topicResult, nil
 }
 
-func (r Repo) GetTotalTopicsCount(ctx context.Context, filter string) (int, error) {
+func (r Repo) GetTotalTopicsCount(ctx context.Context, filter string, categoryID int) (int, error) {
 	countQuery := `
     SELECT COUNT(*) 
     FROM topics t
@@ -209,6 +214,11 @@ func (r Repo) GetTotalTopicsCount(ctx context.Context, filter string) (int, erro
 		countQuery += " AND (t.title LIKE ? OR t.content LIKE ?)"
 		filterParam := "%" + filter + "%"
 		args = append(args, filterParam, filterParam)
+	}
+
+	if categoryID > 0 {
+		countQuery += " AND t.category_id = ?"
+		args = append(args, categoryID)
 	}
 
 	var totalCount int

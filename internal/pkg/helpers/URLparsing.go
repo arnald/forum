@@ -1,11 +1,18 @@
 package helpers
 
 import (
-	"fmt"
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
 )
+
+var (
+	ErrMissingQueryParam = errors.New("missing query parameter")
+	ErrInvalidQueryParam = errors.New("invalid query parameter")
+)
+
+const pageDefaultLimit = 20
 
 type URLParams struct {
 	request *http.Request
@@ -20,12 +27,12 @@ func NewURLParams(r *http.Request) *URLParams {
 func (p *URLParams) GetQueryInt(key string) (int, error) {
 	value := p.request.URL.Query().Get(key)
 	if value == "" {
-		return 0, fmt.Errorf("parameter %s is required", key)
+		return 0, ErrMissingQueryParam
 	}
 
 	result, err := strconv.Atoi(value)
 	if err != nil {
-		return 0, fmt.Errorf("parameter %s must be a valid integer", key)
+		return 0, ErrInvalidQueryParam
 	}
 
 	return result, nil
@@ -48,7 +55,7 @@ func (p *URLParams) GetQueryIntOr(key string, defaultValue int) int {
 func (p *URLParams) GetQueryString(key string) (string, error) {
 	value := p.request.URL.Query().Get(key)
 	if value == "" {
-		return "", fmt.Errorf("parameter %s is required", key)
+		return "", ErrMissingQueryParam
 	}
 	return value, nil
 }
@@ -64,7 +71,7 @@ func (p *URLParams) GetQueryStringOr(key, defaultValue string) string {
 func (p *URLParams) GetQueryBool(key string) (bool, error) {
 	value := p.request.URL.Query().Get(key)
 	if value == "" {
-		return false, fmt.Errorf("parameter %s is required", key)
+		return false, ErrMissingQueryParam
 	}
 
 	switch strings.ToLower(value) {
@@ -73,7 +80,7 @@ func (p *URLParams) GetQueryBool(key string) (bool, error) {
 	case "false", "0", "no":
 		return false, nil
 	default:
-		return false, fmt.Errorf("parameter %s must be true or false", key)
+		return false, ErrInvalidQueryParam
 	}
 }
 
@@ -105,7 +112,7 @@ type PaginationParams struct {
 
 func (p *URLParams) GetPagination() PaginationParams {
 	page := p.GetQueryIntOr("page", 1)
-	limit := p.GetQueryIntOr("limit", 20)
+	limit := p.GetQueryIntOr("limit", pageDefaultLimit)
 
 	if page < 1 {
 		page = 1

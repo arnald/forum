@@ -15,7 +15,7 @@ type GetAllCategoriesRequest struct {
 	Offset  int    `json:"offset"`
 }
 
-type GetAllCategoriesHandler interface {
+type GetAllCategoriesRequestHandler interface {
 	Handle(ctx context.Context, req GetAllCategoriesRequest) ([]category.Category, int, error)
 }
 
@@ -23,7 +23,7 @@ type getAllCategoriesRequestHandler struct {
 	repo category.Repository
 }
 
-func NewGetAllCategoriesHandler(repo category.Repository) getAllCategoriesRequestHandler {
+func NewGetAllCategoriesHandler(repo category.Repository) GetAllCategoriesRequestHandler {
 	return getAllCategoriesRequestHandler{
 		repo: repo,
 	}

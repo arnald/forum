@@ -10,6 +10,8 @@ const (
 	MinTopicContentLength = 10
 	MaxTopicContentLength = 1000
 	MaxPageSize           = 100
+	MinCategoryNameLength = 3
+	MaxCategoryNameLength = 50
 )
 
 func ValidateUserRegistration(v *Validator, data any) {
@@ -214,8 +216,8 @@ func ValidateCreateCategory(v *Validator, data any) {
 			Field: "Name",
 			Rules: []func(any) (bool, string){
 				required,
-				minLength(3),
-				maxLength(50),
+				minLength(MinCategoryNameLength),
+				maxLength(MaxCategoryNameLength),
 			},
 		},
 	}
@@ -229,8 +231,8 @@ func ValidateUpdateCategory(v *Validator, data any) {
 			Field: "Name",
 			Rules: []func(any) (bool, string){
 				required,
-				minLength(3),
-				maxLength(50),
+				minLength(MinCategoryNameLength),
+				maxLength(MaxCategoryNameLength),
 			},
 		},
 	}
