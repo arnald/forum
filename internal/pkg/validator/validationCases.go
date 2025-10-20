@@ -207,3 +207,18 @@ func ValidateGetCategoryByID(v *Validator, data any) {
 
 	ValidateStruct(v, data, rules)
 }
+
+func ValidateCreateCategory(v *Validator, data any) {
+	rules := []ValidationRule{
+		{
+			Field: "Name",
+			Rules: []func(any) (bool, string){
+				required,
+				minLength(3),
+				maxLength(50),
+			},
+		},
+	}
+
+	ValidateStruct(v, data, rules)
+}

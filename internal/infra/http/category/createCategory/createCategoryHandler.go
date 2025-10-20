@@ -10,6 +10,7 @@ import (
 	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/infra/middleware"
 	"github.com/arnald/forum/internal/pkg/helpers"
+	"github.com/arnald/forum/internal/pkg/validator"
 )
 
 type RequestModel struct {
@@ -60,6 +61,17 @@ func (h *Handler) CreateCategory(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
+	val := validator.New()
+
+	validator.ValidateCreateCategory(val, &categoryToCreate)
+	if !val.Valid() {
+		h.Logger.PrintError(logger.ErrValidationFailed, val.Errors)
+		helpers.RespondWithError(w,
+			http.StatusBadRequest,
+			val.ToStringErrors(),
+		)
+		return
+	}
 	err = h.UserServices.UserServices.Commands.CreateCategory.Handle(ctx, categorycommands.CreateCategoryRequest{
 		Name:        categoryToCreate.Name,
 		Description: categoryToCreate.Description,
