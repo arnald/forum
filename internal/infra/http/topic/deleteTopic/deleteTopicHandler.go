@@ -10,6 +10,7 @@ import (
 	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/infra/middleware"
 	"github.com/arnald/forum/internal/pkg/helpers"
+	"github.com/arnald/forum/internal/pkg/validator"
 )
 
 type ResponseModel struct {
@@ -52,6 +53,22 @@ func (h *Handler) DeleteTopic(w http.ResponseWriter, r *http.Request) {
 			http.StatusBadRequest,
 			err.Error(),
 		)
+		return
+	}
+
+	val := validator.New()
+
+	validator.ValidateDeleteTopic(val, &struct {
+		TopicID int
+	}{
+		TopicID: topicID,
+	})
+
+	if !val.Valid() {
+		h.Logger.PrintError(logger.ErrValidationFailed, val.Errors)
+		helpers.RespondWithError(w,
+			http.StatusBadRequest,
+			val.ToStringErrors())
 		return
 	}
 

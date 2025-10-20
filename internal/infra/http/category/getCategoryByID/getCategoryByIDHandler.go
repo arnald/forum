@@ -10,6 +10,7 @@ import (
 	"github.com/arnald/forum/internal/config"
 	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/pkg/helpers"
+	"github.com/arnald/forum/internal/pkg/validator"
 )
 
 type ResponseModel struct {
@@ -52,6 +53,21 @@ func (h *Handler) GetCategoryByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	val := validator.New()
+
+	validator.ValidateGetCategoryByID(val, &struct {
+		CategoryID int
+	}{
+		CategoryID: categoryID,
+	})
+
+	if !val.Valid() {
+		h.Logger.PrintError(logger.ErrValidationFailed, val.Errors)
+		helpers.RespondWithError(w,
+			http.StatusBadRequest,
+			val.ToStringErrors())
+		return
+	}
 	category, err := h.UserServices.UserServices.Queries.GetCategoryByID.Handle(ctx, categoryqueries.GetCategoryByIDRequest{
 		ID: categoryID,
 	})

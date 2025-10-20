@@ -165,3 +165,45 @@ func ValidateGetTopic(v *Validator, data any) {
 
 	ValidateStruct(v, data, rules)
 }
+
+func ValidateDeleteTopic(v *Validator, data any) {
+	rules := []ValidationRule{
+		{
+			Field: "TopicID",
+			Rules: []func(any) (bool, string){
+				required,
+				isPositiveInt,
+			},
+		},
+	}
+
+	ValidateStruct(v, data, rules)
+}
+
+func ValidateDeleteCategory(v *Validator, data any) {
+	rules := []ValidationRule{
+		{
+			Field: "CategoryID",
+			Rules: []func(any) (bool, string){
+				required,
+				isPositiveInt,
+			},
+		},
+	}
+
+	ValidateStruct(v, data, rules)
+}
+
+func ValidateGetCategoryByID(v *Validator, data any) {
+	rules := []ValidationRule{
+		{
+			Field: "CategoryID",
+			Rules: []func(any) (bool, string){
+				required,
+				isPositiveInt,
+			},
+		},
+	}
+
+	ValidateStruct(v, data, rules)
+}

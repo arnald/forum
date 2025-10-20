@@ -196,12 +196,9 @@ func validImagePath(value any) (bool, string) {
 
 func validOrderBy(value any) (bool, string) {
 	orderByWhitelist := map[string]bool{
-		"created_at ASC":  true,
-		"created_at DESC": true,
-		"updated_at ASC":  true,
-		"updated_at DESC": true,
-		"title ASC":       true,
-		"title DESC":      true,
+		"created_at": true,
+		"updated_at": true,
+		"title":      true,
 	}
 
 	str, ok := value.(string)

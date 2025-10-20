@@ -11,6 +11,7 @@ import (
 	"github.com/arnald/forum/internal/domain/topic"
 	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/pkg/helpers"
+	"github.com/arnald/forum/internal/pkg/validator"
 )
 
 type ResponseModel struct {
@@ -52,6 +53,28 @@ func (h *Handler) GetAllTopics(w http.ResponseWriter, r *http.Request) {
 	filter := params.GetQueryStringOr("search", "")
 	categoryID := params.GetQueryIntOr("category", 0)
 
+	val := validator.New()
+
+	validator.ValidateGetAllTopics(val, &struct {
+		OrderBy    string
+		Order      string
+		Search     string
+		CategoryID int
+	}{
+		OrderBy:    orderBy,
+		Order:      order,
+		Search:     filter,
+		CategoryID: categoryID,
+	})
+
+	if !val.Valid() {
+		h.Logger.PrintError(logger.ErrValidationFailed, val.Errors)
+		helpers.RespondWithError(w,
+			http.StatusBadRequest,
+			val.ToStringErrors(),
+		)
+		return
+	}
 	topics, totalCount, err := h.UserServices.UserServices.Queries.GetAllTopics.Handle(ctx, topicQueries.GetAllTopicsRequest{
 		Page:       pagination.Page,
 		Size:       pagination.Limit,
