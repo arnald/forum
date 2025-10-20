@@ -12,6 +12,7 @@ import (
 	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/infra/storage/sqlite/topics"
 	"github.com/arnald/forum/internal/pkg/helpers"
+	"github.com/arnald/forum/internal/pkg/validator"
 )
 
 type ResponseModel struct {
@@ -54,6 +55,24 @@ func (h *Handler) GetTopic(w http.ResponseWriter, r *http.Request) {
 			w,
 			http.StatusBadRequest,
 			err.Error(),
+		)
+		return
+	}
+
+	val := validator.New()
+
+	testStruct := &struct {
+		TopicID int
+	}{
+		TopicID: topicID,
+	}
+	validator.ValidateGetTopic(val, testStruct)
+
+	if !val.Valid() {
+		h.Logger.PrintError(logger.ErrValidationFailed, val.Errors)
+		helpers.RespondWithError(w,
+			http.StatusBadRequest,
+			val.ToStringErrors(),
 		)
 		return
 	}
