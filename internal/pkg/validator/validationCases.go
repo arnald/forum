@@ -1,17 +1,19 @@
 package validator
 
 const (
-	MinUsernameLength     = 3
-	MaxUsernameLength     = 50
-	MinPasswordLength     = 8
-	MaxPasswordLength     = 72
-	MinTopicTitleLength   = 5
-	MaxTopicTitleLength   = 100
-	MinTopicContentLength = 10
-	MaxTopicContentLength = 1000
-	MaxPageSize           = 100
-	MinCategoryNameLength = 3
-	MaxCategoryNameLength = 50
+	MinUsernameLength       = 3
+	MaxUsernameLength       = 50
+	MinPasswordLength       = 8
+	MaxPasswordLength       = 72
+	MinTopicTitleLength     = 5
+	MaxTopicTitleLength     = 100
+	MinTopicContentLength   = 10
+	MaxTopicContentLength   = 1000
+	MaxPageSize             = 100
+	MinCategoryNameLength   = 3
+	MaxCategoryNameLength   = 50
+	MinCommentContentLength = 1
+	MaxCommentContentLength = 1000
 )
 
 func ValidateUserRegistration(v *Validator, data any) {
@@ -281,8 +283,8 @@ func ValidateUpdateComment(v *Validator, data any) {
 			Field: "Content",
 			Rules: []func(any) (bool, string){
 				required,
-				minLength(1),
-				maxLength(1000),
+				minLength(MinCommentContentLength),
+				maxLength(MaxCommentContentLength),
 			},
 		},
 	}
@@ -317,8 +319,8 @@ func ValidateCreateComment(v *Validator, data any) {
 			Field: "Content",
 			Rules: []func(any) (bool, string){
 				required,
-				minLength(1),
-				maxLength(1000),
+				minLength(MinCommentContentLength),
+				maxLength(MaxCommentContentLength),
 			},
 		},
 	}

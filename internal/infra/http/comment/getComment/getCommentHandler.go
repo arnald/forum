@@ -14,13 +14,13 @@ import (
 )
 
 type ResponseModel struct {
-	ID        int    `json:"id"`
 	UserID    string `json:"userId"`
 	Username  string `json:"username"`
-	TopicID   int    `json:"topicId"`
 	Content   string `json:"content"`
 	CreatedAt string `json:"createdAt"`
 	UpdatedAt string `json:"updatedAt"`
+	ID        int    `json:"id"`
+	TopicID   int    `json:"topicId"`
 }
 
 type Handler struct {

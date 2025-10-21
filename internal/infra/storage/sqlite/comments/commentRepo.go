@@ -62,12 +62,14 @@ func (r *Repo) UpdateComment(ctx context.Context, comment *comment.Comment) erro
 
 	defer func() {
 		if err != nil {
-			if rollbackErr := tx.Rollback(); rollbackErr != nil {
+			rollbackErr := tx.Rollback()
+			if rollbackErr != nil {
 				err = fmt.Errorf("transaction rollback failed: %w (original error: %w)", rollbackErr, err)
 			}
 			return
 		}
-		if commitErr := tx.Commit(); commitErr != nil {
+		commitErr := tx.Commit()
+		if commitErr != nil {
 			err = fmt.Errorf("transaction commit failed: %w", commitErr)
 		}
 	}()
@@ -99,7 +101,7 @@ func (r *Repo) UpdateComment(ctx context.Context, comment *comment.Comment) erro
 	}
 
 	if rowsAffected == 0 {
-		return fmt.Errorf("comment with ID %d not found or user not authorized", comment.ID)
+		return fmt.Errorf("comment with ID %d %w", comment.ID, ErrFailedToUpdate)
 	}
 
 	return nil

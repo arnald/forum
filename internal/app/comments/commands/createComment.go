@@ -9,8 +9,8 @@ import (
 
 type CreateCommentRequest struct {
 	User    *user.User
-	TopicID int    `json:"topicId"`
 	Content string `json:"content"`
+	TopicID int    `json:"topicId"`
 }
 
 type CreateCommentRequestHandler interface {

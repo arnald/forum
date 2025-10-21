@@ -9,8 +9,8 @@ import (
 
 type UpdateCommentRequest struct {
 	User      *user.User
-	CommentID int    `json:"commentId"`
 	Content   string `json:"content"`
+	CommentID int    `json:"commentId"`
 }
 
 type UpdateCommentRequestHandler interface {

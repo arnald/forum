@@ -15,13 +15,13 @@ import (
 )
 
 type RequestModel struct {
-	TopicID int    `json:"topicId"`
 	Content string `json:"content"`
+	TopicID int    `json:"topicId"`
 }
 
 type ResponseModel struct {
-	CommentID int    `json:"commentId"`
 	Message   string `json:"message"`
+	CommentID int    `json:"commentId"`
 }
 
 type Handler struct {
@@ -115,7 +115,7 @@ func (h *Handler) CreateComment(w http.ResponseWriter, r *http.Request) {
 		"Comment created successfully",
 		map[string]string{
 			"user_id":    user.ID,
-			"comment_id": strconv.Itoa(int(comment.ID)),
+			"comment_id": strconv.Itoa(comment.ID),
 		},
 	)
 }
