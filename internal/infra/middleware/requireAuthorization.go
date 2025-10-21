@@ -4,25 +4,24 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/arnald/forum/internal/domain/session"
 	"github.com/arnald/forum/internal/pkg/helpers"
 )
 
-type requireAuthMiddleware struct {
-	sessionManager session.Manager
-}
+// type requireAuthMiddleware struct {
+// 	sessionManager session.Manager
+// }
 
-type RequireAuthMiddleware interface {
-	RequireAuth(next http.HandlerFunc) http.HandlerFunc
-}
+// type RequireAuthMiddleware interface {
+// 	Required(next http.HandlerFunc) http.HandlerFunc
+// }
 
-func NewRequireAuthMiddleware(sessionManager session.Manager) RequireAuthMiddleware {
-	return requireAuthMiddleware{
-		sessionManager: sessionManager,
-	}
-}
+// func NewRequireAuthMiddleware(sessionManager session.Manager) AuthorizationInterface {
+// 	return Authorization{
+// 		sessionManager: sessionManager,
+// 	}
+// }
 
-func (a requireAuthMiddleware) RequireAuth(next http.HandlerFunc) http.HandlerFunc {
+func (a authorization) Required(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sessionToken, refreshToken := GetTokensFromRequest(r)
 

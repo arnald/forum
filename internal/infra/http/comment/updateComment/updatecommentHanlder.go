@@ -14,7 +14,7 @@ import (
 )
 
 type RequestModel struct {
-	CommentID int    `json:"commentId"`
+	CommentID int    `json:"id"`
 	Content   string `json:"content"`
 }
 

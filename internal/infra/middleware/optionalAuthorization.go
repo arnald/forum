@@ -3,25 +3,23 @@ package middleware
 import (
 	"context"
 	"net/http"
-
-	"github.com/arnald/forum/internal/domain/session"
 )
 
-type optionalAuthMiddleware struct {
-	sessionManager session.Manager
-}
+// type optionalAuthMiddleware struct {
+// 	sessionManager session.Manager
+// }
 
-type OptionalAuthMiddleware interface {
-	OptionalAuth(next http.HandlerFunc) http.HandlerFunc
-}
+// type OptionalAuthMiddleware interface {
+// 	Optional(next http.HandlerFunc) http.HandlerFunc
+// }
 
-func NewOptionalAuthMiddleware(sessionManager session.Manager) OptionalAuthMiddleware {
-	return optionalAuthMiddleware{
-		sessionManager: sessionManager,
-	}
-}
+// func NewOptionalAuthMiddleware(sessionManager session.Manager) AuthorizationInterface {
+// 	return Authorization{
+// 		sessionManager: sessionManager,
+// 	}
+// }
 
-func (a optionalAuthMiddleware) OptionalAuth(next http.HandlerFunc) http.HandlerFunc {
+func (a authorization) Optional(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sessionToken, refreshToken := GetTokensFromRequest(r)
 		if sessionToken == "" && refreshToken == "" {

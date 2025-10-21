@@ -1,20 +1,21 @@
-package getcommentsbytopic
+package getcategorybyid
 
 import (
 	"context"
 	"net/http"
+	"strconv"
 
 	"github.com/arnald/forum/internal/app"
-	commentQueries "github.com/arnald/forum/internal/app/comments/queries"
+	categoryqueries "github.com/arnald/forum/internal/app/categories/queries"
 	"github.com/arnald/forum/internal/config"
-	"github.com/arnald/forum/internal/domain/comment"
 	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/pkg/helpers"
 	"github.com/arnald/forum/internal/pkg/validator"
 )
 
 type ResponseModel struct {
-	Comments []comment.Comment `json:"comments"`
+	CategoryName string `json:"categoryName"`
+	CategoryID   int    `json:"categoryId"`
 }
 
 type Handler struct {
@@ -31,53 +32,65 @@ func NewHandler(userServices app.Services, config *config.ServerConfig, logger l
 	}
 }
 
-func (h *Handler) GetCommentsByTopic(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetCategoryByID(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		h.Logger.PrintError(logger.ErrInvalidRequestMethod, nil)
-		helpers.RespondWithError(w, http.StatusMethodNotAllowed, "Invalid request method")
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), h.Config.Timeouts.HandlerTimeouts.UserRegister)
 	defer cancel()
 
-	topicID, err := helpers.GetQueryInt(r, "id")
+	categoryID, err := helpers.GetQueryInt(r, "id")
 	if err != nil {
 		h.Logger.PrintError(err, nil)
-		helpers.RespondWithError(w, http.StatusBadRequest, "Invalid topic ID")
+		helpers.RespondWithError(
+			w,
+			http.StatusBadRequest,
+			err.Error(),
+		)
 		return
 	}
 
 	val := validator.New()
 
-	topicIDVal := &struct {
-		TopicID int
+	validator.ValidateGetCategoryByID(val, &struct {
+		CategoryID int
 	}{
-		TopicID: topicID,
-	}
-	validator.ValidateGetCommentsByTopic(val, topicIDVal)
+		CategoryID: categoryID,
+	})
 
 	if !val.Valid() {
 		h.Logger.PrintError(logger.ErrValidationFailed, val.Errors)
 		helpers.RespondWithError(w,
 			http.StatusBadRequest,
-			val.ToStringErrors(),
-		)
+			val.ToStringErrors())
 		return
 	}
-
-	comments, err := h.UserServices.UserServices.Queries.GetCommentsByTopic.Handle(ctx, commentQueries.GetCommentsByTopicRequest{
-		TopicID: topicID,
+	category, err := h.UserServices.UserServices.Queries.GetCategoryByID.Handle(ctx, categoryqueries.GetCategoryByIDRequest{
+		ID: categoryID,
 	})
 	if err != nil {
 		h.Logger.PrintError(err, nil)
-		helpers.RespondWithError(w, http.StatusInternalServerError, "Failed to get comments")
+		helpers.RespondWithError(w, http.StatusInternalServerError, "Error getting category")
 		return
 	}
 
-	response := ResponseModel{
-		Comments: comments,
-	}
+	helpers.RespondWithJSON(w,
+		http.StatusOK,
+		nil,
+		ResponseModel{
+			CategoryID:   category.ID,
+			CategoryName: category.Name,
+		},
+	)
 
-	helpers.RespondWithJSON(w, http.StatusOK, nil, response)
+	h.Logger.PrintInfo(
+		"Category retrieved successfully",
+		map[string]string{
+			"category_id": strconv.Itoa(category.ID),
+			"name":        category.Name,
+		},
+	)
 }

@@ -11,18 +11,19 @@ import (
 	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/infra/middleware"
 	"github.com/arnald/forum/internal/pkg/helpers"
+	"github.com/arnald/forum/internal/pkg/validator"
 )
 
 type RequestModel struct {
-	ID          int    `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
+	ID          int    `json:"id"`
 }
 
 type ResponseModel struct {
-	CategoryID   int    `json:"category_id"`
-	CategoryName string `json:"category_name"`
+	CategoryName string `json:"categoryName"`
 	Message      string `json:"message"`
+	CategoryID   int    `json:"categoryId"`
 }
 
 type Handler struct {
@@ -62,6 +63,17 @@ func (h *Handler) UpdateCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer r.Body.Close()
+
+	val := validator.New()
+
+	validator.ValidateUpdateCategory(val, categoryToUpdate)
+	if !val.Valid() {
+		h.Logger.PrintError(logger.ErrValidationFailed, val.Errors)
+		helpers.RespondWithError(w,
+			http.StatusBadRequest,
+			val.ToStringErrors())
+		return
+	}
 
 	err = h.UserServices.UserServices.Commands.UpdateCategory.Handle(ctx, categorycommands.UpdateCategoryRequest{
 		ID:          categoryToUpdate.ID,

@@ -7,9 +7,9 @@ import (
 )
 
 type UpdateCategoryRequest struct {
-	ID          int
 	Name        string
 	Description string
+	ID          int
 }
 
 type UpdateCategoryRequestHandler interface {

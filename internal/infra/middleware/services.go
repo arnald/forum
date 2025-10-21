@@ -5,13 +5,11 @@ import (
 )
 
 type Middleware struct {
-	Authorization RequireAuthMiddleware
-	OptionalAuth  OptionalAuthMiddleware
+	Authorization Authorization
 }
 
 func NewMiddleware(sessionManager session.Manager) *Middleware {
 	return &Middleware{
-		Authorization: NewRequireAuthMiddleware(sessionManager),
-		OptionalAuth:  NewOptionalAuthMiddleware(sessionManager),
+		Authorization: NewAuthorizationMiddleware(sessionManager),
 	}
 }

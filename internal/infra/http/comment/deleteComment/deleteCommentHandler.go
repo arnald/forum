@@ -10,11 +10,8 @@ import (
 	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/infra/middleware"
 	"github.com/arnald/forum/internal/pkg/helpers"
+	"github.com/arnald/forum/internal/pkg/validator"
 )
-
-type RequestModel struct {
-	CommentID int `json:"commentId"`
-}
 
 type ResponseModel struct {
 	Message string `json:"message"`
@@ -46,23 +43,30 @@ func (h *Handler) DeleteComment(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), h.Config.Timeouts.HandlerTimeouts.UserRegister)
 	defer cancel()
 
-	var commentToDelete RequestModel
-
-	_, err := helpers.ParseBodyRequest(r, &commentToDelete)
+	commentID, err := helpers.GetQueryInt(r, "id")
 	if err != nil {
-		helpers.RespondWithError(w,
-			http.StatusBadRequest,
-			"Invalid request payload",
-		)
-
 		h.Logger.PrintError(err, nil)
-
+		helpers.RespondWithError(w, http.StatusBadRequest, "Invalid comment ID")
 		return
 	}
-	defer r.Body.Close()
+
+	val := validator.New()
+
+	commentIDVal := &struct {
+		CommentID int
+	}{
+		CommentID: commentID,
+	}
+	validator.ValidateDeleteComment(val, commentIDVal)
+
+	if !val.Valid() {
+		h.Logger.PrintError(logger.ErrValidationFailed, val.Errors)
+		helpers.RespondWithError(w, http.StatusBadRequest, val.ToStringErrors())
+		return
+	}
 
 	err = h.UserServices.UserServices.Commands.DeleteComment.Handle(ctx, commentCommands.DeleteCommentRequest{
-		CommentID: commentToDelete.CommentID,
+		CommentID: commentID,
 		User:      user,
 	})
 	if err != nil {

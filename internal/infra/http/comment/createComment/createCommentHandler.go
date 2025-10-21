@@ -3,6 +3,7 @@ package createcomment
 import (
 	"context"
 	"net/http"
+	"strconv"
 
 	"github.com/arnald/forum/internal/app"
 	commentCommands "github.com/arnald/forum/internal/app/comments/commands"
@@ -109,7 +110,7 @@ func (h *Handler) CreateComment(w http.ResponseWriter, r *http.Request) {
 		"Comment created successfully",
 		map[string]string{
 			"user_id":    user.ID,
-			"comment_id": string(comment.ID),
+			"comment_id": strconv.Itoa(int(comment.ID)),
 		},
 	)
 }

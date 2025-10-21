@@ -2,7 +2,6 @@ package getcomment
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -11,11 +10,8 @@ import (
 	"github.com/arnald/forum/internal/config"
 	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/pkg/helpers"
+	"github.com/arnald/forum/internal/pkg/validator"
 )
-
-type RequestModel struct {
-	CommentID int `json:"commentId"`
-}
 
 type ResponseModel struct {
 	ID        int    `json:"id"`
@@ -51,17 +47,33 @@ func (h *Handler) GetComment(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), h.Config.Timeouts.HandlerTimeouts.UserRegister)
 	defer cancel()
 
-	var commentToGet RequestModel
-
-	err := json.NewDecoder(r.Body).Decode(&commentToGet)
+	commentID, err := helpers.GetQueryInt(r, "id")
 	if err != nil {
 		h.Logger.PrintError(err, nil)
-		helpers.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		helpers.RespondWithError(w, http.StatusBadRequest, "Invalid comment ID")
+		return
+	}
+
+	commentIDVal := &struct {
+		CommentID int
+	}{
+		CommentID: commentID,
+	}
+
+	val := validator.New()
+	validator.ValidateGetComment(val, commentIDVal)
+
+	if !val.Valid() {
+		h.Logger.PrintError(logger.ErrValidationFailed, val.Errors)
+		helpers.RespondWithError(w,
+			http.StatusBadRequest,
+			val.ToStringErrors(),
+		)
 		return
 	}
 
 	comment, err := h.UserServices.UserServices.Queries.GetComment.Handle(ctx, commentQueries.GetCommentRequest{
-		CommentID: commentToGet.CommentID,
+		CommentID: commentIDVal.CommentID,
 	})
 	if err != nil {
 		if errors.Is(err, commentQueries.ErrCommentNotFound) {

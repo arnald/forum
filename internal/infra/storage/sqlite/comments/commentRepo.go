@@ -62,15 +62,13 @@ func (r *Repo) UpdateComment(ctx context.Context, comment *comment.Comment) erro
 
 	defer func() {
 		if err != nil {
-			rollbackErr := tx.Rollback()
-			if rollbackErr != nil {
+			if rollbackErr := tx.Rollback(); rollbackErr != nil {
 				err = fmt.Errorf("transaction rollback failed: %w (original error: %w)", rollbackErr, err)
 			}
 			return
 		}
-		err = tx.Commit()
-		if err != nil {
-			err = fmt.Errorf("transaction commit failed: %w", err)
+		if commitErr := tx.Commit(); commitErr != nil {
+			err = fmt.Errorf("transaction commit failed: %w", commitErr)
 		}
 	}()
 
@@ -79,13 +77,13 @@ func (r *Repo) UpdateComment(ctx context.Context, comment *comment.Comment) erro
 	SET content = ?, updated_at = CURRENT_TIMESTAMP
 	WHERE id = ? AND user_id = ?`
 
-	stmt, err := r.DB.PrepareContext(ctx, query)
+	stmt, err := tx.PrepareContext(ctx, query)
 	if err != nil {
 		return fmt.Errorf("prepare failed: %w", err)
 	}
 	defer stmt.Close()
 
-	result, err := r.DB.ExecContext(
+	result, err := stmt.ExecContext(
 		ctx,
 		comment.Content,
 		comment.ID,
@@ -101,7 +99,7 @@ func (r *Repo) UpdateComment(ctx context.Context, comment *comment.Comment) erro
 	}
 
 	if rowsAffected == 0 {
-		return fmt.Errorf("comment with ID %d not found or user not authorized: %w", comment.ID, ErrCommentNotFound)
+		return fmt.Errorf("comment with ID %d not found or user not authorized", comment.ID)
 	}
 
 	return nil
