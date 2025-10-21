@@ -48,6 +48,11 @@ func (h *Handler) CreateCategory(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	user := middleware.GetUserFromContext(r)
+	if user == nil {
+		h.Logger.PrintError(logger.ErrUserNotFoundInContext, nil)
+		helpers.RespondWithError(w, http.StatusUnauthorized, "User not authenticated")
+		return
+	}
 
 	var categoryToCreate RequestModel
 
