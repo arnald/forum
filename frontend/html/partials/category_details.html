@@ -18,19 +18,25 @@
       {{ end }}
     </div>
   </details>
+  <div class="category-links"></div>
   <a
     href="/categories"
-    class="nav-categories-btn {{if eq .ActivePage "categories"}}active{{end}}"
+    class='nav-categories-btn {{if eq .ActivePage "categories"}}active{{end}}'
     >Categories</a
   >
   <a
+    href="/topics"
+    class='nav-categories-btn {{if eq .ActivePage "topics"}}active{{end}}'
+    >All Topics</a
+  >
+  <a
     href="/latest_posts"
-    class="nav-categories-btn {{if eq .ActivePage "latest"}}active{{end}}"
+    class='nav-categories-btn {{if eq .ActivePage "latest"}}active{{end}}'
     >Latest</a
   >
   <a
     href="/top_posts"
-    class="nav-categories-btn {{if eq .ActivePage "top"}}active{{end}}"
+    class='nav-categories-btn {{if eq .ActivePage "top"}}active{{end}}'
     >Top</a
   >
 </div>

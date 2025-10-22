@@ -105,6 +105,129 @@ type TopicPageData struct {
 	ActivePage string
 }
 
+// ///////////////////////////////////////////////////////////////////////////////////////////////
+// Structs needed for all topics
+// Backend API response structures
+type BackendTopic struct {
+	ID            int    `json:"ID"`
+	Title         string `json:"Title"`
+	Content       string `json:"Content"`
+	OwnerUsername string `json:"OwnerUsername"`
+	CategoryID    int    `json:"CategoryID"`
+	CreatedAt     string `json:"CreatedAt"`
+	UpdatedAt     string `json:"UpdatedAt"`
+	ImagePath     string `json:"ImagePath"`
+}
+
+type BackendCategory struct {
+	ID          int    `json:"ID"`
+	Name        string `json:"Name"`
+	Description string `json:"Description"`
+	CreatedAt   string `json:"CreatedAt"`
+	CreatedBy   string `json:"CreatedBy"`
+	Topics      *[]int `json:"Topics"`
+}
+
+type CategoriesResponse struct {
+	Data struct {
+		Categories []BackendCategory `json:"categories"`
+		Filters    Filters           `json:"filters"`
+		Pagination Pagination        `json:"pagination"`
+	} `json:"data"`
+}
+
+type Pagination struct {
+	Page       int  `json:"page"`
+	Limit      int  `json:"limit"`
+	Total      int  `json:"total"`
+	TotalPages int  `json:"total_pages"`
+	HasNext    bool `json:"has_next"`
+	HasPrev    bool `json:"has_prev"`
+	NextPage   *int `json:"next_page"`
+	PrevPage   *int `json:"prev_page"`
+}
+
+type Filters struct {
+	Search  string `json:"search"`
+	OrderBy string `json:"order_by"`
+	Order   string `json:"order"`
+}
+
+type BackendResponse struct {
+	Data struct {
+		Topics     []BackendTopic `json:"topics"`
+		Pagination Pagination     `json:"pagination"`
+		Filters    Filters        `json:"filters"`
+	} `json:"data"`
+}
+
+// Frontend data structures
+type TopicExtended struct {
+	ID            int
+	Title         string
+	CategoryName  string
+	CategoryColor string
+	AuthorName    string
+	ReplyCount    int
+	ViewCount     int
+	CreatedAt     string
+}
+
+type PaginationData struct {
+	Page       int
+	Limit      int
+	Total      int
+	TotalPages int
+	HasNext    bool
+	HasPrev    bool
+	NextPage   int
+	PrevPage   int
+}
+
+type FiltersData struct {
+	Search   string
+	OrderBy  string
+	Order    string
+	Category int
+}
+
+type AllTopicsPageData struct {
+	Topics     []TopicExtended
+	Pagination PaginationData
+	Filters    FiltersData
+	Categories []TemplateCategory
+	ActivePage string
+}
+
+// TemplateCategory is what we pass to the template
+type TemplateCategory struct {
+	ID     int
+	Name   string
+	Color  string
+	Slug   string
+	Topics []int
+}
+
+// Convert local JSON categories to TemplateCategory format
+func convertLocalCategoriesToTemplate(cats []Category) []TemplateCategory {
+	result := make([]TemplateCategory, len(cats))
+	for i, c := range cats {
+		topics := make([]int, len(c.Topics))
+		for j, t := range c.Topics {
+			topics[j] = t.ID
+		}
+		result[i] = TemplateCategory{
+			ID:     c.ID,
+			Name:   c.Name,
+			Color:  c.Color,
+			Slug:   c.Slug,
+			Topics: topics,
+		}
+	}
+	return result
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 /*
 type BasePageData struct {
 	Categories []Category
@@ -373,6 +496,114 @@ func TopicPage(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "Render error", http.StatusInternalServerError)
 		log.Println("Render error:", err)
+	}
+}
+
+// All Topics Handler
+func AllTopicsPage(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	basePath, _ := os.Getwd()
+	jsonPath := filepath.Join(basePath, "cmd", "client", "data", "categories.json")
+	jsonPath = filepath.Clean(jsonPath)
+
+	file, err := os.Open(jsonPath)
+	if err != nil {
+		log.Println("Failed to open categories.json:", err)
+		http.Error(w, "Internal error: cannot load categories", http.StatusInternalServerError)
+		return
+	}
+	defer file.Close()
+
+	var catData CategoryData
+	err = json.NewDecoder(file).Decode(&catData)
+	if err != nil {
+		http.Error(w, "Invalid data format", http.StatusInternalServerError)
+		return
+	}
+
+	// ✅ Hardcoded example topics (simulating API response)
+	topics := []TopicExtended{
+		{
+			ID:            1,
+			Title:         "Welcome to the Forum!",
+			CategoryName:  "Announcements",
+			CategoryColor: "FF5733",
+			AuthorName:    "Admin",
+			ReplyCount:    5,
+			ViewCount:     120,
+			CreatedAt:     "2025-10-20",
+		},
+		{
+			ID:            2,
+			Title:         "Share your feedback about our site",
+			CategoryName:  "Feedback",
+			CategoryColor: "33A1FF",
+			AuthorName:    "User123",
+			ReplyCount:    8,
+			ViewCount:     230,
+			CreatedAt:     "2025-10-18",
+		},
+	}
+
+	// ✅ Hardcoded pagination (pretending API response)
+	pagination := PaginationData{
+		Page:       1,
+		Limit:      10,
+		Total:      35, // simulate 35 topics
+		TotalPages: 4,  // 4 pages total
+		HasNext:    true,
+		HasPrev:    false,
+		NextPage:   2,
+		PrevPage:   0,
+	}
+
+	// pagination := PaginationData{
+	// 	Page:       2,
+	// 	Limit:      10,
+	// 	Total:      35,
+	// 	TotalPages: 4,
+	// 	HasNext:    true,
+	// 	HasPrev:    true,
+	// 	NextPage:   3,
+	// 	PrevPage:   1,
+	// }
+
+	// ✅ Hardcoded filters (matching template expectations)
+	filters := FiltersData{
+		Search:   "",
+		OrderBy:  "created_at",
+		Order:    "desc",
+		Category: 0,
+	}
+
+	pageData := AllTopicsPageData{
+		Topics:     topics,
+		Pagination: pagination,
+		Filters:    filters,
+		Categories: convertLocalCategoriesToTemplate(catData.Data.Categories),
+		ActivePage: "topics",
+	}
+
+	tmpl, err := template.ParseFiles(
+		"frontend/html/layouts/base.html",
+		"frontend/html/pages/all_topics.html",
+		"frontend/html/partials/navbar.html",
+		"frontend/html/partials/footer.html",
+		"frontend/html/partials/category_details.html",
+	)
+	if err != nil {
+		log.Println("Template parse error:", err)
+		http.Error(w, "Template error", http.StatusInternalServerError)
+		return
+	}
+
+	if err := tmpl.ExecuteTemplate(w, "base", pageData); err != nil {
+		log.Println("Template exec error:", err)
+		http.Error(w, "Failed to render page", http.StatusInternalServerError)
 	}
 }
 
