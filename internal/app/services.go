@@ -9,10 +9,12 @@ import (
 	topicQueries "github.com/arnald/forum/internal/app/topics/queries"
 	userCommands "github.com/arnald/forum/internal/app/user/commands"
 	userQueries "github.com/arnald/forum/internal/app/user/queries"
+	votecommands "github.com/arnald/forum/internal/app/votes/commands"
 	"github.com/arnald/forum/internal/domain/category"
 	"github.com/arnald/forum/internal/domain/comment"
 	"github.com/arnald/forum/internal/domain/topic"
 	"github.com/arnald/forum/internal/domain/user"
+	"github.com/arnald/forum/internal/domain/vote"
 	"github.com/arnald/forum/internal/pkg/bcrypt"
 	"github.com/arnald/forum/internal/pkg/uuid"
 )
@@ -39,6 +41,7 @@ type Commands struct {
 	CreateCategory categoryCommands.CreateCategoryRequestHandler
 	UpdateCategory categoryCommands.UpdateCategoryRequestHandler
 	DeleteCategory categoryCommands.DeleteCategoryRequestHandler
+	CastVote       votecommands.CastVoteRequestHandler
 }
 
 type UserServices struct {
@@ -50,7 +53,7 @@ type Services struct {
 	UserServices UserServices
 }
 
-func NewServices(userRepo user.Repository, categoryRepo category.Repository, topicRepo topic.Repository, commentRepo comment.Repository) Services {
+func NewServices(userRepo user.Repository, categoryRepo category.Repository, topicRepo topic.Repository, commentRepo comment.Repository, voteRepo vote.Repository) Services {
 	uuidProvider := uuid.NewProvider()
 	encryption := bcrypt.NewProvider()
 	return Services{
@@ -76,6 +79,7 @@ func NewServices(userRepo user.Repository, categoryRepo category.Repository, top
 				categoryCommands.NewCreateCategoryHandler(categoryRepo),
 				categoryCommands.NewUpdateCategoryHandler(categoryRepo),
 				categoryCommands.NewDeleteCategoryHandler(categoryRepo),
+				votecommands.NewCastVoteHandler(voteRepo),
 			},
 		},
 	}
