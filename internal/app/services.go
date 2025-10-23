@@ -42,6 +42,7 @@ type Commands struct {
 	UpdateCategory categoryCommands.UpdateCategoryRequestHandler
 	DeleteCategory categoryCommands.DeleteCategoryRequestHandler
 	CastVote       votecommands.CastVoteRequestHandler
+	DeleteVote     votecommands.DeleteVoteRequestHandler
 }
 
 type UserServices struct {
@@ -80,6 +81,7 @@ func NewServices(userRepo user.Repository, categoryRepo category.Repository, top
 				categoryCommands.NewUpdateCategoryHandler(categoryRepo),
 				categoryCommands.NewDeleteCategoryHandler(categoryRepo),
 				votecommands.NewCastVoteHandler(voteRepo),
+				votecommands.NewDeleteVoteHandler(voteRepo),
 			},
 		},
 	}

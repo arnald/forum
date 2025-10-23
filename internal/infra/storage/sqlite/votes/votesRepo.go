@@ -51,3 +51,22 @@ func (r *Repo) CastVote(ctx context.Context, userID string, target vote.VoteTarg
 
 	return nil
 }
+
+func (r *Repo) DeleteVote(ctx context.Context, voteID int, userID string) error {
+	query := `
+	DELETE FROM votes
+	WHERE id = ? AND user_id = ?
+	`
+
+	stmt, err := r.DB.PrepareContext(ctx, query)
+	if err != nil {
+		return fmt.Errorf("failed to prepare statement: %w", err)
+	}
+
+	_, err = stmt.ExecContext(ctx, voteID, userID)
+	if err != nil {
+		return fmt.Errorf("failed to delete vote: %w", err)
+	}
+
+	return nil
+}

@@ -28,6 +28,7 @@ import (
 	userLogin "github.com/arnald/forum/internal/infra/http/user/login"
 	userRegister "github.com/arnald/forum/internal/infra/http/user/register"
 	castvote "github.com/arnald/forum/internal/infra/http/vote/castVote"
+	deletevote "github.com/arnald/forum/internal/infra/http/vote/deleteVote"
 	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/infra/middleware"
 	"github.com/arnald/forum/internal/infra/storage/sessionstore"
@@ -175,6 +176,13 @@ func (server *Server) AddHTTPRoutes() {
 	server.router.HandleFunc(apiContext+"/vote/cast",
 		middlewareChain(
 			castvote.NewHandler(server.appServices, server.config, server.logger).CastVote,
+			server.middleware.Authorization.Required,
+		),
+	)
+
+	server.router.HandleFunc(apiContext+"/vote/delete",
+		middlewareChain(
+			deletevote.NewHandler(server.appServices, server.config, server.logger).DeleteVote,
 			server.middleware.Authorization.Required,
 		),
 	)
