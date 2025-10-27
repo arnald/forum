@@ -10,6 +10,7 @@ import (
 	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/infra/middleware"
 	"github.com/arnald/forum/internal/pkg/helpers"
+	"github.com/arnald/forum/internal/pkg/validator"
 )
 
 type Response struct {
@@ -60,7 +61,25 @@ func (h *Handler) DeleteVote(w http.ResponseWriter, r *http.Request) {
 		)
 	}
 
-	// TO DO: VALIDATION
+	val := validator.New()
+
+	valData := struct {
+		VoteID int
+	}{
+		VoteID: voteID,
+	}
+
+	validator.ValidateDeleteVote(val, valData)
+
+	if !val.Valid() {
+		h.Logger.PrintError(logger.ErrValidationFailed, val.Errors)
+		helpers.RespondWithError(
+			w,
+			http.StatusBadRequest,
+			val.ToStringErrors(),
+		)
+		return
+	}
 
 	err = h.Services.UserServices.Commands.DeleteVote.Handle(ctx, votecommands.DeleteVoteRequest{
 		VoteID: voteID,

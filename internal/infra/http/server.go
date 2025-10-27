@@ -29,6 +29,7 @@ import (
 	userRegister "github.com/arnald/forum/internal/infra/http/user/register"
 	castvote "github.com/arnald/forum/internal/infra/http/vote/castVote"
 	deletevote "github.com/arnald/forum/internal/infra/http/vote/deleteVote"
+	getvotecounts "github.com/arnald/forum/internal/infra/http/vote/getVoteCounts"
 	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/infra/middleware"
 	"github.com/arnald/forum/internal/infra/storage/sessionstore"
@@ -114,7 +115,10 @@ func (server *Server) AddHTTPRoutes() {
 		gettopic.NewHandler(server.appServices, server.config, server.logger).GetTopic,
 	)
 	server.router.HandleFunc(apiContext+"/topics/all",
-		getalltopics.NewHandler(server.appServices, server.config, server.logger).GetAllTopics,
+		middlewareChain(
+			getalltopics.NewHandler(server.appServices, server.config, server.logger).GetAllTopics,
+			server.middleware.Authorization.Optional,
+		),
 	)
 
 	// Comment routes
@@ -184,6 +188,13 @@ func (server *Server) AddHTTPRoutes() {
 		middlewareChain(
 			deletevote.NewHandler(server.appServices, server.config, server.logger).DeleteVote,
 			server.middleware.Authorization.Required,
+		),
+	)
+
+	server.router.HandleFunc(apiContext+"/vote/counts",
+		middlewareChain(
+			getvotecounts.NewHandler(server.appServices, server.config, server.logger).GetVoteCounts,
+			server.middleware.Authorization.Optional,
 		),
 	)
 }

@@ -15,7 +15,7 @@ import (
 )
 
 type RequestModel struct {
-	TopicID      int  `json:"topicId"`
+	TopicID      *int `json:"topicId"`
 	CommentID    *int `json:"commentId,omitempty"`
 	ReactionType int  `json:"reactionType"`
 }

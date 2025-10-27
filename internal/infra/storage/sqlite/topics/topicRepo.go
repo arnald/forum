@@ -230,16 +230,51 @@ func (r Repo) GetTotalTopicsCount(ctx context.Context, filter string, categoryID
 	return totalCount, nil
 }
 
-func (r Repo) GetAllTopics(ctx context.Context, page, size, categoryID int, orderBy, order, filter string) ([]topic.Topic, error) {
+func (r Repo) GetAllTopics(ctx context.Context, page, size, categoryID int, orderBy, order, filter string, userID *string) ([]topic.Topic, error) {
 	query := `
     SELECT 
         t.id, t.user_id, t.title, t.content, t.image_path, t.category_id, t.created_at, t.updated_at,
-        u.username
-    FROM topics t
-    LEFT JOIN users u ON t.user_id = u.id
-    WHERE 1=1`
+        u.username,
+		COALESCE(vote_counts.upvotes, 0) as upvote_count,
+		COALESCE(vote_counts.downvotes, 0) as downvote_count,
+		COALESCE(vote_counts.score, 0) as vote_score
+		`
+
+	if userID != nil {
+		query += `
+		user_votes.reaction_type as user_vote
+		`
+	}
+
+	query += `
+	FROM topics t
+	LEFT JOIN users u ON t.user_id = u.id
+	LEFT JOIN (
+		SELECT
+			topic_id,
+			COUNT(CASE WHEN reaction_type = 1 THEN 1 END) as upvotes,
+			COUNT(CASE WHEN reaction_type = -1 THEN	1 END) as downvotes,
+			(COUNT(CASE WHEN reaction_type = 1 THEN 1 END) - COUNT(CASE WHEN reaction_type = -1 THEN 1 END)) as score
+			FROM votes
+			WHERE comment_id IS NULL
+			GROUP BY topic_id
+		) vote_counts ON t.id = vote_counts.topic_id`
+
+	if userID != nil {
+		query += `
+		LEFT JOIN votes user_votes ON t.id = user_votes.topic_id
+			AND user_votes.user_id = ?
+			AND user_votes.comment_id IS NULL`
+	}
+
+	query += ` WHERE 1=1`
 
 	args := make([]interface{}, 0)
+
+	if userID != nil {
+		args = append(args, *userID)
+	}
+
 	if filter != "" {
 		query += " AND (t.title LIKE ? OR t.content LIKE ?)"
 		filterParam := "%" + filter + "%"
@@ -270,7 +305,9 @@ func (r Repo) GetAllTopics(ctx context.Context, page, size, categoryID int, orde
 	topics := make([]topic.Topic, 0)
 	for rows.Next() {
 		var topic topic.Topic
-		err = rows.Scan(
+		var userVote sql.NullInt32
+
+		scanFields := []interface{}{
 			&topic.ID,
 			&topic.UserID,
 			&topic.Title,
@@ -280,10 +317,26 @@ func (r Repo) GetAllTopics(ctx context.Context, page, size, categoryID int, orde
 			&topic.CreatedAt,
 			&topic.UpdatedAt,
 			&topic.OwnerUsername,
-		)
+			&topic.UpvoteCount,
+			&topic.DownvoteCount,
+			&topic.VoteScore,
+		}
+
+		if userID != nil {
+			scanFields = append(scanFields, &userVote)
+		}
+
+		err = rows.Scan(scanFields...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan row: %w", err)
 		}
+
+		if userID != nil && userVote.Valid {
+			vote := int(userVote.Int32)
+			topic.UserVote = &vote
+		}
+
+		topic.Comments = make([]comment.Comment, 0)
 		topics = append(topics, topic)
 	}
 

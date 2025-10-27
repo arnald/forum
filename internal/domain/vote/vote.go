@@ -12,7 +12,7 @@ type Vote struct {
 }
 
 type VoteTarget struct {
-	TopicID   int
+	TopicID   *int
 	CommentID *int
 }
 

@@ -10,6 +10,7 @@ import (
 	userCommands "github.com/arnald/forum/internal/app/user/commands"
 	userQueries "github.com/arnald/forum/internal/app/user/queries"
 	votecommands "github.com/arnald/forum/internal/app/votes/commands"
+	voteQueries "github.com/arnald/forum/internal/app/votes/queries"
 	"github.com/arnald/forum/internal/domain/category"
 	"github.com/arnald/forum/internal/domain/comment"
 	"github.com/arnald/forum/internal/domain/topic"
@@ -28,6 +29,7 @@ type Queries struct {
 	UserLoginUsername  userQueries.UserLoginUsernameRequestHandler
 	GetCategoryByID    categoryQueries.GetCategoryByIDHandler
 	GetAllCategories   categoryQueries.GetAllCategoriesRequestHandler
+	GetVoteCounts      voteQueries.GetVoteCountsRequestHandler
 }
 
 type Commands struct {
@@ -68,6 +70,7 @@ func NewServices(userRepo user.Repository, categoryRepo category.Repository, top
 				userQueries.NewUserLoginUsernameHandler(userRepo, encryption),
 				categoryQueries.NewGetCategoryByIDHandler(categoryRepo),
 				categoryQueries.NewGetAllCategoriesHandler(categoryRepo),
+				voteQueries.NewGetVoteCountsRequestHandler(voteRepo),
 			},
 			Commands: Commands{
 				userCommands.NewUserRegisterHandler(userRepo, uuidProvider, encryption),

@@ -13,4 +13,8 @@ type Topic struct {
 	Comments      []comment.Comment
 	ID            int
 	CategoryID    int
+	UpvoteCount   int
+	DownvoteCount int
+	VoteScore     int
+	UserVote      *int
 }

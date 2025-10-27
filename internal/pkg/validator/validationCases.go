@@ -327,3 +327,17 @@ func ValidateCreateComment(v *Validator, data any) {
 
 	ValidateStruct(v, data, rules)
 }
+
+func ValidateDeleteVote(v *Validator, data any) {
+	rules := []ValidationRule{
+		{
+			Field: "VoteID",
+			Rules: []func(any) (bool, string){
+				required,
+				isPositiveInt,
+			},
+		},
+	}
+
+	ValidateStruct(v, data, rules)
+}

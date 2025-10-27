@@ -63,10 +63,61 @@ func (r *Repo) DeleteVote(ctx context.Context, voteID int, userID string) error 
 		return fmt.Errorf("failed to prepare statement: %w", err)
 	}
 
-	_, err = stmt.ExecContext(ctx, voteID, userID)
+	result, err := stmt.ExecContext(ctx, voteID, userID)
 	if err != nil {
 		return fmt.Errorf("failed to delete vote: %w", err)
 	}
 
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get affected rows: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("no vote found to remove")
+	}
+
 	return nil
+}
+
+func (r *Repo) GetVoteCounts(ctx context.Context, target vote.VoteTarget) (*vote.VoteCounts, error) {
+	var query string
+	var args []interface{}
+
+	if target.CommentID == nil {
+		query = `
+		SELECT
+			COUNT(CASE WHEN reaction_type = 1 THEN 1 END) as upvotes,
+			COUNT(CASE WHEN reaction_type = -1 THEN 1 END) as downvotes
+		FROM votes
+		WHERE topic_id = ? AND comment_id IS NULL`
+		args = []interface{}{target.TopicID}
+	} else {
+		query = `
+		SELECT
+			COUNT(CASE WHEN reaction_type = 1 THEN 1 END) as upvotes,
+			COUNT(CASE WHEN reaction_type = -1 THEN 1 END) as downvotes
+		FROM votes
+		WHERE comment_id = ? AND topic_id IS NULL`
+		args = []interface{}{target.CommentID}
+	}
+
+	var counts vote.VoteCounts
+	stmt, err := r.DB.PrepareContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to prepare statement: %w", err)
+	}
+
+	err = stmt.QueryRowContext(ctx, args...).Scan(
+		&counts.Upvotes,
+		&counts.DownVotes,
+	)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vote counts: %w", err)
+	}
+
+	counts.Score = counts.Upvotes - counts.DownVotes
+
+	return &counts, nil
 }
