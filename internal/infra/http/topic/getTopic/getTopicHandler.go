@@ -26,6 +26,10 @@ type ResponseModel struct {
 	Comments   []comment.Comment `json:"comments"`
 	TopicID    int               `json:"topicId"`
 	CategoryID int               `json:"categoryId"`
+	Upvotes    int               `json:"upvotes"`
+	Downvotes  int               `json:"downvotes"`
+	Score      int               `json:"score"`
+	UserVote   *int              `json:"userVote"`
 }
 
 type Handler struct {
@@ -89,7 +93,7 @@ func (h *Handler) GetTopic(w http.ResponseWriter, r *http.Request) {
 
 	topic, err := h.UserServices.UserServices.Queries.GetTopic.Handle(ctx, topicQueries.GetTopicRequest{
 		TopicID: topicID,
-		UserID: userID,
+		UserID:  userID,
 	})
 	if err != nil {
 		if errors.Is(err, topics.ErrTopicNotFound) {
@@ -112,6 +116,10 @@ func (h *Handler) GetTopic(w http.ResponseWriter, r *http.Request) {
 		CreatedAt:  topic.CreatedAt,
 		UpdatedAt:  topic.UpdatedAt,
 		Comments:   topic.Comments,
+		Upvotes:    topic.UpvoteCount,
+		Downvotes:  topic.DownvoteCount,
+		Score:      topic.VoteScore,
+		UserVote:   topic.UserVote,
 	}
 
 	helpers.RespondWithJSON(w, http.StatusOK, nil, response)

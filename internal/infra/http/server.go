@@ -112,7 +112,10 @@ func (server *Server) AddHTTPRoutes() {
 		),
 	)
 	server.router.HandleFunc(apiContext+"/topic",
-		gettopic.NewHandler(server.appServices, server.config, server.logger).GetTopic,
+		middlewareChain(
+			gettopic.NewHandler(server.appServices, server.config, server.logger).GetTopic,
+			server.middleware.Authorization.Optional,
+		),
 	)
 	server.router.HandleFunc(apiContext+"/topics/all",
 		middlewareChain(

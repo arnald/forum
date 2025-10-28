@@ -31,6 +31,7 @@ INSERT OR IGNORE INTO comments (user_id, topic_id, content) VALUES
 -- Votes
 INSERT OR IGNORE INTO votes (user_id, topic_id, comment_id, reaction_type) VALUES
 ('df16d238-e4dd-4645-9101-54aed9c0fbf4', NULL, 3, 1),
+('df16d238-e4dd-4645-9101-54aed9c0fbf4', 1, NULL, 1),
 ('000dec3a-51af-4e7c-ae0c-21436a0a2395', 2, NULL, 1),
 ('f1433622-9c10-44e5-94b1-1f6a148c9131', 3, NULL, -1),
 ('000dec3a-51af-4e7c-ae0c-21436a0a2395', 1, NULL, 1),

@@ -29,12 +29,10 @@ func NewGetTopicHandler(topicRepo topic.Repository, commentRepo comment.Reposito
 }
 
 func (h *getTopicRequestHandler) Handle(ctx context.Context, req GetTopicRequest) (*topic.Topic, error) {
-	topic, err := h.topicRepo.GetTopicByID(ctx, req.TopicID)
+	topic, err := h.topicRepo.GetTopicByID(ctx, req.TopicID, req.UserID)
 	if err != nil {
 		return nil, err
 	}
-
-	topic.Comments = nil
 
 	comments, err := h.commentRepo.GetCommentsWithVotes(ctx, req.TopicID, req.UserID)
 	if err != nil {
