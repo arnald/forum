@@ -10,4 +10,8 @@ type Comment struct {
 	OwnerUsername string
 	TopicID       int
 	ID            int
+	UpvoteCount   int
+	DownvoteCount int
+	VoteScore     int
+	UserVote      *int
 }

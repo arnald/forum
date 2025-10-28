@@ -8,4 +8,5 @@ type Repository interface {
 	DeleteComment(ctx context.Context, userID string, commentID int) error
 	GetCommentByID(ctx context.Context, commentID int) (*Comment, error)
 	GetCommentsByTopicID(ctx context.Context, topicID int) ([]Comment, error)
+	GetCommentsWithVotes(ctx context.Context, topicID int, userID *string) ([]Comment, error)
 }

@@ -62,7 +62,7 @@ func NewServices(userRepo user.Repository, categoryRepo category.Repository, top
 	return Services{
 		UserServices: UserServices{
 			Queries: Queries{
-				topicQueries.NewGetTopicHandler(topicRepo),
+				topicQueries.NewGetTopicHandler(topicRepo, commentRepo),
 				topicQueries.NewGetAllTopicsHandler(topicRepo),
 				commentQueries.NewGetCommentHandler(commentRepo),
 				commentQueries.NewGetCommentsByTopicRequestHandler(commentRepo),

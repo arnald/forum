@@ -3,11 +3,13 @@ package topicqueries
 import (
 	"context"
 
+	"github.com/arnald/forum/internal/domain/comment"
 	"github.com/arnald/forum/internal/domain/topic"
 )
 
 type GetTopicRequest struct {
-	TopicID int `json:"topicId"`
+	TopicID int     `json:"topicId"`
+	UserID  *string `json:"userId"`
 }
 
 type GetTopicRequestHandler interface {
@@ -15,19 +17,31 @@ type GetTopicRequestHandler interface {
 }
 
 type getTopicRequestHandler struct {
-	repo topic.Repository
+	topicRepo   topic.Repository
+	commentRepo comment.Repository
 }
 
-func NewGetTopicHandler(repo topic.Repository) GetTopicRequestHandler {
+func NewGetTopicHandler(topicRepo topic.Repository, commentRepo comment.Repository) GetTopicRequestHandler {
 	return &getTopicRequestHandler{
-		repo: repo,
+		topicRepo:   topicRepo,
+		commentRepo: commentRepo,
 	}
 }
 
 func (h *getTopicRequestHandler) Handle(ctx context.Context, req GetTopicRequest) (*topic.Topic, error) {
-	topic, err := h.repo.GetTopicByID(ctx, req.TopicID)
+	topic, err := h.topicRepo.GetTopicByID(ctx, req.TopicID)
 	if err != nil {
 		return nil, err
 	}
+
+	topic.Comments = nil
+
+	comments, err := h.commentRepo.GetCommentsWithVotes(ctx, req.TopicID, req.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	topic.Comments = comments
+
 	return topic, nil
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/arnald/forum/internal/config"
 	"github.com/arnald/forum/internal/domain/comment"
 	"github.com/arnald/forum/internal/infra/logger"
+	"github.com/arnald/forum/internal/infra/middleware"
 	"github.com/arnald/forum/internal/infra/storage/sqlite/topics"
 	"github.com/arnald/forum/internal/pkg/helpers"
 	"github.com/arnald/forum/internal/pkg/validator"
@@ -48,6 +49,12 @@ func (h *Handler) GetTopic(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var userID *string
+	user := middleware.GetUserFromContext(r)
+	if user != nil {
+		userID = &user.ID
+	}
+
 	topicID, err := helpers.GetQueryInt(r, "id")
 	if err != nil {
 		h.Logger.PrintError(err, nil)
@@ -82,6 +89,7 @@ func (h *Handler) GetTopic(w http.ResponseWriter, r *http.Request) {
 
 	topic, err := h.UserServices.UserServices.Queries.GetTopic.Handle(ctx, topicQueries.GetTopicRequest{
 		TopicID: topicID,
+		UserID: userID,
 	})
 	if err != nil {
 		if errors.Is(err, topics.ErrTopicNotFound) {

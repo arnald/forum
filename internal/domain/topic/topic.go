@@ -18,3 +18,4 @@ type Topic struct {
 	VoteScore     int
 	UserVote      *int
 }
+
