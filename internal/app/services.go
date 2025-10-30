@@ -29,7 +29,7 @@ type Queries struct {
 	UserLoginUsername  userQueries.UserLoginUsernameRequestHandler
 	GetCategoryByID    categoryQueries.GetCategoryByIDHandler
 	GetAllCategories   categoryQueries.GetAllCategoriesRequestHandler
-	GetVoteCounts      voteQueries.GetVoteCountsRequestHandler
+	GetCounts          voteQueries.GetCountsRequestHandler
 }
 
 type Commands struct {
@@ -70,7 +70,7 @@ func NewServices(userRepo user.Repository, categoryRepo category.Repository, top
 				userQueries.NewUserLoginUsernameHandler(userRepo, encryption),
 				categoryQueries.NewGetCategoryByIDHandler(categoryRepo),
 				categoryQueries.NewGetAllCategoriesHandler(categoryRepo),
-				voteQueries.NewGetVoteCountsRequestHandler(voteRepo),
+				voteQueries.NewGetCountsRequestHandler(voteRepo),
 			},
 			Commands: Commands{
 				userCommands.NewUserRegisterHandler(userRepo, uuidProvider, encryption),

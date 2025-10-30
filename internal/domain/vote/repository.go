@@ -3,7 +3,7 @@ package vote
 import "context"
 
 type Repository interface {
-	CastVote(ctx context.Context, userID string, target VoteTarget, reactionType int) error
+	CastVote(ctx context.Context, userID string, target Target, reactionType int) error
 	DeleteVote(ctx context.Context, voteID int, userID string) error
-	GetVoteCounts(ctx context.Context, target VoteTarget) (*VoteCounts, error)
+	GetCounts(ctx context.Context, target Target) (*Counts, error)
 }

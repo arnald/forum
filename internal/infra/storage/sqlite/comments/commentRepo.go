@@ -217,7 +217,7 @@ func (r *Repo) GetCommentsByTopicID(ctx context.Context, topicID int) ([]comment
 	return comments, nil
 }
 
-func (r Repo) GetCommentsWithVotes(ctx context.Context, topicID int, userID *string) ([]comment.Comment, error) {
+func (r *Repo) GetCommentsWithVotes(ctx context.Context, topicID int, userID *string) ([]comment.Comment, error) {
 	query := `
 	SELECT
 		c.id, c.user_id, c.topic_id, c.content, c.created_at, c.updated_at,
@@ -263,6 +263,7 @@ func (r Repo) GetCommentsWithVotes(ctx context.Context, topicID int, userID *str
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare statement: %w", err)
 	}
+	defer stmt.Close()
 
 	rows, err := stmt.QueryContext(ctx, args...)
 	if err != nil {
@@ -270,7 +271,7 @@ func (r Repo) GetCommentsWithVotes(ctx context.Context, topicID int, userID *str
 	}
 	defer rows.Close()
 
-	var comments []comment.Comment
+	comments := make([]comment.Comment, 0)
 	for rows.Next() {
 		var commentResult comment.Comment
 		var userVote sql.NullInt32
@@ -292,7 +293,7 @@ func (r Repo) GetCommentsWithVotes(ctx context.Context, topicID int, userID *str
 			scanFields = append(scanFields, &userVote)
 		}
 
-		err := rows.Scan(scanFields...)
+		err = rows.Scan(scanFields...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan comment: %w", err)
 		}

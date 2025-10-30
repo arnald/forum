@@ -5,6 +5,7 @@ import "time"
 type Comment struct {
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
+	UserVote      *int
 	UserID        string
 	Content       string
 	OwnerUsername string
@@ -13,5 +14,4 @@ type Comment struct {
 	UpvoteCount   int
 	DownvoteCount int
 	VoteScore     int
-	UserVote      *int
 }

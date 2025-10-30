@@ -6,26 +6,26 @@ import (
 	"github.com/arnald/forum/internal/domain/vote"
 )
 
-type GetVoteCountsRequest struct {
-	Target vote.VoteTarget
+type GetCountsRequest struct {
+	Target vote.Target
 }
 
-type getVoteCountsRequestHandler struct {
+type getCountsRequestHandler struct {
 	VoteService vote.Repository
 }
 
-type GetVoteCountsRequestHandler interface {
-	Handle(ctx context.Context, request GetVoteCountsRequest) (*vote.VoteCounts, error)
+type GetCountsRequestHandler interface {
+	Handle(ctx context.Context, request GetCountsRequest) (*vote.Counts, error)
 }
 
-func NewGetVoteCountsRequestHandler(voteService vote.Repository) GetVoteCountsRequestHandler {
-	return &getVoteCountsRequestHandler{
+func NewGetCountsRequestHandler(voteService vote.Repository) GetCountsRequestHandler {
+	return &getCountsRequestHandler{
 		VoteService: voteService,
 	}
 }
 
-func (h *getVoteCountsRequestHandler) Handle(ctx context.Context, request GetVoteCountsRequest) (*vote.VoteCounts, error) {
-	counts, err := h.VoteService.GetVoteCounts(ctx, request.Target)
+func (h *getCountsRequestHandler) Handle(ctx context.Context, request GetCountsRequest) (*vote.Counts, error) {
+	counts, err := h.VoteService.GetCounts(ctx, request.Target)
 	if err != nil {
 		return nil, err
 	}

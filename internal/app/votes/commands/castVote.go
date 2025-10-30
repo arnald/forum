@@ -7,9 +7,9 @@ import (
 )
 
 type CastVoteRequest struct {
-	UserID       string          `json:"userId"`
-	Target       vote.VoteTarget `json:"target"`
-	ReactionType int             `json:"reactionType"`
+	Target       vote.Target `json:"target"`
+	UserID       string      `json:"userId"`
+	ReactionType int         `json:"reactionType"`
 }
 
 type castVoteRequestHandler struct {

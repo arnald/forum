@@ -3,20 +3,20 @@ package vote
 import "time"
 
 type Vote struct {
-	ID           int
-	UserID       string
-	TopicID      int
-	CommentID    *int
-	ReactionType int
 	CreatedAt    time.Time
+	CommentID    *int
+	UserID       string
+	ID           int
+	TopicID      int
+	ReactionType int
 }
 
-type VoteTarget struct {
+type Target struct {
 	TopicID   *int
 	CommentID *int
 }
 
-type VoteCounts struct {
+type Counts struct {
 	Upvotes   int
 	DownVotes int
 	Score     int

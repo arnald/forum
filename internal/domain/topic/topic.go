@@ -3,19 +3,18 @@ package topic
 import "github.com/arnald/forum/internal/domain/comment"
 
 type Topic struct {
-	UserID        string
-	OwnerUsername string
+	UserVote      *int
+	UpdatedAt     string
 	Title         string
 	Content       string
 	ImagePath     string
 	CreatedAt     string
-	UpdatedAt     string
+	UserID        string
+	OwnerUsername string
 	Comments      []comment.Comment
 	ID            int
 	CategoryID    int
 	UpvoteCount   int
 	DownvoteCount int
 	VoteScore     int
-	UserVote      *int
 }
-

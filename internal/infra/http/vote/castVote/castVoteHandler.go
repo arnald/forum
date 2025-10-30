@@ -21,8 +21,8 @@ type RequestModel struct {
 }
 
 type ResponseModel struct {
-	Message    string           `json:"message"`
-	VoteCounts *vote.VoteCounts `json:"voteCounts"`
+	Counts  *vote.Counts `json:"counts"`
+	Message string       `json:"message"`
 }
 
 type Handler struct {
@@ -47,6 +47,7 @@ func (h *Handler) CastVote(w http.ResponseWriter, r *http.Request) {
 			http.StatusMethodNotAllowed,
 			"Invalid request method",
 		)
+		return
 	}
 
 	user := middleware.GetUserFromContext(r)
@@ -72,9 +73,10 @@ func (h *Handler) CastVote(w http.ResponseWriter, r *http.Request) {
 			http.StatusBadRequest,
 			"invalid JSON",
 		)
+		return
 	}
 
-	targer := vote.VoteTarget{
+	targer := vote.Target{
 		TopicID:   req.TopicID,
 		CommentID: req.CommentID,
 	}
@@ -94,13 +96,13 @@ func (h *Handler) CastVote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ResponseModel := ResponseModel{
+	Response := ResponseModel{
 		Message: "Vote cast successfully",
 	}
 
 	helpers.RespondWithJSON(w,
 		http.StatusOK,
 		nil,
-		ResponseModel,
+		Response,
 	)
 }

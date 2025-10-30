@@ -207,8 +207,8 @@ func (r Repo) GetTopicByID(ctx context.Context, topicID int, userID *string) (*t
 
 	err = stmt.QueryRowContext(ctx, args...).Scan(scanFields...)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("topic with ID %d not found", topicID)
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("topic with ID %d not found: %w", topicID, ErrTopicNotFound)
 		}
 		return nil, fmt.Errorf("failed to get topic: %w", err)
 	}
@@ -219,7 +219,6 @@ func (r Repo) GetTopicByID(ctx context.Context, topicID int, userID *string) (*t
 	}
 
 	return &topicResult, nil
-
 }
 
 func (r Repo) GetTotalTopicsCount(ctx context.Context, filter string, categoryID int) (int, error) {

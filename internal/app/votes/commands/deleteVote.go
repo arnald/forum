@@ -7,8 +7,8 @@ import (
 )
 
 type DeleteVoteRequest struct {
-	VoteID int
 	UserID string
+	VoteID int
 }
 
 type deleteVoteRequestHandler struct {

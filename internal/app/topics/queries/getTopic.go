@@ -8,8 +8,8 @@ import (
 )
 
 type GetTopicRequest struct {
-	TopicID int     `json:"topicId"`
 	UserID  *string `json:"userId"`
+	TopicID int     `json:"topicId"`
 }
 
 type GetTopicRequestHandler interface {

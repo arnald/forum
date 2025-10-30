@@ -33,7 +33,7 @@ func NewHandler(services app.Services, config *config.ServerConfig, logger logge
 	}
 }
 
-func (h *Handler) GetVoteCounts(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetCounts(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		h.Logger.PrintError(logger.ErrInvalidRequestMethod, nil)
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
@@ -66,13 +66,13 @@ func (h *Handler) GetVoteCounts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	voteTarget := vote.VoteTarget{
+	Target := vote.Target{
 		TopicID:   topicID,
 		CommentID: commentID,
 	}
 
-	voteCounts, err := h.Services.UserServices.Queries.GetVoteCounts.Handle(ctx, votequeries.GetVoteCountsRequest{
-		Target: voteTarget,
+	Counts, err := h.Services.UserServices.Queries.GetCounts.Handle(ctx, votequeries.GetCountsRequest{
+		Target: Target,
 	})
 	if err != nil {
 		h.Logger.PrintError(err, nil)
@@ -81,9 +81,9 @@ func (h *Handler) GetVoteCounts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := Response{
-		Upvotes:   voteCounts.Upvotes,
-		Downvotes: voteCounts.DownVotes,
-		Score:     voteCounts.Score,
+		Upvotes:   Counts.Upvotes,
+		Downvotes: Counts.DownVotes,
+		Score:     Counts.Score,
 	}
 
 	helpers.RespondWithJSON(

@@ -29,7 +29,7 @@ import (
 	userRegister "github.com/arnald/forum/internal/infra/http/user/register"
 	castvote "github.com/arnald/forum/internal/infra/http/vote/castVote"
 	deletevote "github.com/arnald/forum/internal/infra/http/vote/deleteVote"
-	getvotecounts "github.com/arnald/forum/internal/infra/http/vote/getVoteCounts"
+	getCounts "github.com/arnald/forum/internal/infra/http/vote/getVoteCounts"
 	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/infra/middleware"
 	"github.com/arnald/forum/internal/infra/storage/sessionstore"
@@ -196,7 +196,7 @@ func (server *Server) AddHTTPRoutes() {
 
 	server.router.HandleFunc(apiContext+"/vote/counts",
 		middlewareChain(
-			getvotecounts.NewHandler(server.appServices, server.config, server.logger).GetVoteCounts,
+			getCounts.NewHandler(server.appServices, server.config, server.logger).GetCounts,
 			server.middleware.Authorization.Optional,
 		),
 	)

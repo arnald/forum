@@ -17,19 +17,19 @@ import (
 )
 
 type ResponseModel struct {
-	Title      string            `json:"title"`
+	UserVote   *int              `json:"userVote"`
 	Content    string            `json:"content"`
 	ImagePath  string            `json:"imagePath"`
 	UserID     string            `json:"userId"`
 	CreatedAt  string            `json:"createdAt"`
 	UpdatedAt  string            `json:"updatedAt"`
+	Title      string            `json:"title"`
 	Comments   []comment.Comment `json:"comments"`
-	TopicID    int               `json:"topicId"`
 	CategoryID int               `json:"categoryId"`
 	Upvotes    int               `json:"upvotes"`
 	Downvotes  int               `json:"downvotes"`
 	Score      int               `json:"score"`
-	UserVote   *int              `json:"userVote"`
+	TopicID    int               `json:"topicId"`
 }
 
 type Handler struct {

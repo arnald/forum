@@ -16,7 +16,7 @@ func NewRepo(db *sql.DB) *Repo {
 	return &Repo{DB: db}
 }
 
-func (r *Repo) CastVote(ctx context.Context, userID string, target vote.VoteTarget, reactionType int) error {
+func (r *Repo) CastVote(ctx context.Context, userID string, target vote.Target, reactionType int) error {
 	var query string
 	var args []interface{}
 
@@ -62,6 +62,7 @@ func (r *Repo) DeleteVote(ctx context.Context, voteID int, userID string) error 
 	if err != nil {
 		return fmt.Errorf("failed to prepare statement: %w", err)
 	}
+	defer stmt.Close()
 
 	result, err := stmt.ExecContext(ctx, voteID, userID)
 	if err != nil {
@@ -74,13 +75,13 @@ func (r *Repo) DeleteVote(ctx context.Context, voteID int, userID string) error 
 	}
 
 	if rowsAffected == 0 {
-		return fmt.Errorf("no vote found to remove")
+		return ErrVoteNotFound
 	}
 
 	return nil
 }
 
-func (r *Repo) GetVoteCounts(ctx context.Context, target vote.VoteTarget) (*vote.VoteCounts, error) {
+func (r *Repo) GetCounts(ctx context.Context, target vote.Target) (*vote.Counts, error) {
 	var query string
 	var args []interface{}
 
@@ -102,17 +103,17 @@ func (r *Repo) GetVoteCounts(ctx context.Context, target vote.VoteTarget) (*vote
 		args = []interface{}{target.CommentID}
 	}
 
-	var counts vote.VoteCounts
+	var counts vote.Counts
 	stmt, err := r.DB.PrepareContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare statement: %w", err)
 	}
+	defer stmt.Close()
 
 	err = stmt.QueryRowContext(ctx, args...).Scan(
 		&counts.Upvotes,
 		&counts.DownVotes,
 	)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to get vote counts: %w", err)
 	}

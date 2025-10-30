@@ -7,6 +7,7 @@ import (
 )
 
 type GetAllTopicsRequest struct {
+	UserID     *string `json:"userId,omitempty"`
 	OrderBy    string  `json:"orderBy"`
 	Order      string  `json:"order"`
 	Filter     string  `json:"filter"`
@@ -14,7 +15,6 @@ type GetAllTopicsRequest struct {
 	Size       int     `json:"size"`
 	Offset     int     `json:"offset"`
 	CategoryID int     `json:"categoryId"`
-	UserID     *string `json:"userID,omitempty"`
 }
 
 type GetAllTopicsRequestHandler interface {
