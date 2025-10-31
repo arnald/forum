@@ -63,6 +63,20 @@ CREATE TABLE IF NOT EXISTS votes (
     UNIQUE (user_id, comment_id)
 );
 
+-- Notifications
+CREATE TABLE IF NOT EXISTS notifications {
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id TEXT NOT NULL,
+    type TEXT NOT NULL,
+    title TEXT NOT NULL,
+    message TEXT NOT NULL,
+    related_type TEXT,
+    related_id INTEGER,
+    is_read BOOLEAN DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+};
+
 -- Users table indexes
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
@@ -100,3 +114,7 @@ ON votes(comment_id, reaction_type) WHERE comment_id IS NOT NULL;
 
 -- User activity lookup
 CREATE INDEX IF NOT EXISTS idx_votes_user ON votes(user_id);
+
+-- Notifications table indexes
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications(is_read);
