@@ -20,6 +20,11 @@ import (
 	getcommentsbytopic "github.com/arnald/forum/internal/infra/http/comment/getCommentsByTopic"
 	updatecomment "github.com/arnald/forum/internal/infra/http/comment/updateComment"
 	"github.com/arnald/forum/internal/infra/http/health"
+	getnotifications "github.com/arnald/forum/internal/infra/http/notification/getNotifications"
+	getunreadcount "github.com/arnald/forum/internal/infra/http/notification/getUnreadCount"
+	markallasread "github.com/arnald/forum/internal/infra/http/notification/markAllAsRead"
+	markasread "github.com/arnald/forum/internal/infra/http/notification/markAsRead"
+	streamnotification "github.com/arnald/forum/internal/infra/http/notification/streamNotification"
 	createtopic "github.com/arnald/forum/internal/infra/http/topic/createTopic"
 	deletetopic "github.com/arnald/forum/internal/infra/http/topic/deleteTopic"
 	getalltopics "github.com/arnald/forum/internal/infra/http/topic/getAllTopics"
@@ -32,6 +37,7 @@ import (
 	getCounts "github.com/arnald/forum/internal/infra/http/vote/getVoteCounts"
 	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/infra/middleware"
+	"github.com/arnald/forum/internal/infra/storage/notifications"
 	"github.com/arnald/forum/internal/infra/storage/sessionstore"
 )
 
@@ -47,6 +53,7 @@ type Server struct {
 	config         *config.ServerConfig
 	router         *http.ServeMux
 	sessionManager session.Manager
+	notifications  *notifications.NotificationService
 	middleware     *middleware.Middleware
 	db             *sql.DB
 	logger         logger.Logger
@@ -61,6 +68,7 @@ func NewServer(cfg *config.ServerConfig, db *sql.DB, logger logger.Logger, appSe
 		logger:      logger,
 	}
 	httpServer.initSessionManager()
+	httpServer.initNotifications()
 	httpServer.initMiddleware(httpServer.sessionManager)
 	httpServer.AddHTTPRoutes()
 	return httpServer
@@ -200,6 +208,43 @@ func (server *Server) AddHTTPRoutes() {
 			server.middleware.Authorization.Optional,
 		),
 	)
+
+	// Notifications routes
+
+	server.router.HandleFunc(apiContext+"notifications/stream", //get
+		middlewareChain(
+			streamnotification.NewHandler(server.notifications).StreamNotifications,
+			server.middleware.Authorization.Required,
+		),
+	)
+
+	server.router.HandleFunc(apiContext+"notifications/unread-count", //get
+		middlewareChain(
+			getunreadcount.NewHandler(server.notifications).GetUnread,
+			server.middleware.Authorization.Required,
+		),
+	)
+
+	server.router.HandleFunc(apiContext+"notifications", //get
+		middlewareChain(
+			getnotifications.NewHandler(server.notifications).GetNotifications,
+			server.middleware.Authorization.Required,
+		),
+	)
+
+	server.router.HandleFunc(apiContext+"notifications/mark-read", //post
+		middlewareChain(
+			markasread.NewHandler(server.notifications).MarkAsRead,
+			server.middleware.Authorization.Required,
+		),
+	)
+
+	server.router.HandleFunc(apiContext+"notifications/mark-all-read", //post
+		middlewareChain(
+			markallasread.NewHandler(server.notifications).MarkAllAsRead,
+			server.middleware.Authorization.Required,
+		),
+	)
 }
 
 func (server *Server) ListenAndServe() {
@@ -225,6 +270,10 @@ func (server *Server) ListenAndServe() {
 
 func (server *Server) initSessionManager() {
 	server.sessionManager = sessionstore.NewSessionManager(server.db, server.config.SessionManager)
+}
+
+func (server *Server) initNotifications() {
+	server.notifications = notifications.NewNotificationService(server.db)
 }
 
 func (server *Server) initMiddleware(sessionManager session.Manager) {

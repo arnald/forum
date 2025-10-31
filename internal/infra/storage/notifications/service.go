@@ -2,6 +2,7 @@ package notifications
 
 import (
 	"context"
+	"database/sql"
 	"sync"
 
 	"github.com/arnald/forum/internal/domain/notification"
@@ -15,9 +16,9 @@ type NotificationService struct {
 	mu      sync.RWMutex
 }
 
-func NewNotificationService(repo notification.Repository) *NotificationService {
+func NewNotificationService(db *sql.DB) *NotificationService {
 	return &NotificationService{
-		repo:    repo,
+		repo:    NewRepo(db),
 		clients: make(map[string][]chan *notification.Notification),
 	}
 }
@@ -78,16 +79,16 @@ func (s *NotificationService) MarkAllAsRead(ctx context.Context, userID string) 
 }
 
 func (s *NotificationService) broadcastToUser(userID string, notification *notification.Notification) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 
 	clients := s.clients[userID]
 	for _, ch := range clients {
 		select {
 		case ch <- notification:
-			// sent
+			// send
 		default:
-			// full channel, skip
+			// channel full, skip
 		}
 	}
 }

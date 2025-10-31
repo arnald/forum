@@ -123,7 +123,7 @@ func (r *Repo) GetUnreadCount(ctx context.Context, userID string) (int, error) {
 	return count, nil
 }
 
-func (r *Repo) MarkAsRead(ctx context.Context, notificationID, userID string) error {
+func (r *Repo) MarkAsRead(ctx context.Context, notificationID int, userID string) error {
 	query := `
 	UPDATE notifications
 	SET is_read = 1
