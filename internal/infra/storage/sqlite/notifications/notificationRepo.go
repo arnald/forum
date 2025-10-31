@@ -100,7 +100,7 @@ func (r *Repo) GetByUserID(ctx context.Context, userID string, limit int) ([]*no
 	return notifications, rows.Err()
 }
 
-func (r *Repo) GetUnreadCount(ctx context.Context, userID int) (int, error) {
+func (r *Repo) GetUnreadCount(ctx context.Context, userID string) (int, error) {
 	query := `
 	SELECTO COUNT(*) FROM notifications
 	WHERE user_id = ? AND is_read = 0`
@@ -123,7 +123,7 @@ func (r *Repo) GetUnreadCount(ctx context.Context, userID int) (int, error) {
 	return count, nil
 }
 
-func (r *Repo) MarkAsRead(ctx context.Context, notificationID, userID int) error {
+func (r *Repo) MarkAsRead(ctx context.Context, notificationID, userID string) error {
 	query := `
 	UPDATE notifications
 	SET is_read = 1
@@ -147,7 +147,7 @@ func (r *Repo) MarkAsRead(ctx context.Context, notificationID, userID int) error
 	return err
 }
 
-func (r *Repo) MarkAllAsRead(ctx context.Context, userID int) error {
+func (r *Repo) MarkAllAsRead(ctx context.Context, userID string) error {
 	query := `
 	UPDATE notifications
 	SET is_read = 1
