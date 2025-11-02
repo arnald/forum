@@ -33,7 +33,7 @@ func (h *Handler) StreamNotifications(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5500")
 
 	flusher, ok := w.(http.Flusher)
 	if !ok {
@@ -56,6 +56,7 @@ func (h *Handler) StreamNotifications(w http.ResponseWriter, r *http.Request) {
 			w,
 			"data: {\"type\":\"unread_count\",\"count\":%d}\n\n", count,
 		)
+		fmt.Printf(err.Error())
 		flusher.Flush()
 	}
 
@@ -76,6 +77,7 @@ func (h *Handler) StreamNotifications(w http.ResponseWriter, r *http.Request) {
 				w,
 				"data: %s\n\n", data,
 			)
+			fmt.Printf("Sent notification: %s\n", data)
 			flusher.Flush()
 		case <-ticker.C:
 			fmt.Fprintf(

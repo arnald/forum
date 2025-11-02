@@ -19,7 +19,7 @@ func NewRepo(db *sql.DB) *Repo {
 func (r *Repo) Create(ctx context.Context, notification *notification.Notification) error {
 	query := `
 	INSERT INTO notifications (user_id, type, title, message, related_type, related_id, is_read)
-	VALUES (?, ?, ?, ?, ?, ?, ?,)
+	VALUES (?, ?, ?, ?, ?, ?, ?)
 	`
 
 	stmt, err := r.DB.PrepareContext(ctx, query)
@@ -53,7 +53,7 @@ func (r *Repo) Create(ctx context.Context, notification *notification.Notificati
 
 func (r *Repo) GetByUserID(ctx context.Context, userID string, limit int) ([]*notification.Notification, error) {
 	query := `
-	SELECT id, user_id, type, title, message, relation_type, relation_id, is_read, created_at
+	SELECT id, user_id, type, title, message, related_type, related_id, is_read, created_at
 	FROM notifications
 	WHERE user_id = ?
 	ORDER BY created_at DESC
@@ -81,14 +81,14 @@ func (r *Repo) GetByUserID(ctx context.Context, userID string, limit int) ([]*no
 		n := &notification.Notification{}
 		err := rows.Scan(
 			&n.ID,
-			n.UserID,
-			n.Type,
-			n.Title,
-			n.Message,
-			n.RelatedType,
-			n.RelatedID,
-			n.IsRead,
-			n.CreatedAt,
+			&n.UserID,
+			&n.Type,
+			&n.Title,
+			&n.Message,
+			&n.RelatedType,
+			&n.RelatedID,
+			&n.IsRead,
+			&n.CreatedAt,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan rows: %w", err)
@@ -102,7 +102,7 @@ func (r *Repo) GetByUserID(ctx context.Context, userID string, limit int) ([]*no
 
 func (r *Repo) GetUnreadCount(ctx context.Context, userID string) (int, error) {
 	query := `
-	SELECTO COUNT(*) FROM notifications
+	SELECT COUNT(*) FROM notifications
 	WHERE user_id = ? AND is_read = 0`
 
 	stmt, err := r.DB.PrepareContext(ctx, query)

@@ -85,7 +85,7 @@ func middlewareChain(handler http.HandlerFunc, middlewares ...func(http.HandlerF
 func (server *Server) AddHTTPRoutes() {
 	server.router.HandleFunc(apiContext+"/health",
 		middlewareChain(
-			health.NewHandler(server.logger).HealthCheck,
+			health.NewHandler(server.logger, server.notifications).HealthCheck,
 			server.middleware.Authorization.Optional,
 		))
 
@@ -211,35 +211,35 @@ func (server *Server) AddHTTPRoutes() {
 
 	// Notifications routes
 
-	server.router.HandleFunc(apiContext+"notifications/stream", //get
+	server.router.HandleFunc(apiContext+"/notifications/stream", //get
 		middlewareChain(
 			streamnotification.NewHandler(server.notifications).StreamNotifications,
 			server.middleware.Authorization.Required,
 		),
 	)
 
-	server.router.HandleFunc(apiContext+"notifications/unread-count", //get
+	server.router.HandleFunc(apiContext+"/otifications/unread-count", //get
 		middlewareChain(
 			getunreadcount.NewHandler(server.notifications).GetUnread,
 			server.middleware.Authorization.Required,
 		),
 	)
 
-	server.router.HandleFunc(apiContext+"notifications", //get
+	server.router.HandleFunc(apiContext+"/notifications", //get
 		middlewareChain(
 			getnotifications.NewHandler(server.notifications).GetNotifications,
 			server.middleware.Authorization.Required,
 		),
 	)
 
-	server.router.HandleFunc(apiContext+"notifications/mark-read", //post
+	server.router.HandleFunc(apiContext+"/notifications/mark-read", //post
 		middlewareChain(
 			markasread.NewHandler(server.notifications).MarkAsRead,
 			server.middleware.Authorization.Required,
 		),
 	)
 
-	server.router.HandleFunc(apiContext+"notifications/mark-all-read", //post
+	server.router.HandleFunc(apiContext+"/notifications/mark-all-read", //post
 		middlewareChain(
 			markallasread.NewHandler(server.notifications).MarkAllAsRead,
 			server.middleware.Authorization.Required,

@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS votes (
 );
 
 -- Notifications
-CREATE TABLE IF NOT EXISTS notifications {
+CREATE TABLE IF NOT EXISTS notifications (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id TEXT NOT NULL,
     type TEXT NOT NULL,
@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS notifications {
     is_read BOOLEAN DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-};
+);
 
 -- Users table indexes
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);

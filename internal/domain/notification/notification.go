@@ -12,7 +12,7 @@ const (
 
 type Notification struct {
 	CreatedAt   time.Time
-	RelatedID   *int
+	RelatedID   string
 	UserID      string
 	Type        Type
 	Title       string

@@ -2,6 +2,7 @@ package getnotifications
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -56,6 +57,7 @@ func (h *Handler) GetNotifications(w http.ResponseWriter, r *http.Request) {
 			"failed to fetch notifications",
 			http.StatusInternalServerError,
 		)
+		fmt.Printf(err.Error())
 		return
 	}
 
