@@ -2,7 +2,6 @@ package getnotifications
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -26,6 +25,7 @@ func (h *Handler) GetNotifications(w http.ResponseWriter, r *http.Request) {
 			"Unauthorized",
 			http.StatusUnauthorized,
 		)
+		return
 	}
 
 	if user.ID == "" {
@@ -34,6 +34,7 @@ func (h *Handler) GetNotifications(w http.ResponseWriter, r *http.Request) {
 			"Unauthorized",
 			http.StatusUnauthorized,
 		)
+		return
 	}
 
 	userID := user.ID
@@ -41,7 +42,8 @@ func (h *Handler) GetNotifications(w http.ResponseWriter, r *http.Request) {
 	limit := 50
 	limitStr := r.URL.Query().Get("limit")
 	if limitStr != "" {
-		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 && l <= 100 {
+		l, err := strconv.Atoi(limitStr)
+		if err == nil && l > 0 && l <= 100 {
 			limit = l
 		}
 	}
@@ -57,10 +59,17 @@ func (h *Handler) GetNotifications(w http.ResponseWriter, r *http.Request) {
 			"failed to fetch notifications",
 			http.StatusInternalServerError,
 		)
-		fmt.Printf(err.Error())
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(notifications)
+	err = json.NewEncoder(w).Encode(notifications)
+	if err != nil {
+		http.Error(
+			w,
+			"failed to encode notifications",
+			http.StatusInternalServerError,
+		)
+		return
+	}
 }

@@ -2,14 +2,18 @@ package createcomment
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/arnald/forum/internal/app"
 	commentCommands "github.com/arnald/forum/internal/app/comments/commands"
+	topicqueries "github.com/arnald/forum/internal/app/topics/queries"
 	"github.com/arnald/forum/internal/config"
+	"github.com/arnald/forum/internal/domain/notification"
 	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/infra/middleware"
+	"github.com/arnald/forum/internal/infra/storage/notifications"
 	"github.com/arnald/forum/internal/pkg/helpers"
 	"github.com/arnald/forum/internal/pkg/validator"
 )
@@ -28,13 +32,15 @@ type Handler struct {
 	UserServices app.Services
 	Config       *config.ServerConfig
 	Logger       logger.Logger
+	Notification *notifications.NotificationService
 }
 
-func NewHandler(userServices app.Services, config *config.ServerConfig, logger logger.Logger) *Handler {
+func NewHandler(userServices app.Services, config *config.ServerConfig, logger logger.Logger, notifications *notifications.NotificationService) *Handler {
 	return &Handler{
 		UserServices: userServices,
 		Config:       config,
 		Logger:       logger,
+		Notification: notifications,
 	}
 }
 
@@ -97,6 +103,29 @@ func (h *Handler) CreateComment(w http.ResponseWriter, r *http.Request) {
 
 		h.Logger.PrintError(err, nil)
 		return
+	}
+
+	topic, err := h.UserServices.UserServices.Queries.GetTopic.Handle(ctx, topicqueries.GetTopicRequest{
+		UserID:  &user.ID,
+		TopicID: comment.TopicID,
+	})
+	if err != nil {
+		h.Logger.PrintError(err, nil)
+	}
+
+	notification := &notification.Notification{
+		ActorID:     user.Username,
+		UserID:      topic.UserID,
+		RelatedID:   strconv.Itoa(comment.TopicID),
+		RelatedType: "topic",
+		Type:        notification.NotificationTypeReply,
+		Title:       "New comment",
+		Message:     fmt.Sprintf("%s commented on your Topic %s", user.Username, topic.Title),
+	}
+
+	err = h.Notification.CreateNotification(ctx, notification)
+	if err != nil {
+		h.Logger.PrintError(err, nil)
 	}
 
 	commentResponse := ResponseModel{

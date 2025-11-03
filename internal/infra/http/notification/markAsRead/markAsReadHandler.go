@@ -24,6 +24,7 @@ func (h *Handler) MarkAsRead(w http.ResponseWriter, r *http.Request) {
 			"Unauthorized",
 			http.StatusUnauthorized,
 		)
+		return
 	}
 
 	if user.ID == "" {
@@ -32,6 +33,7 @@ func (h *Handler) MarkAsRead(w http.ResponseWriter, r *http.Request) {
 			"Unauthorized",
 			http.StatusUnauthorized,
 		)
+		return
 	}
 
 	userID := user.ID

@@ -24,6 +24,7 @@ func (h *Handler) GetUnread(w http.ResponseWriter, r *http.Request) {
 			"Unauthorized",
 			http.StatusUnauthorized,
 		)
+		return
 	}
 
 	if user.ID == "" {
@@ -32,6 +33,7 @@ func (h *Handler) GetUnread(w http.ResponseWriter, r *http.Request) {
 			"Unauthorized",
 			http.StatusUnauthorized,
 		)
+		return
 	}
 
 	userID := user.ID
@@ -47,5 +49,13 @@ func (h *Handler) GetUnread(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]int{"count": count})
+	err = json.NewEncoder(w).Encode(map[string]int{"count": count})
+	if err != nil {
+		http.Error(
+			w,
+			"failed to encode response",
+			http.StatusInternalServerError,
+		)
+		return
+	}
 }

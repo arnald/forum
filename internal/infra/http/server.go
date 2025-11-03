@@ -135,7 +135,7 @@ func (server *Server) AddHTTPRoutes() {
 	// Comment routes
 	server.router.HandleFunc(apiContext+"/comments/create",
 		middlewareChain(
-			createcomment.NewHandler(server.appServices, server.config, server.logger).CreateComment,
+			createcomment.NewHandler(server.appServices, server.config, server.logger, server.notifications).CreateComment,
 			server.middleware.Authorization.Required,
 		),
 	)
@@ -190,7 +190,7 @@ func (server *Server) AddHTTPRoutes() {
 	// Vote routes
 	server.router.HandleFunc(apiContext+"/vote/cast",
 		middlewareChain(
-			castvote.NewHandler(server.appServices, server.config, server.logger).CastVote,
+			castvote.NewHandler(server.appServices, server.config, server.logger, server.notifications).CastVote,
 			server.middleware.Authorization.Required,
 		),
 	)
@@ -211,35 +211,35 @@ func (server *Server) AddHTTPRoutes() {
 
 	// Notifications routes
 
-	server.router.HandleFunc(apiContext+"/notifications/stream", //get
+	server.router.HandleFunc(apiContext+"/notifications/stream", // get
 		middlewareChain(
 			streamnotification.NewHandler(server.notifications).StreamNotifications,
 			server.middleware.Authorization.Required,
 		),
 	)
 
-	server.router.HandleFunc(apiContext+"/otifications/unread-count", //get
+	server.router.HandleFunc(apiContext+"/otifications/unread-count", // get
 		middlewareChain(
 			getunreadcount.NewHandler(server.notifications).GetUnread,
 			server.middleware.Authorization.Required,
 		),
 	)
 
-	server.router.HandleFunc(apiContext+"/notifications", //get
+	server.router.HandleFunc(apiContext+"/notifications", // get
 		middlewareChain(
 			getnotifications.NewHandler(server.notifications).GetNotifications,
 			server.middleware.Authorization.Required,
 		),
 	)
 
-	server.router.HandleFunc(apiContext+"/notifications/mark-read", //post
+	server.router.HandleFunc(apiContext+"/notifications/mark-read", // post
 		middlewareChain(
 			markasread.NewHandler(server.notifications).MarkAsRead,
 			server.middleware.Authorization.Required,
 		),
 	)
 
-	server.router.HandleFunc(apiContext+"/notifications/mark-all-read", //post
+	server.router.HandleFunc(apiContext+"/notifications/mark-all-read", // post
 		middlewareChain(
 			markallasread.NewHandler(server.notifications).MarkAllAsRead,
 			server.middleware.Authorization.Required,

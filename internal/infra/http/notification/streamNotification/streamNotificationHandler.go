@@ -10,6 +10,8 @@ import (
 	"github.com/arnald/forum/internal/infra/storage/notifications"
 )
 
+const tickerTime = 30
+
 type Handler struct {
 	service *notifications.NotificationService
 }
@@ -26,6 +28,7 @@ func (h *Handler) StreamNotifications(w http.ResponseWriter, r *http.Request) {
 			"Unauthorized",
 			http.StatusUnauthorized,
 		)
+		return
 	}
 
 	userID := user.ID
@@ -56,11 +59,10 @@ func (h *Handler) StreamNotifications(w http.ResponseWriter, r *http.Request) {
 			w,
 			"data: {\"type\":\"unread_count\",\"count\":%d}\n\n", count,
 		)
-		fmt.Printf(err.Error())
 		flusher.Flush()
 	}
 
-	ticker := time.NewTicker(30 * time.Second)
+	ticker := time.NewTicker(tickerTime * time.Second)
 	defer ticker.Stop()
 
 	for {
@@ -77,7 +79,6 @@ func (h *Handler) StreamNotifications(w http.ResponseWriter, r *http.Request) {
 				w,
 				"data: %s\n\n", data,
 			)
-			fmt.Printf("Sent notification: %s\n", data)
 			flusher.Flush()
 		case <-ticker.C:
 			fmt.Fprintf(
