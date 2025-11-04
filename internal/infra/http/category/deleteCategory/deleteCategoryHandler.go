@@ -11,11 +11,8 @@ import (
 	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/infra/middleware"
 	"github.com/arnald/forum/internal/pkg/helpers"
+	"github.com/arnald/forum/internal/pkg/validator"
 )
-
-type RequestModel struct {
-	CategoryID int `json:"categoryId"`
-}
 
 type ResponseModel struct {
 	Message    string `json:"message"`
@@ -48,16 +45,33 @@ func (h *Handler) DeleteCategory(w http.ResponseWriter, r *http.Request) {
 
 	user := middleware.GetUserFromContext(r)
 
-	var categoryToDelete RequestModel
-
-	_, err := helpers.ParseBodyRequest(r, &categoryToDelete)
+	categoryID, err := helpers.GetQueryInt(r, "id")
 	if err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		h.Logger.PrintError(err, nil)
+		helpers.RespondWithError(
+			w,
+			http.StatusBadRequest,
+			err.Error(),
+		)
+	}
+
+	val := validator.New()
+	validator.ValidateDeleteCategory(val, &struct {
+		CategoryID int
+	}{
+		CategoryID: categoryID,
+	})
+
+	if !val.Valid() {
+		h.Logger.PrintError(logger.ErrValidationFailed, val.Errors)
+		helpers.RespondWithError(w,
+			http.StatusBadRequest,
+			val.ToStringErrors())
 		return
 	}
 
 	err = h.UserServices.UserServices.Commands.DeleteCategory.Handle(ctx, categorycommands.DeleteCategoryRequest{
-		CategoryID: categoryToDelete.CategoryID,
+		CategoryID: categoryID,
 		UserID:     user.ID,
 	})
 	if err != nil {
@@ -70,14 +84,14 @@ func (h *Handler) DeleteCategory(w http.ResponseWriter, r *http.Request) {
 		http.StatusOK,
 		nil,
 		ResponseModel{
-			CategoryID: categoryToDelete.CategoryID,
+			CategoryID: categoryID,
 			Message:    "Category deleted successfully",
 		})
 
 	h.Logger.PrintInfo(
 		"Category deleted successfully",
 		map[string]string{
-			"cat_id":  strconv.Itoa(categoryToDelete.CategoryID),
+			"cat_id":  strconv.Itoa(categoryID),
 			"user_id": user.ID,
 		})
 }

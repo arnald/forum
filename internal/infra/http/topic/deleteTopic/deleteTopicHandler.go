@@ -10,11 +10,8 @@ import (
 	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/infra/middleware"
 	"github.com/arnald/forum/internal/pkg/helpers"
+	"github.com/arnald/forum/internal/pkg/validator"
 )
-
-type RequestModel struct {
-	TopicID int `json:"topicId"`
-}
 
 type ResponseModel struct {
 	UserID  string `json:"userId"`
@@ -48,23 +45,35 @@ func (h *Handler) DeleteTopic(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), h.Config.Timeouts.HandlerTimeouts.UserRegister)
 	defer cancel()
 
-	var topicToDelete RequestModel
-
-	_, err := helpers.ParseBodyRequest(r, &topicToDelete)
+	topicID, err := helpers.GetQueryInt(r, "id")
 	if err != nil {
-		helpers.RespondWithError(w,
-			http.StatusBadRequest,
-			"Invalid request payload",
-		)
-
 		h.Logger.PrintError(err, nil)
-
+		helpers.RespondWithError(
+			w,
+			http.StatusBadRequest,
+			err.Error(),
+		)
 		return
 	}
-	defer r.Body.Close()
+
+	val := validator.New()
+
+	validator.ValidateDeleteTopic(val, &struct {
+		TopicID int
+	}{
+		TopicID: topicID,
+	})
+
+	if !val.Valid() {
+		h.Logger.PrintError(logger.ErrValidationFailed, val.Errors)
+		helpers.RespondWithError(w,
+			http.StatusBadRequest,
+			val.ToStringErrors())
+		return
+	}
 
 	err = h.UserServices.UserServices.Commands.DeleteTopic.Handle(ctx, topicCommands.DeleteTopicRequest{
-		TopicID: topicToDelete.TopicID,
+		TopicID: topicID,
 		User:    user,
 	})
 	if err != nil {
@@ -80,7 +89,7 @@ func (h *Handler) DeleteTopic(w http.ResponseWriter, r *http.Request) {
 
 	topicResponse := ResponseModel{
 		UserID:  user.ID,
-		TopicID: topicToDelete.TopicID,
+		TopicID: topicID,
 		Message: "Topic deleted successfully",
 	}
 

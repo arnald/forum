@@ -10,6 +10,8 @@ const (
 	MinTopicContentLength = 10
 	MaxTopicContentLength = 1000
 	MaxPageSize           = 100
+	MinCategoryNameLength = 3
+	MaxCategoryNameLength = 50
 )
 
 func ValidateUserRegistration(v *Validator, data any) {
@@ -145,6 +147,92 @@ func ValidateGetAllTopics(v *Validator, data any) {
 				required,
 				isPositiveInt,
 				maxInt(MaxPageSize),
+			},
+		},
+	}
+
+	ValidateStruct(v, data, rules)
+}
+
+func ValidateGetTopic(v *Validator, data any) {
+	rules := []ValidationRule{
+		{
+			Field: "TopicID",
+			Rules: []func(any) (bool, string){
+				required,
+				isPositiveInt,
+			},
+		},
+	}
+
+	ValidateStruct(v, data, rules)
+}
+
+func ValidateDeleteTopic(v *Validator, data any) {
+	rules := []ValidationRule{
+		{
+			Field: "TopicID",
+			Rules: []func(any) (bool, string){
+				required,
+				isPositiveInt,
+			},
+		},
+	}
+
+	ValidateStruct(v, data, rules)
+}
+
+func ValidateDeleteCategory(v *Validator, data any) {
+	rules := []ValidationRule{
+		{
+			Field: "CategoryID",
+			Rules: []func(any) (bool, string){
+				required,
+				isPositiveInt,
+			},
+		},
+	}
+
+	ValidateStruct(v, data, rules)
+}
+
+func ValidateGetCategoryByID(v *Validator, data any) {
+	rules := []ValidationRule{
+		{
+			Field: "CategoryID",
+			Rules: []func(any) (bool, string){
+				required,
+				isPositiveInt,
+			},
+		},
+	}
+
+	ValidateStruct(v, data, rules)
+}
+
+func ValidateCreateCategory(v *Validator, data any) {
+	rules := []ValidationRule{
+		{
+			Field: "Name",
+			Rules: []func(any) (bool, string){
+				required,
+				minLength(MinCategoryNameLength),
+				maxLength(MaxCategoryNameLength),
+			},
+		},
+	}
+
+	ValidateStruct(v, data, rules)
+}
+
+func ValidateUpdateCategory(v *Validator, data any) {
+	rules := []ValidationRule{
+		{
+			Field: "Name",
+			Rules: []func(any) (bool, string){
+				required,
+				minLength(MinCategoryNameLength),
+				maxLength(MaxCategoryNameLength),
 			},
 		},
 	}

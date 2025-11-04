@@ -1,4 +1,4 @@
-package getalltopics
+package getallcategories
 
 import (
 	"context"
@@ -6,17 +6,16 @@ import (
 	"strconv"
 
 	"github.com/arnald/forum/internal/app"
-	topicQueries "github.com/arnald/forum/internal/app/topics/queries"
+	categoryqueries "github.com/arnald/forum/internal/app/categories/queries"
 	"github.com/arnald/forum/internal/config"
-	"github.com/arnald/forum/internal/domain/topic"
+	"github.com/arnald/forum/internal/domain/category"
 	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/pkg/helpers"
-	"github.com/arnald/forum/internal/pkg/validator"
 )
 
 type ResponseModel struct {
 	Filters    map[string]interface{}   `json:"filters"`
-	Topics     []topic.Topic            `json:"topics"`
+	Categories []category.Category      `json:"categories"`
 	Pagination helpers.PaginationParams `json:"pagination"`
 }
 
@@ -34,7 +33,7 @@ func NewHandler(userServices app.Services, config *config.ServerConfig, logger l
 	}
 }
 
-func (h *Handler) GetAllTopics(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetAllCategories(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		h.Logger.PrintError(logger.ErrInvalidRequestMethod, nil)
 		helpers.RespondWithError(w, http.StatusMethodNotAllowed, "Invalid request method")
@@ -51,56 +50,36 @@ func (h *Handler) GetAllTopics(w http.ResponseWriter, r *http.Request) {
 	orderBy := params.GetQueryStringOr("order_by", "created_at")
 	order := params.GetQueryStringOr("order", "desc")
 	filter := params.GetQueryStringOr("search", "")
-	categoryID := params.GetQueryIntOr("category", 0)
 
-	val := validator.New()
-
-	validator.ValidateGetAllTopics(val, &struct {
-		OrderBy    string
-		Order      string
-		Search     string
-		CategoryID int
-	}{
-		OrderBy:    orderBy,
-		Order:      order,
-		Search:     filter,
-		CategoryID: categoryID,
-	})
-
-	if !val.Valid() {
-		h.Logger.PrintError(logger.ErrValidationFailed, val.Errors)
-		helpers.RespondWithError(w,
-			http.StatusBadRequest,
-			val.ToStringErrors(),
-		)
-		return
-	}
-	topics, totalCount, err := h.UserServices.UserServices.Queries.GetAllTopics.Handle(ctx, topicQueries.GetAllTopicsRequest{
-		Page:       pagination.Page,
-		Size:       pagination.Limit,
-		Offset:     pagination.Offset,
-		OrderBy:    orderBy,
-		Order:      order,
-		Filter:     filter,
-		CategoryID: categoryID,
+	categories, totalCount, err := h.UserServices.UserServices.Queries.GetAllCategories.Handle(ctx, categoryqueries.GetAllCategoriesRequest{
+		OrderBy: orderBy,
+		Order:   order,
+		Filter:  filter,
+		Page:    pagination.Page,
+		Size:    pagination.Limit,
+		Offset:  pagination.Offset,
 	})
 	if err != nil {
 		h.Logger.PrintError(err, nil)
-		helpers.RespondWithError(w, http.StatusInternalServerError, "Failed to get topics")
+		helpers.RespondWithError(
+			w,
+			http.StatusInternalServerError,
+			"Failed to get categories",
+		)
 		return
 	}
 
 	totalPages := (totalCount + pagination.Limit - 1) / pagination.Limit
 
 	paginationMeta := map[string]interface{}{
-		"page":        pagination.Page,
-		"limit":       pagination.Limit,
-		"total":       totalCount,
-		"total_pages": totalPages,
-		"has_next":    pagination.Page < totalPages,
-		"has_prev":    pagination.Page > 1,
-		"next_page":   nil,
-		"prev_page":   nil,
+		"page":       pagination.Page,
+		"limit":      pagination.Limit,
+		"totalPages": totalPages,
+		"totalItems": totalCount,
+		"has_next":   pagination.Page < totalPages,
+		"has_prev":   pagination.Page > 1,
+		"next_page":  nil,
+		"prev_page":  nil,
 	}
 
 	if pagination.Page < totalPages {
@@ -117,16 +96,16 @@ func (h *Handler) GetAllTopics(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := map[string]interface{}{
-		"topics":     topics,
+		"categories": categories,
 		"pagination": paginationMeta,
 		"filters":    appliedFilters,
 	}
 
 	helpers.RespondWithJSON(w, http.StatusOK, nil, response)
 
-	h.Logger.PrintInfo("Topics retrieved successfully", map[string]string{
+	h.Logger.PrintInfo("Categories retrieved successfully", map[string]string{
 		"page":  strconv.Itoa(pagination.Page),
-		"count": strconv.Itoa(len(topics)),
+		"count": strconv.Itoa(len(categories)),
 		"total": strconv.Itoa(totalCount),
 	})
 }

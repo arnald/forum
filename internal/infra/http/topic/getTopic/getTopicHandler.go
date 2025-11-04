@@ -2,7 +2,6 @@ package gettopic
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -11,12 +10,10 @@ import (
 	"github.com/arnald/forum/internal/config"
 	"github.com/arnald/forum/internal/domain/comment"
 	"github.com/arnald/forum/internal/infra/logger"
+	"github.com/arnald/forum/internal/infra/storage/sqlite/topics"
 	"github.com/arnald/forum/internal/pkg/helpers"
+	"github.com/arnald/forum/internal/pkg/validator"
 )
-
-type RequestModel struct {
-	TopicID int `json:"topicId"`
-}
 
 type ResponseModel struct {
 	Title      string            `json:"title"`
@@ -25,7 +22,7 @@ type ResponseModel struct {
 	UserID     string            `json:"userId"`
 	CreatedAt  string            `json:"createdAt"`
 	UpdatedAt  string            `json:"updatedAt"`
-	Comments   []comment.Comment `json:"comments,omitempty"`
+	Comments   []comment.Comment `json:"comments"`
 	TopicID    int               `json:"topicId"`
 	CategoryID int               `json:"categoryId"`
 }
@@ -51,23 +48,43 @@ func (h *Handler) GetTopic(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), h.Config.Timeouts.HandlerTimeouts.UserRegister)
-	defer cancel()
-
-	var topicToGet RequestModel
-
-	err := json.NewDecoder(r.Body).Decode(&topicToGet)
+	topicID, err := helpers.GetQueryInt(r, "id")
 	if err != nil {
 		h.Logger.PrintError(err, nil)
-		helpers.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		helpers.RespondWithError(
+			w,
+			http.StatusBadRequest,
+			err.Error(),
+		)
 		return
 	}
 
+	val := validator.New()
+
+	testStruct := &struct {
+		TopicID int
+	}{
+		TopicID: topicID,
+	}
+	validator.ValidateGetTopic(val, testStruct)
+
+	if !val.Valid() {
+		h.Logger.PrintError(logger.ErrValidationFailed, val.Errors)
+		helpers.RespondWithError(w,
+			http.StatusBadRequest,
+			val.ToStringErrors(),
+		)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), h.Config.Timeouts.HandlerTimeouts.UserRegister)
+	defer cancel()
+
 	topic, err := h.UserServices.UserServices.Queries.GetTopic.Handle(ctx, topicQueries.GetTopicRequest{
-		TopicID: topicToGet.TopicID,
+		TopicID: topicID,
 	})
 	if err != nil {
-		if errors.Is(err, topicQueries.ErrTopicNotFound) {
+		if errors.Is(err, topics.ErrTopicNotFound) {
 			helpers.RespondWithError(w, http.StatusNotFound, "Topic not found")
 			return
 		}

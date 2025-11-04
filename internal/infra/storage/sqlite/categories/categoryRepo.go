@@ -48,36 +48,50 @@ func (r *Repo) CreateCategory(ctx context.Context, category *category.Category) 
 	return nil
 }
 
-func (r *Repo) GetAllCategories(ctx context.Context) ([]*category.Category, error) {
+func (r *Repo) GetAllCategories(ctx context.Context, page, size int, orderBy, order, filter string) ([]category.Category, error) {
 	query := `
-	SELECT id, name, description, created_by, created_at
-	FROM categories
+	SELECT c.id, c.name, c.description, c.created_at, c.created_by
+	FROM categories c
+	WHERE 1=1
 	`
+	args := make([]interface{}, 0)
+
+	if filter != "" {
+		query += " AND (c.name LIKE ? OR c.description LIKE ?)"
+		filterParam := "%" + filter + "%"
+		args = append(args, filterParam, filterParam)
+	}
+
+	query += " ORDER BY c." + orderBy + " " + order + " LIMIT ? OFFSET ?"
+	offset := (page - 1) * size
+	args = append(args, size, offset)
+
 	stmt, err := r.DB.PrepareContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("prepare failed: %w", err)
 	}
 	defer stmt.Close()
 
-	rows, err := stmt.QueryContext(ctx)
+	rows, err := stmt.QueryContext(ctx, args...)
 	if err != nil {
-		return nil, fmt.Errorf("query failed: %w", err)
+		return nil, fmt.Errorf("failed to query categories: %w", err)
 	}
 	defer rows.Close()
 
-	categoriesList := make([]*category.Category, 0)
+	categories := make([]category.Category, 0)
 	for rows.Next() {
 		var category category.Category
 		err = rows.Scan(
 			&category.ID,
 			&category.Name,
 			&category.Description,
+			&category.CreatedAt,
 			&category.CreatedBy,
-			&category.CreatedAt)
+		)
 		if err != nil {
 			return nil, fmt.Errorf("scan failed: %w", err)
 		}
-		categoriesList = append(categoriesList, &category)
+		categories = append(categories, category)
 	}
 
 	err = rows.Err()
@@ -85,7 +99,30 @@ func (r *Repo) GetAllCategories(ctx context.Context) ([]*category.Category, erro
 		return nil, fmt.Errorf("rows iteration failed: %w", err)
 	}
 
-	return categoriesList, nil
+	return categories, nil
+}
+
+func (r *Repo) GetTotalCategoriesCount(ctx context.Context, filter string) (int, error) {
+	countQuery := `
+	SELECT COUNT(*)
+	FROM categories c
+	WHERE 1=1
+	`
+
+	args := make([]interface{}, 0)
+	if filter != "" {
+		countQuery += " AND (c.name LIKE ? OR c.description LIKE ?)"
+		filterParam := "%" + filter + "%"
+		args = append(args, filterParam, filterParam)
+	}
+
+	var totalCount int
+	err := r.DB.QueryRowContext(ctx, countQuery, args...).Scan(&totalCount)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get total count: %w", err)
+	}
+
+	return totalCount, nil
 }
 
 func (r *Repo) GetCategoryByID(ctx context.Context, id int) (*category.Category, error) {

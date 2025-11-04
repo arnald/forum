@@ -10,11 +10,8 @@ import (
 	"github.com/arnald/forum/internal/config"
 	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/pkg/helpers"
+	"github.com/arnald/forum/internal/pkg/validator"
 )
-
-type RequestModel struct {
-	CategoryID int `json:"categoryId"`
-}
 
 type ResponseModel struct {
 	CategoryName string `json:"categoryName"`
@@ -45,16 +42,34 @@ func (h *Handler) GetCategoryByID(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), h.Config.Timeouts.HandlerTimeouts.UserRegister)
 	defer cancel()
 
-	var categoryToGet RequestModel
-
-	_, err := helpers.ParseBodyRequest(r, &categoryToGet)
+	categoryID, err := helpers.GetQueryInt(r, "id")
 	if err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		h.Logger.PrintError(err, nil)
+		helpers.RespondWithError(
+			w,
+			http.StatusBadRequest,
+			err.Error(),
+		)
 		return
 	}
 
+	val := validator.New()
+
+	validator.ValidateGetCategoryByID(val, &struct {
+		CategoryID int
+	}{
+		CategoryID: categoryID,
+	})
+
+	if !val.Valid() {
+		h.Logger.PrintError(logger.ErrValidationFailed, val.Errors)
+		helpers.RespondWithError(w,
+			http.StatusBadRequest,
+			val.ToStringErrors())
+		return
+	}
 	category, err := h.UserServices.UserServices.Queries.GetCategoryByID.Handle(ctx, categoryqueries.GetCategoryByIDRequest{
-		ID: categoryToGet.CategoryID,
+		ID: categoryID,
 	})
 	if err != nil {
 		h.Logger.PrintError(err, nil)
