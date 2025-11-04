@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Forum</title>
+    <style>
+        .notification-bell {
+            position: relative;
+            cursor: pointer;
+        }
+        .notification-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: red;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 12px;
+        }
+        .notification-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            background: white;
+            border: 1px solid #ccc;
+            width: 300px;
+            max-height: 400px;
+            overflow-y: auto;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .notification-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .notification-item.unread {
+            background: #f0f8ff;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="notification-bell" id="notificationBell">
+            🔔
+            <span class="notification-badge" id="notificationCount" style="display: none;">0</span>
+        </div>
+        <div class="notification-dropdown" id="notificationDropdown">
+            <div id="notificationList"></div>
+        </div>
+    </nav>
+
+    <script>
+        // Set cookies FIRST (before any connections)
+        document.cookie = "session_token=dev_session_token_1; path=/; SameSite=None; Secure";
+        document.cookie = "refresh_token=dev_refresh_token_1; path=/; SameSite=None; Secure";
+
+        // Verify cookies are set
+        console.log('Cookies set:', document.cookie);
+        
+        // SSE Connection
+        let eventSource = null;
+        let unreadCount = 0;
+
+        function connectSSE() {
+            // Get JWT token from cookie or localStorage
+            // const token = getCookie('token'); // Implement this based on your auth
+            
+            // if (!token) return;
+            
+            eventSource = new EventSource('http://localhost:8080/api/v1/notifications/stream', {
+                withCredentials: true // Send cookies with the request
+            });
+            
+            eventSource.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                
+                if (data.type === 'connected') {
+                    console.log('Connected to notification stream');
+                } else if (data.type === 'unread_count') {
+                    updateBadge(data.count);
+                } else {
+                    // New notification
+                    handleNewNotification(data);
+                }
+            };
+            
+            eventSource.onerror = function() {
+                console.log('SSE connection lost, reconnecting...');
+                eventSource.close();
+                setTimeout(connectSSE, 5000); // Reconnect after 5s
+            };
+        }
+
+        function handleNewNotification(notification) {
+            unreadCount++;
+            updateBadge(unreadCount);
+            
+            // Show browser notification if permitted
+            if (Notification.permission === 'granted') {
+                new Notification(notification.Title, {
+                    body: notification.Message,
+                    icon: '/icon.png'
+                });
+                console.log('Browser notification shown');
+            }
+            
+            // Add to dropdown
+            addNotificationToList(notification);
+        }
+
+        function updateBadge(count) {
+            unreadCount = count;
+            const badge = document.getElementById('notificationCount');
+            if (count > 0) {
+                badge.textContent = count > 99 ? '99+' : count;
+                badge.style.display = 'block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function addNotificationToList(notification) {
+            const list = document.getElementById('notificationList');
+            const item = document.createElement('div');
+            item.className = 'notification-item' + (notification.Is_read ? '' : ' unread');
+            item.innerHTML = `
+                <strong>${notification.Title}</strong>
+                <p>${notification.Message}</p>
+                <small>${new Date(notification.CreatedAt).toLocaleString()}</small>
+            `;
+            list.insertBefore(item, list.firstChild);
+        }
+
+        // Toggle dropdown
+        document.getElementById('notificationBell').addEventListener('click', function() {
+            const dropdown = document.getElementById('notificationDropdown');
+            dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+            
+            if (dropdown.style.display === 'block') {
+                loadNotifications();
+            }
+        });
+
+        function loadNotifications() {
+            fetch('http://localhost:8080/api/v1/notifications?limit=20', {
+                method: 'GET',
+                credentials: 'include' // Send cookies with the request
+            })
+                .then(res => res.json())
+                .then(notifications => {
+                    const list = document.getElementById('notificationList');
+                    list.innerHTML = '';
+                    notifications.forEach(addNotificationToList);
+                });
+        }
+
+        // Request browser notification permission
+        if (Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+
+        // Connect on page load
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', connectSSE);
+        } else {
+            connectSSE();
+        }
+
+        // Helper to get cookie
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+    </script>
+</body>
+</html>

@@ -31,5 +31,6 @@ func (h *castVoteRequestHandler) Handle(ctx context.Context, req CastVoteRequest
 	if err != nil {
 		return err
 	}
+
 	return nil
 }

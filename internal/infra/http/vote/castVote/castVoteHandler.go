@@ -3,14 +3,22 @@ package castvote
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/arnald/forum/internal/app"
+	commentqueries "github.com/arnald/forum/internal/app/comments/queries"
+	topicqueries "github.com/arnald/forum/internal/app/topics/queries"
 	votecommands "github.com/arnald/forum/internal/app/votes/commands"
 	"github.com/arnald/forum/internal/config"
+	"github.com/arnald/forum/internal/domain/comment"
+	"github.com/arnald/forum/internal/domain/notification"
+	"github.com/arnald/forum/internal/domain/topic"
 	"github.com/arnald/forum/internal/domain/vote"
 	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/infra/middleware"
+	"github.com/arnald/forum/internal/infra/storage/notifications"
 	"github.com/arnald/forum/internal/pkg/helpers"
 )
 
@@ -26,16 +34,18 @@ type ResponseModel struct {
 }
 
 type Handler struct {
-	Services app.Services
-	Config   *config.ServerConfig
-	Logger   logger.Logger
+	Services      app.Services
+	Config        *config.ServerConfig
+	Logger        logger.Logger
+	Notifications *notifications.NotificationService
 }
 
-func NewHandler(services app.Services, config *config.ServerConfig, logger logger.Logger) *Handler {
+func NewHandler(services app.Services, config *config.ServerConfig, logger logger.Logger, notifications *notifications.NotificationService) *Handler {
 	return &Handler{
-		Services: services,
-		Config:   config,
-		Logger:   logger,
+		Services:      services,
+		Config:        config,
+		Logger:        logger,
+		Notifications: notifications,
 	}
 }
 
@@ -76,14 +86,14 @@ func (h *Handler) CastVote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	targer := vote.Target{
+	target := vote.Target{
 		TopicID:   req.TopicID,
 		CommentID: req.CommentID,
 	}
 
 	err = h.Services.UserServices.Commands.CastVote.Handle(ctx, votecommands.CastVoteRequest{
 		UserID:       user.ID,
-		Target:       targer,
+		Target:       target,
 		ReactionType: req.ReactionType,
 	})
 	if err != nil {
@@ -96,6 +106,13 @@ func (h *Handler) CastVote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.sendVoteNotification(
+		ctx,
+		user.Username,
+		user.ID,
+		req,
+	)
+
 	Response := ResponseModel{
 		Message: "Vote cast successfully",
 	}
@@ -105,4 +122,61 @@ func (h *Handler) CastVote(w http.ResponseWriter, r *http.Request) {
 		nil,
 		Response,
 	)
+}
+
+func (h *Handler) getCommentOwner(ctx context.Context, commentID int) (*comment.Comment, error) {
+	return h.Services.UserServices.Queries.GetComment.Handle(ctx, commentqueries.GetCommentRequest{
+		CommentID: commentID,
+	})
+}
+
+func (h *Handler) getTopicOwner(ctx context.Context, topicID int) (*topic.Topic, error) {
+	return h.Services.UserServices.Queries.GetTopic.Handle(ctx, topicqueries.GetTopicRequest{
+		TopicID: topicID,
+	})
+}
+
+func (h *Handler) sendVoteNotification(ctx context.Context, username, userID string, req RequestModel) {
+	var ownerID string
+	var contentType string
+	var contentID string
+
+	if req.CommentID != nil {
+		comment, err := h.getCommentOwner(ctx, *req.CommentID)
+		if err != nil {
+			h.Logger.PrintError(err, nil)
+			return
+		}
+		ownerID = comment.UserID
+		contentType = "comment"
+		contentID = strconv.Itoa(*req.CommentID)
+	} else if req.TopicID != nil {
+		topic, err := h.getTopicOwner(ctx, *req.TopicID)
+		if err != nil {
+			h.Logger.PrintError(err, nil)
+			return
+		}
+		ownerID = topic.UserID
+		contentType = "topic"
+		contentID = strconv.Itoa(*req.TopicID)
+	}
+
+	if ownerID == "" || ownerID == userID {
+		return
+	}
+
+	notification := &notification.Notification{
+		Type:        notification.NotificationTypeLike,
+		RelatedID:   contentID,
+		UserID:      ownerID,
+		ActorID:     userID,
+		Message:     fmt.Sprintf("%s liked your %s", username, contentType),
+		Title:       "New like!",
+		RelatedType: contentType,
+	}
+
+	err := h.Notifications.CreateNotification(ctx, notification)
+	if err != nil {
+		h.Logger.PrintError(err, nil)
+	}
 }

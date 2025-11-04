@@ -5,6 +5,7 @@ import (
 
 	"github.com/arnald/forum/internal/domain/category"
 	"github.com/arnald/forum/internal/domain/comment"
+	"github.com/arnald/forum/internal/domain/notification"
 	"github.com/arnald/forum/internal/domain/topic"
 	"github.com/arnald/forum/internal/domain/user"
 	"github.com/arnald/forum/internal/domain/vote"
@@ -16,11 +17,12 @@ import (
 )
 
 type Repositories struct {
-	UserRepo     user.Repository
-	CategoryRepo category.Repository
-	TopicRepo    topic.Repository
-	CommentRepo  comment.Repository
-	VoteRepo     vote.Repository
+	UserRepo         user.Repository
+	CategoryRepo     category.Repository
+	TopicRepo        topic.Repository
+	CommentRepo      comment.Repository
+	VoteRepo         vote.Repository
+	NotificationRepo notification.Repository
 }
 
 func NewRepositories(db *sql.DB) *Repositories {
