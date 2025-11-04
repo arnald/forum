@@ -9,6 +9,21 @@ CREATE TABLE IF NOT EXISTS users (
     avatar_url TEXT
 );
 
+-- OAuth
+CREATE TABLE IF NOT EXISTS oauth_providers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id TEXT NOT NULL,
+    provider TEXT NOT NULL,
+    provider_user_id TEXT NOT NULL,
+    email TEXT,
+    username TEXT,
+    avatar_url TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DATETIME CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE(provider, provider_user_id)
+);
+
 -- Sessions
 CREATE TABLE IF NOT EXISTS sessions (
     token TEXT PRIMARY KEY,
