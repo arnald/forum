@@ -9,10 +9,13 @@ import (
 	topicQueries "github.com/arnald/forum/internal/app/topics/queries"
 	userCommands "github.com/arnald/forum/internal/app/user/commands"
 	userQueries "github.com/arnald/forum/internal/app/user/queries"
+	votecommands "github.com/arnald/forum/internal/app/votes/commands"
+	voteQueries "github.com/arnald/forum/internal/app/votes/queries"
 	"github.com/arnald/forum/internal/domain/category"
 	"github.com/arnald/forum/internal/domain/comment"
 	"github.com/arnald/forum/internal/domain/topic"
 	"github.com/arnald/forum/internal/domain/user"
+	"github.com/arnald/forum/internal/domain/vote"
 	"github.com/arnald/forum/internal/pkg/bcrypt"
 	"github.com/arnald/forum/internal/pkg/uuid"
 )
@@ -26,6 +29,7 @@ type Queries struct {
 	UserLoginUsername  userQueries.UserLoginUsernameRequestHandler
 	GetCategoryByID    categoryQueries.GetCategoryByIDHandler
 	GetAllCategories   categoryQueries.GetAllCategoriesRequestHandler
+	GetCounts          voteQueries.GetCountsRequestHandler
 }
 
 type Commands struct {
@@ -39,6 +43,8 @@ type Commands struct {
 	CreateCategory categoryCommands.CreateCategoryRequestHandler
 	UpdateCategory categoryCommands.UpdateCategoryRequestHandler
 	DeleteCategory categoryCommands.DeleteCategoryRequestHandler
+	CastVote       votecommands.CastVoteRequestHandler
+	DeleteVote     votecommands.DeleteVoteRequestHandler
 }
 
 type UserServices struct {
@@ -50,13 +56,13 @@ type Services struct {
 	UserServices UserServices
 }
 
-func NewServices(userRepo user.Repository, categoryRepo category.Repository, topicRepo topic.Repository, commentRepo comment.Repository) Services {
+func NewServices(userRepo user.Repository, categoryRepo category.Repository, topicRepo topic.Repository, commentRepo comment.Repository, voteRepo vote.Repository) Services {
 	uuidProvider := uuid.NewProvider()
 	encryption := bcrypt.NewProvider()
 	return Services{
 		UserServices: UserServices{
 			Queries: Queries{
-				topicQueries.NewGetTopicHandler(topicRepo),
+				topicQueries.NewGetTopicHandler(topicRepo, commentRepo),
 				topicQueries.NewGetAllTopicsHandler(topicRepo),
 				commentQueries.NewGetCommentHandler(commentRepo),
 				commentQueries.NewGetCommentsByTopicRequestHandler(commentRepo),
@@ -64,6 +70,7 @@ func NewServices(userRepo user.Repository, categoryRepo category.Repository, top
 				userQueries.NewUserLoginUsernameHandler(userRepo, encryption),
 				categoryQueries.NewGetCategoryByIDHandler(categoryRepo),
 				categoryQueries.NewGetAllCategoriesHandler(categoryRepo),
+				voteQueries.NewGetCountsRequestHandler(voteRepo),
 			},
 			Commands: Commands{
 				userCommands.NewUserRegisterHandler(userRepo, uuidProvider, encryption),
@@ -76,6 +83,8 @@ func NewServices(userRepo user.Repository, categoryRepo category.Repository, top
 				categoryCommands.NewCreateCategoryHandler(categoryRepo),
 				categoryCommands.NewUpdateCategoryHandler(categoryRepo),
 				categoryCommands.NewDeleteCategoryHandler(categoryRepo),
+				votecommands.NewCastVoteHandler(voteRepo),
+				votecommands.NewDeleteVoteHandler(voteRepo),
 			},
 		},
 	}

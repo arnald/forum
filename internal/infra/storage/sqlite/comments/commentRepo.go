@@ -216,3 +216,100 @@ func (r *Repo) GetCommentsByTopicID(ctx context.Context, topicID int) ([]comment
 
 	return comments, nil
 }
+
+func (r *Repo) GetCommentsWithVotes(ctx context.Context, topicID int, userID *string) ([]comment.Comment, error) {
+	query := `
+	SELECT
+		c.id, c.user_id, c.topic_id, c.content, c.created_at, c.updated_at,
+		u.username,
+		COALESCE(vote_counts.upvotes, 0) as upvote_count,
+		COALESCE(vote_counts.downvotes,0) as downvote_count,
+		COALESCE(vote_counts.score, 0) as vote_score`
+
+	if userID != nil {
+		query += `,
+		user_vote.reaction_type`
+	}
+
+	query += `
+	FROM comments c
+	LEFT JOIN users u ON c.user_id = u.id
+	LEFT JOIN (
+		SELECT
+			comment_id,
+			COUNT(CASE WHEN reaction_type = 1 THEN 1 END) as upvotes,
+			COUNT(CASE WHEN reaction_type = -1 THEN 1 END) as downvotes,
+			(COUNT(CASE WHEN reaction_type = 1 THEN 1 END) - COUNT(CASE WHEN reaction_type = -1 THEN 1 END)) as score
+			FROM votes
+			WHERE comment_id IS NOT NULL
+			GROUP BY comment_id
+		) vote_counts ON c.id = vote_counts.comment_id`
+
+	if userID != nil {
+		query += `
+	LEFT JOIN votes user_vote ON c.id = user_vote.comment_id
+		AND user_vote.user_id = ?`
+	}
+
+	query += ` WHERE c.topic_id = ? ORDER BY c.created_at ASC`
+
+	args := make([]interface{}, 0)
+	if userID != nil {
+		args = append(args, *userID)
+	}
+	args = append(args, topicID)
+
+	stmt, err := r.DB.PrepareContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to prepare statement: %w", err)
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.QueryContext(ctx, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query comments: %w", err)
+	}
+	defer rows.Close()
+
+	comments := make([]comment.Comment, 0)
+	for rows.Next() {
+		var commentResult comment.Comment
+		var userVote sql.NullInt32
+
+		scanFields := []interface{}{
+			&commentResult.ID,
+			&commentResult.UserID,
+			&commentResult.TopicID,
+			&commentResult.Content,
+			&commentResult.CreatedAt,
+			&commentResult.UpdatedAt,
+			&commentResult.OwnerUsername,
+			&commentResult.UpvoteCount,
+			&commentResult.DownvoteCount,
+			&commentResult.VoteScore,
+		}
+
+		if userID != nil {
+			scanFields = append(scanFields, &userVote)
+		}
+
+		err = rows.Scan(scanFields...)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan comment: %w", err)
+		}
+
+		if userID != nil && userVote.Valid {
+			vote := int(userVote.Int32)
+			commentResult.UserVote = &vote
+		}
+
+		comments = append(comments, commentResult)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return nil, fmt.Errorf("error itarating comments: %w", err)
+	}
+
+	return comments, nil
+}

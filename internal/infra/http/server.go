@@ -27,6 +27,9 @@ import (
 	updatetopic "github.com/arnald/forum/internal/infra/http/topic/updateTopic"
 	userLogin "github.com/arnald/forum/internal/infra/http/user/login"
 	userRegister "github.com/arnald/forum/internal/infra/http/user/register"
+	castvote "github.com/arnald/forum/internal/infra/http/vote/castVote"
+	deletevote "github.com/arnald/forum/internal/infra/http/vote/deleteVote"
+	getCounts "github.com/arnald/forum/internal/infra/http/vote/getVoteCounts"
 	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/infra/middleware"
 	"github.com/arnald/forum/internal/infra/storage/sessionstore"
@@ -109,10 +112,16 @@ func (server *Server) AddHTTPRoutes() {
 		),
 	)
 	server.router.HandleFunc(apiContext+"/topic",
-		gettopic.NewHandler(server.appServices, server.config, server.logger).GetTopic,
+		middlewareChain(
+			gettopic.NewHandler(server.appServices, server.config, server.logger).GetTopic,
+			server.middleware.Authorization.Optional,
+		),
 	)
 	server.router.HandleFunc(apiContext+"/topics/all",
-		getalltopics.NewHandler(server.appServices, server.config, server.logger).GetAllTopics,
+		middlewareChain(
+			getalltopics.NewHandler(server.appServices, server.config, server.logger).GetAllTopics,
+			server.middleware.Authorization.Optional,
+		),
 	)
 
 	// Comment routes
@@ -168,6 +177,28 @@ func (server *Server) AddHTTPRoutes() {
 	)
 	server.router.HandleFunc(apiContext+"/categories/all",
 		getallcategories.NewHandler(server.appServices, server.config, server.logger).GetAllCategories,
+	)
+
+	// Vote routes
+	server.router.HandleFunc(apiContext+"/vote/cast",
+		middlewareChain(
+			castvote.NewHandler(server.appServices, server.config, server.logger).CastVote,
+			server.middleware.Authorization.Required,
+		),
+	)
+
+	server.router.HandleFunc(apiContext+"/vote/delete",
+		middlewareChain(
+			deletevote.NewHandler(server.appServices, server.config, server.logger).DeleteVote,
+			server.middleware.Authorization.Required,
+		),
+	)
+
+	server.router.HandleFunc(apiContext+"/vote/counts",
+		middlewareChain(
+			getCounts.NewHandler(server.appServices, server.config, server.logger).GetCounts,
+			server.middleware.Authorization.Optional,
+		),
 	)
 }
 

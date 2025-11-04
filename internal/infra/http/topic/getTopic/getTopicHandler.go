@@ -10,21 +10,26 @@ import (
 	"github.com/arnald/forum/internal/config"
 	"github.com/arnald/forum/internal/domain/comment"
 	"github.com/arnald/forum/internal/infra/logger"
+	"github.com/arnald/forum/internal/infra/middleware"
 	"github.com/arnald/forum/internal/infra/storage/sqlite/topics"
 	"github.com/arnald/forum/internal/pkg/helpers"
 	"github.com/arnald/forum/internal/pkg/validator"
 )
 
 type ResponseModel struct {
-	Title      string            `json:"title"`
+	UserVote   *int              `json:"userVote"`
 	Content    string            `json:"content"`
 	ImagePath  string            `json:"imagePath"`
 	UserID     string            `json:"userId"`
 	CreatedAt  string            `json:"createdAt"`
 	UpdatedAt  string            `json:"updatedAt"`
+	Title      string            `json:"title"`
 	Comments   []comment.Comment `json:"comments"`
-	TopicID    int               `json:"topicId"`
 	CategoryID int               `json:"categoryId"`
+	Upvotes    int               `json:"upvotes"`
+	Downvotes  int               `json:"downvotes"`
+	Score      int               `json:"score"`
+	TopicID    int               `json:"topicId"`
 }
 
 type Handler struct {
@@ -46,6 +51,12 @@ func (h *Handler) GetTopic(w http.ResponseWriter, r *http.Request) {
 		h.Logger.PrintError(logger.ErrInvalidRequestMethod, nil)
 		helpers.RespondWithError(w, http.StatusMethodNotAllowed, "Invalid request method")
 		return
+	}
+
+	var userID *string
+	user := middleware.GetUserFromContext(r)
+	if user != nil {
+		userID = &user.ID
 	}
 
 	topicID, err := helpers.GetQueryInt(r, "id")
@@ -82,6 +93,7 @@ func (h *Handler) GetTopic(w http.ResponseWriter, r *http.Request) {
 
 	topic, err := h.UserServices.UserServices.Queries.GetTopic.Handle(ctx, topicQueries.GetTopicRequest{
 		TopicID: topicID,
+		UserID:  userID,
 	})
 	if err != nil {
 		if errors.Is(err, topics.ErrTopicNotFound) {
@@ -104,6 +116,10 @@ func (h *Handler) GetTopic(w http.ResponseWriter, r *http.Request) {
 		CreatedAt:  topic.CreatedAt,
 		UpdatedAt:  topic.UpdatedAt,
 		Comments:   topic.Comments,
+		Upvotes:    topic.UpvoteCount,
+		Downvotes:  topic.DownvoteCount,
+		Score:      topic.VoteScore,
+		UserVote:   topic.UserVote,
 	}
 
 	helpers.RespondWithJSON(w, http.StatusOK, nil, response)

@@ -10,6 +10,7 @@ import (
 	"github.com/arnald/forum/internal/config"
 	"github.com/arnald/forum/internal/domain/topic"
 	"github.com/arnald/forum/internal/infra/logger"
+	"github.com/arnald/forum/internal/infra/middleware"
 	"github.com/arnald/forum/internal/pkg/helpers"
 	"github.com/arnald/forum/internal/pkg/validator"
 )
@@ -39,6 +40,12 @@ func (h *Handler) GetAllTopics(w http.ResponseWriter, r *http.Request) {
 		h.Logger.PrintError(logger.ErrInvalidRequestMethod, nil)
 		helpers.RespondWithError(w, http.StatusMethodNotAllowed, "Invalid request method")
 		return
+	}
+
+	var userID *string
+	user := middleware.GetUserFromContext(r)
+	if user != nil {
+		userID = &user.ID
 	}
 
 	params := helpers.NewURLParams(r)
@@ -83,6 +90,7 @@ func (h *Handler) GetAllTopics(w http.ResponseWriter, r *http.Request) {
 		Order:      order,
 		Filter:     filter,
 		CategoryID: categoryID,
+		UserID:     userID,
 	})
 	if err != nil {
 		h.Logger.PrintError(err, nil)
