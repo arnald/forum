@@ -1,11 +1,11 @@
-package createcategory
+package updatecomment
 
 import (
 	"context"
 	"net/http"
 
 	"github.com/arnald/forum/internal/app"
-	categorycommands "github.com/arnald/forum/internal/app/categories/commands"
+	commentCommands "github.com/arnald/forum/internal/app/comments/commands"
 	"github.com/arnald/forum/internal/config"
 	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/infra/middleware"
@@ -14,13 +14,12 @@ import (
 )
 
 type RequestModel struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	Content   string `json:"content"`
+	CommentID int    `json:"id"`
 }
 
 type ResponseModel struct {
-	CategoryName string `json:"categoryName"`
-	Message      string `json:"message"`
+	Message string `json:"message"`
 }
 
 type Handler struct {
@@ -37,15 +36,12 @@ func NewHandler(userServices app.Services, config *config.ServerConfig, logger l
 	}
 }
 
-func (h *Handler) CreateCategory(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
+func (h *Handler) UpdateComment(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPut {
 		h.Logger.PrintError(logger.ErrInvalidRequestMethod, nil)
 		helpers.RespondWithError(w, http.StatusMethodNotAllowed, "Invalid request method")
 		return
 	}
-
-	ctx, cancel := context.WithTimeout(r.Context(), h.Config.Timeouts.HandlerTimeouts.UserRegister)
-	defer cancel()
 
 	user := middleware.GetUserFromContext(r)
 	if user == nil {
@@ -54,60 +50,68 @@ func (h *Handler) CreateCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var categoryToCreate RequestModel
+	ctx, cancel := context.WithTimeout(r.Context(), h.Config.Timeouts.HandlerTimeouts.UserRegister)
+	defer cancel()
 
-	_, err := helpers.ParseBodyRequest(r, &categoryToCreate)
+	var commentToUpdate RequestModel
+
+	commentAny, err := helpers.ParseBodyRequest(r, &commentToUpdate)
 	if err != nil {
 		helpers.RespondWithError(w,
 			http.StatusBadRequest,
 			"Invalid request payload",
 		)
+
+		h.Logger.PrintError(err, nil)
 		return
 	}
 	defer r.Body.Close()
 
-	val := validator.New()
+	v := validator.New()
 
-	validator.ValidateCreateCategory(val, &categoryToCreate)
-	if !val.Valid() {
-		h.Logger.PrintError(logger.ErrValidationFailed, val.Errors)
-		helpers.RespondWithError(w,
+	validator.ValidateUpdateComment(v, commentAny)
+
+	if !v.Valid() {
+		helpers.RespondWithError(
+			w,
 			http.StatusBadRequest,
-			val.ToStringErrors(),
+			v.ToStringErrors(),
 		)
+
+		h.Logger.PrintError(logger.ErrValidationFailed, v.Errors)
 		return
 	}
-	err = h.UserServices.UserServices.Commands.CreateCategory.Handle(ctx, categorycommands.CreateCategoryRequest{
-		Name:        categoryToCreate.Name,
-		Description: categoryToCreate.Description,
-		CreatedBy:   user.ID,
+
+	_, err = h.UserServices.UserServices.Commands.UpdateComment.Handle(ctx, commentCommands.UpdateCommentRequest{
+		CommentID: commentToUpdate.CommentID,
+		Content:   commentToUpdate.Content,
+		User:      user,
 	})
 	if err != nil {
 		helpers.RespondWithError(w,
 			http.StatusInternalServerError,
-			"Failed to create category",
+			"Failed to update comment",
 		)
 
 		h.Logger.PrintError(err, nil)
 		return
 	}
 
-	response := ResponseModel{
-		CategoryName: categoryToCreate.Name,
-		Message:      "Category created successfully",
+	commentResponse := ResponseModel{
+		Message: "Comment updated successfully",
 	}
 
 	helpers.RespondWithJSON(
 		w,
-		http.StatusCreated,
+		http.StatusOK,
 		nil,
-		response,
+		commentResponse,
 	)
 
 	h.Logger.PrintInfo(
-		"Category created successfully",
+		"Comment updated successfully",
 		map[string]string{
-			"cat_name": categoryToCreate.Name,
-			"user_id":  user.ID,
-		})
+			"user_id": user.ID,
+		},
+	)
 }

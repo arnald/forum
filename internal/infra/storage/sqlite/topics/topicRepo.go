@@ -184,7 +184,7 @@ func (r Repo) GetTopicByID(ctx context.Context, topicID int) (*topic.Topic, erro
 			&comment.Content,
 			&comment.CreatedAt,
 			&comment.UpdatedAt,
-			&comment.Username,
+			&comment.OwnerUsername,
 		)
 		if err != nil {
 			continue

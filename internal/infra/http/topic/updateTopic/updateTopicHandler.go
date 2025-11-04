@@ -48,6 +48,11 @@ func (h *Handler) UpdateTopic(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user := middleware.GetUserFromContext(r)
+	if user == nil {
+		h.Logger.PrintError(logger.ErrUserNotFoundInContext, nil)
+		helpers.RespondWithError(w, http.StatusUnauthorized, "User not authenticated")
+		return
+	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), h.Config.Timeouts.HandlerTimeouts.UserRegister)
 	defer cancel()

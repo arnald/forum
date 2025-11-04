@@ -28,7 +28,7 @@ func main() {
 	// 3. Create repository with injected DB
 	logger := logger.New(os.Stdout, logger.LevelInfo)
 	infraProviders := infra.NewInfraProviders(db)
-	appServices := app.NewServices(infraProviders.Repositories.UserRepo, infraProviders.Repositories.CategoryRepo, infraProviders.Repositories.TopicRepo)
+	appServices := app.NewServices(infraProviders.Repositories.UserRepo, infraProviders.Repositories.CategoryRepo, infraProviders.Repositories.TopicRepo, infraProviders.Repositories.CommentRepo)
 	infraHTTPServer := infra.NewHTTPServer(cfg, db, logger, appServices)
 	infraHTTPServer.ListenAndServe()
 }

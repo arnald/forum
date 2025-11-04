@@ -194,6 +194,8 @@ func validImagePath(value any) (bool, string) {
 // 	return validCategories[str], "must be a valid category"
 // }
 
+// ValidateCreateComment validates the create comment request
+
 func validOrderBy(value any) (bool, string) {
 	orderByWhitelist := map[string]bool{
 		"created_at": true,

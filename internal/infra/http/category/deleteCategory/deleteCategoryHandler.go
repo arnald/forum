@@ -44,6 +44,11 @@ func (h *Handler) DeleteCategory(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	user := middleware.GetUserFromContext(r)
+	if user == nil {
+		h.Logger.PrintError(logger.ErrUserNotFoundInContext, nil)
+		helpers.RespondWithError(w, http.StatusUnauthorized, "User not authenticated")
+		return
+	}
 
 	categoryID, err := helpers.GetQueryInt(r, "id")
 	if err != nil {

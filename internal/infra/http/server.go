@@ -14,6 +14,11 @@ import (
 	getallcategories "github.com/arnald/forum/internal/infra/http/category/getAllCategories"
 	getcategorybyid "github.com/arnald/forum/internal/infra/http/category/getCategoryByID"
 	updatecategory "github.com/arnald/forum/internal/infra/http/category/updateCategory"
+	createcomment "github.com/arnald/forum/internal/infra/http/comment/createComment"
+	deletecomment "github.com/arnald/forum/internal/infra/http/comment/deleteComment"
+	getcomment "github.com/arnald/forum/internal/infra/http/comment/getComment"
+	getcommentsbytopic "github.com/arnald/forum/internal/infra/http/comment/getCommentsByTopic"
+	updatecomment "github.com/arnald/forum/internal/infra/http/comment/updateComment"
 	"github.com/arnald/forum/internal/infra/http/health"
 	createtopic "github.com/arnald/forum/internal/infra/http/topic/createTopic"
 	deletetopic "github.com/arnald/forum/internal/infra/http/topic/deleteTopic"
@@ -108,6 +113,32 @@ func (server *Server) AddHTTPRoutes() {
 	)
 	server.router.HandleFunc(apiContext+"/topics/all",
 		getalltopics.NewHandler(server.appServices, server.config, server.logger).GetAllTopics,
+	)
+
+	// Comment routes
+	server.router.HandleFunc(apiContext+"/comments/create",
+		middlewareChain(
+			createcomment.NewHandler(server.appServices, server.config, server.logger).CreateComment,
+			server.middleware.Authorization.Required,
+		),
+	)
+	server.router.HandleFunc(apiContext+"/comments/update",
+		middlewareChain(
+			updatecomment.NewHandler(server.appServices, server.config, server.logger).UpdateComment,
+			server.middleware.Authorization.Required,
+		),
+	)
+	server.router.HandleFunc(apiContext+"/comments/delete",
+		middlewareChain(
+			deletecomment.NewHandler(server.appServices, server.config, server.logger).DeleteComment,
+			server.middleware.Authorization.Required,
+		),
+	)
+	server.router.HandleFunc(apiContext+"/comments/get",
+		getcomment.NewHandler(server.appServices, server.config, server.logger).GetComment,
+	)
+	server.router.HandleFunc(apiContext+"/comments/topic",
+		getcommentsbytopic.NewHandler(server.appServices, server.config, server.logger).GetCommentsByTopic,
 	)
 
 	// Category routes
