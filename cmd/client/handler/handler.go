@@ -168,11 +168,12 @@ func RegisterPost(w http.ResponseWriter, r *http.Request) {
 		errorMsg := backendErr.Error()
 
 		// Try to determine which field the error is about
-		if strings.Contains(errorMsg, "email") {
+		switch {
+		case strings.Contains(errorMsg, "email"):
 			data.EmailError = errorMsg
-		} else if strings.Contains(errorMsg, "username") {
+		case strings.Contains(errorMsg, "username"):
 			data.UsernameError = errorMsg
-		} else {
+		default:
 			data.Password = errorMsg
 		}
 
@@ -214,7 +215,10 @@ func registerWithBackend(ctx context.Context, req domain.BackendRegisterRequest)
 	if resp.StatusCode != http.StatusCreated {
 		// Backend returns an error
 		var errResp domain.BackendErrorResponse
-		json.NewDecoder(resp.Body).Decode(&errResp)
+		err := json.NewDecoder(resp.Body).Decode(&errResp)
+		if err != nil {
+			return nil, backendError("Registration failed. Please try again.")
+		}
 
 		if errResp.Message != "" {
 			return nil, backendError(errResp.Message)

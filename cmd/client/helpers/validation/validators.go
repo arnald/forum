@@ -11,7 +11,6 @@ const (
 	minPasswordLength = 8
 )
 
-// ValidateEmail validates the email format.
 func ValidateEmail(email string) string {
 	if email == "" {
 		return "Email is required."
@@ -22,7 +21,6 @@ func ValidateEmail(email string) string {
 	return ""
 }
 
-// ValidateUsername validates the username length and presence.
 func ValidateUsername(username string) string {
 	if username == "" {
 		return "Username is required."
@@ -33,13 +31,11 @@ func ValidateUsername(username string) string {
 	return ""
 }
 
-// IsValidEmail checks if the email format is valid.
 func IsValidEmail(email string) bool {
 	_, err := mail.ParseAddress(email)
 	return err == nil
 }
 
-// HasLower checks if string contains lowercase letter.
 func HasLower(s string) bool {
 	for _, c := range s {
 		if unicode.IsLower(c) {
@@ -49,7 +45,6 @@ func HasLower(s string) bool {
 	return false
 }
 
-// HasUpper checks if string contains uppercase letter.
 func HasUpper(s string) bool {
 	for _, c := range s {
 		if unicode.IsUpper(c) {
@@ -59,7 +54,6 @@ func HasUpper(s string) bool {
 	return false
 }
 
-// HasDigit checks if string contains digit.
 func HasDigit(s string) bool {
 	for _, c := range s {
 		if unicode.IsDigit(c) {
@@ -69,7 +63,6 @@ func HasDigit(s string) bool {
 	return false
 }
 
-// HasSpecial checks if string contains special character.
 func HasSpecial(s string) bool {
 	for _, c := range s {
 		if !unicode.IsLetter(c) && !unicode.IsDigit(c) && !unicode.IsSpace(c) {
@@ -79,7 +72,6 @@ func HasSpecial(s string) bool {
 	return false
 }
 
-// ValidatePassword validates password strength and requirements.
 func ValidatePassword(pw string) string {
 	if pw == "" {
 		return "Password is required."

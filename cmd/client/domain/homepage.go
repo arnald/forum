@@ -1,7 +1,7 @@
 package domain
 
-// Data for Homepage
+// Data for Homepage.
 type HomePageData struct {
-	Categories []Category
 	ActivePage string
+	Categories []Category
 }
