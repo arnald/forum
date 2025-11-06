@@ -37,9 +37,20 @@ func setupRoutes() *http.ServeMux {
 
 	resolver := path.NewResolver()
 	router.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(resolver.GetPath("frontend/static/")))))
+	// Homepage
 	router.HandleFunc("/", handler.HomePage)
 	// Register page
-	router.HandleFunc("/register", handler.RegisterPage)
+	router.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			handler.RegisterPage(w, r)
+		case http.MethodPost:
+			handler.RegisterPost(w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+
+	})
 
 	return router
 }

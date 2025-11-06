@@ -20,7 +20,7 @@
     />
     <!-- Stylesheets -->
     <link rel="stylesheet" href="/static/css/base.css" />
-    <link rel="stylesheet" href="/static/css/pages.css" />
+    <link rel="stylesheet" href="/static/css/signup-login.css" />
   </head>
   <body>
     <header>
@@ -32,7 +32,7 @@
           <h2 class="signup-title">Sign Up</h2>
           <div class="text-base">
             Already a member?
-            <a href="login.html">Sign In</a>
+            <a href="/login">Sign In</a>
           </div>
           <div class="btn-box">
             <button class="signup-provider-btn google">
@@ -55,7 +55,7 @@
             <span class="border-text">or</span>
           </div>
 
-          <form class="signup" action="">
+          <form class="signup" method="post" action="/register">
             <div class="input-wrapper">
               <div class="input-box">
                 <label for="username">Username</label>
@@ -63,10 +63,19 @@
                   type="text"
                   name="username"
                   id="username"
+                  value="{{ .Username }}"
+                  class="form-input {{ if .UsernameError }}input-error{{ end }}"
                   placeholder="Enter your username"
-                  aria-label="username submission"
+                  {{
+                  if
+                  .UsernameError
+                  }}autofocus{{
+                  end
+                  }}
                 />
-                <span class="error-message" id="username-error"></span>
+                {{ if .UsernameError }}
+                <span class="error-message">{{ .UsernameError }}</span>
+                {{ end }}
               </div>
               <div class="input-box">
                 <label for="email">Email address</label>
@@ -74,10 +83,19 @@
                   type="email"
                   name="email"
                   id="email"
+                  value="{{ .Email }}"
+                  class="form-input {{ if .EmailError }}input-error{{ end }}"
                   placeholder="Enter your email"
-                  aria-label="email submission"
+                  {{
+                  if
+                  .EmailError
+                  }}autofocus{{
+                  end
+                  }}
                 />
-                <span class="error-message" id="email-error"></span>
+                {{ if .EmailError }}
+                <span class="error-message">{{ .EmailError }}</span>
+                {{ end }}
               </div>
               <div class="input-box">
                 <div class="password-wrapper">
@@ -86,15 +104,23 @@
                     type="password"
                     name="password"
                     id="password"
+                    class="form-input {{ if .Password }}input-error{{ end }}"
                     placeholder="Enter your password"
-                    aria-label="password submission"
+                    {{if
+                    .Password}}autofocus{{end}}
                   />
-
                   <label for="togglePassword" class="togglePassword">
                     <img
                       src="/static/images/icons/eye.png"
                       alt="Toggle Password Icon"
+                      id="eye-icon"
                       class="eye-icon"
+                    />
+                    <img
+                      src="/static/images/icons/hidden.png"
+                      alt="Toggle Password Icon"
+                      id="hidden-icon"
+                      class="hidden-icon"
                     />
                   </label>
                   <input
@@ -104,7 +130,9 @@
                     aria-label="show/hide password"
                   />
                 </div>
-                <span class="error-message" id="password-error"></span>
+                {{ if .Password }}
+                <span class="error-message">{{ .Password }}</span>
+                {{ end }}
               </div>
             </div>
 
