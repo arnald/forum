@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/arnald/forum/cmd/client/domain"
 	h "github.com/arnald/forum/cmd/client/helpers"
@@ -18,9 +17,8 @@ import (
 )
 
 const (
-	notFoundMessage       = "Oops! The page you're looking for has vanished into the digital void."
-	backendURL            = "http://localhost:8080/api/v1/register"
-	backendRequestTimeout = 10 * time.Second
+	notFoundMessage = "Oops! The page you're looking for has vanished into the digital void."
+	backendURL      = "http://localhost:8080/api/v1/register"
 )
 
 // Helper for rendering different templates (login/register).
@@ -187,6 +185,13 @@ func RegisterPost(w http.ResponseWriter, r *http.Request) {
 	// http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
+// backendError is a custom error type for backend errors.
+type backendError string
+
+func (e backendError) Error() string {
+	return string(e)
+}
+
 // registerWithBackend - Makes HTTP request to backend register endpoint.
 func registerWithBackend(ctx context.Context, req domain.BackendRegisterRequest) (*domain.BackendRegisterResponse, error) {
 	// Marshal request to JSON
@@ -215,9 +220,9 @@ func registerWithBackend(ctx context.Context, req domain.BackendRegisterRequest)
 	if resp.StatusCode != http.StatusCreated {
 		// Backend returns an error
 		var errResp domain.BackendErrorResponse
-		err := json.NewDecoder(resp.Body).Decode(&errResp)
+		err = json.NewDecoder(resp.Body).Decode(&errResp)
 		if err != nil {
-			return nil, backendError("Error Decoding BackendErrorResponse JSON")
+			return nil, backendError("Error decoding BackendErrorResponse JSON")
 		}
 
 		if errResp.Message != "" {
@@ -234,13 +239,6 @@ func registerWithBackend(ctx context.Context, req domain.BackendRegisterRequest)
 	}
 
 	return &successResp, nil
-}
-
-// backendError - Custom error type for backend errors
-type backendError string
-
-func (e backendError) Error() string {
-	return string(e)
 }
 
 func notFoundHandler(w http.ResponseWriter, _ *http.Request, errorMessage string, httpStatus int) {
