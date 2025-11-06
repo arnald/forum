@@ -23,7 +23,7 @@ const (
 	backendRequestTimeout = 10 * time.Second
 )
 
-// Helper for rendering different templates (login/register)
+// Helper for rendering different templates (login/register).
 func renderTemplate(w http.ResponseWriter, templateName string, data interface{}) {
 	resolver := path.NewResolver()
 
@@ -43,7 +43,7 @@ func renderTemplate(w http.ResponseWriter, templateName string, data interface{}
 	}
 }
 
-// HomePage Handler
+// HomePage Handler.
 func HomePage(w http.ResponseWriter, r *http.Request) {
 	// handle / and /categories
 	if r.URL.Path != "/" && r.URL.Path != "/categories" {
@@ -107,7 +107,7 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Register Handler GET
+// Register Handler GET.
 func RegisterPage(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -117,7 +117,7 @@ func RegisterPage(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, "register", domain.RegisterFormErrors{})
 }
 
-// Register Handler POST
+// Register Handler POST.
 func RegisterPost(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -187,7 +187,7 @@ func RegisterPost(w http.ResponseWriter, r *http.Request) {
 	// http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
-// registerWithBackend - Makes HTTP request to backend register endpoint
+// registerWithBackend - Makes HTTP request to backend register endpoint.
 func registerWithBackend(ctx context.Context, req domain.BackendRegisterRequest) (*domain.BackendRegisterResponse, error) {
 	// Marshal request to JSON
 	reqBody, err := json.Marshal(req)
@@ -217,7 +217,7 @@ func registerWithBackend(ctx context.Context, req domain.BackendRegisterRequest)
 		var errResp domain.BackendErrorResponse
 		err := json.NewDecoder(resp.Body).Decode(&errResp)
 		if err != nil {
-			return nil, backendError("Registration failed. Please try again.")
+			return nil, backendError("Error Decoding BackendErrorResponse JSON")
 		}
 
 		if errResp.Message != "" {
