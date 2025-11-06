@@ -2,12 +2,14 @@ package handler
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"html/template"
 	"log"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/arnald/forum/cmd/client/domain"
 	h "github.com/arnald/forum/cmd/client/helpers"
@@ -16,8 +18,9 @@ import (
 )
 
 const (
-	notFoundMessage = "Oops! The page you're looking for has vanished into the digital void."
-	backendURL      = "http://localhost:8080/api/v1/register"
+	notFoundMessage       = "Oops! The page you're looking for has vanished into the digital void."
+	backendURL            = "http://localhost:8080/api/v1/register"
+	backendRequestTimeout = 10 * time.Second
 )
 
 // Helper for rendering different templates (login/register)
@@ -38,7 +41,6 @@ func renderTemplate(w http.ResponseWriter, templateName string, data interface{}
 		log.Printf("Error executing %s template: %v", templateName, err)
 		http.Error(w, "Failed to render page", http.StatusInternalServerError)
 	}
-
 }
 
 // HomePage Handler
@@ -155,7 +157,7 @@ func RegisterPost(w http.ResponseWriter, r *http.Request) {
 		Password: password,
 	}
 
-	backendResp, backendErr := registerWithBackend(backendReq)
+	backendResp, backendErr := registerWithBackend(r.Context(), backendReq)
 	if backendErr != nil {
 		// Backend validation/registration failed
 		data.UsernameError = ""
@@ -185,7 +187,7 @@ func RegisterPost(w http.ResponseWriter, r *http.Request) {
 }
 
 // registerWithBackend - Makes HTTP request to backend register endpoint
-func registerWithBackend(req domain.BackendRegisterRequest) (*domain.BackendRegisterResponse, error) {
+func registerWithBackend(ctx context.Context, req domain.BackendRegisterRequest) (*domain.BackendRegisterResponse, error) {
 	// Marshal request to JSON
 	reqBody, err := json.Marshal(req)
 	if err != nil {
@@ -193,7 +195,7 @@ func registerWithBackend(req domain.BackendRegisterRequest) (*domain.BackendRegi
 	}
 
 	// Create HTTP request to backend
-	httpReq, err := http.NewRequest(http.MethodPost, backendURL, bytes.NewBuffer(reqBody))
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, backendURL, bytes.NewBuffer(reqBody))
 	if err != nil {
 		return nil, err
 	}

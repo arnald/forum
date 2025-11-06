@@ -49,7 +49,6 @@ func setupRoutes() *http.ServeMux {
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
-
 	})
 
 	return router
