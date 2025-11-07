@@ -21,7 +21,7 @@ const (
 	notFoundMessage    = "Oops! The page you're looking for has vanished into the digital void."
 	backendAPIBase     = "http://localhost:8080/api/v1"
 	backendRegisterURL = backendAPIBase + "/register"
-	// backendLoginURL    = backendAPIBase + "/login"
+	// backendLoginURL    = backendAPIBase + "/login".
 	requestTimeout = 15 * time.Second
 )
 
@@ -29,7 +29,7 @@ const (
 // HELPER FUNCTIONS (Package-level, not methods)
 // ============================================================================
 
-// renderTemplate renders a template with the given data
+// renderTemplate renders a template with the given data.
 func renderTemplate(w http.ResponseWriter, templateName string, data interface{}) {
 	resolver := path.NewResolver()
 	tmplPath := resolver.GetPath("frontend/html/pages/" + templateName + ".html")
@@ -48,7 +48,7 @@ func renderTemplate(w http.ResponseWriter, templateName string, data interface{}
 	}
 }
 
-// notFoundHandler renders a 404 error page
+// notFoundHandler renders a 404 error page.
 func notFoundHandler(w http.ResponseWriter, _ *http.Request, errorMessage string, httpStatus int) {
 	resolver := path.NewResolver()
 
@@ -77,7 +77,7 @@ func notFoundHandler(w http.ResponseWriter, _ *http.Request, errorMessage string
 	}
 }
 
-// backendError is a custom error type for backend errors
+// backendError is a custom error type for backend errors.
 type backendError string
 
 func (e backendError) Error() string {
@@ -88,7 +88,7 @@ func (e backendError) Error() string {
 // PAGE HANDLERS (Methods on ClientServer)
 // ============================================================================
 
-// HomePage handles requests to the homepage
+// HomePage handles requests to the homepage.
 func (cs *ClientServer) HomePage(w http.ResponseWriter, r *http.Request) {
 	// Handle / and /categories
 	if r.URL.Path != "/" && r.URL.Path != "/categories" {
@@ -142,7 +142,7 @@ func (cs *ClientServer) HomePage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// RegisterPage handles GET requests to /register
+// RegisterPage handles GET requests to /register.
 func (cs *ClientServer) RegisterPage(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -151,7 +151,7 @@ func (cs *ClientServer) RegisterPage(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, "register", domain.RegisterFormErrors{})
 }
 
-// RegisterPost handles POST requests to /register
+// RegisterPost handles POST requests to /register.
 func (cs *ClientServer) RegisterPost(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -228,9 +228,9 @@ func (cs *ClientServer) RegisterPost(w http.ResponseWriter, r *http.Request) {
 // API REQUEST METHODS (Methods on ClientServer)
 // ============================================================================
 
-// registerWithBackend sends registration request to backend API
-// The HTTP client includes the cookie jar, so cookies will be automatically
-// handled for all subsequent requests
+// registerWithBackend sends registration request to backend API.
+// The HTTP client includes the cookie jar, so cookies will be automatically.
+// handled for all subsequent requests.
 func (cs *ClientServer) registerWithBackend(ctx context.Context, req domain.BackendRegisterRequest) (*domain.BackendRegisterResponse, error) {
 	// Marshal request to JSON
 	reqBody, err := json.Marshal(req)

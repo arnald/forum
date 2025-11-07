@@ -24,7 +24,8 @@ func main() {
 	clientServer.SetupRoutes()
 
 	// Start server
-	if err := clientServer.ListenAndServe(); err != nil {
+	err = clientServer.ListenAndServe()
+	if err != nil {
 		log.Fatalf("Server error: %v", err)
 	}
 }
