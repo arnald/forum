@@ -270,11 +270,25 @@ func (cs *ClientServer) registerWithBackend(ctx context.Context, req domain.Back
 	}
 
 	// Success response
-	var successResp domain.BackendRegisterResponse
-	err = json.NewDecoder(resp.Body).Decode(&successResp)
+	target := domain.BackendRegisterResponse{}
+	err = DecodeBackendResponse(resp, &target)
 	if err != nil {
-		return nil, backendError("Failed to decode response: " + err.Error())
+		return nil, backendError("Failed to decode response " + err.Error())
+	}
+	return &target, nil
+}
+
+func DecodeBackendResponse[T any](resp *http.Response, target *T) error {
+	wrapper := struct {
+		Data T `json:"data"`
+	}{}
+
+	err := json.NewDecoder(resp.Body).Decode(&wrapper)
+	if err != nil {
+		return err
 	}
 
-	return &successResp, nil
+	*target = wrapper.Data
+
+	return nil
 }
