@@ -1,4 +1,4 @@
-package handler
+package server
 
 import (
 	"bytes"
@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/arnald/forum/cmd/client/domain"
 	h "github.com/arnald/forum/cmd/client/helpers"
@@ -17,14 +18,20 @@ import (
 )
 
 const (
-	notFoundMessage = "Oops! The page you're looking for has vanished into the digital void."
-	backendURL      = "http://localhost:8080/api/v1/register"
+	notFoundMessage    = "Oops! The page you're looking for has vanished into the digital void."
+	backendAPIBase     = "http://localhost:8080/api/v1"
+	backendRegisterURL = backendAPIBase + "/register"
+	// backendLoginURL    = backendAPIBase + "/login"
+	requestTimeout = 15 * time.Second
 )
 
-// Helper for rendering different templates (login/register).
+// ============================================================================
+// HELPER FUNCTIONS (Package-level, not methods)
+// ============================================================================
+
+// renderTemplate renders a template with the given data
 func renderTemplate(w http.ResponseWriter, templateName string, data interface{}) {
 	resolver := path.NewResolver()
-
 	tmplPath := resolver.GetPath("frontend/html/pages/" + templateName + ".html")
 
 	tmpl, err := template.ParseFiles(tmplPath)
@@ -41,9 +48,49 @@ func renderTemplate(w http.ResponseWriter, templateName string, data interface{}
 	}
 }
 
-// HomePage Handler.
-func HomePage(w http.ResponseWriter, r *http.Request) {
-	// handle / and /categories
+// notFoundHandler renders a 404 error page
+func notFoundHandler(w http.ResponseWriter, _ *http.Request, errorMessage string, httpStatus int) {
+	resolver := path.NewResolver()
+
+	tmpl, err := template.ParseFiles(resolver.GetPath("frontend/html/pages/not_found.html"))
+	if err != nil {
+		http.Error(w, errorMessage, httpStatus)
+		log.Println("Error loading not_found_page.html:", err)
+		return
+	}
+
+	data := struct {
+		StatusText   string
+		ErrorMessage string
+		StatusCode   int
+	}{
+		StatusText:   http.StatusText(httpStatus),
+		ErrorMessage: errorMessage,
+		StatusCode:   httpStatus,
+	}
+
+	w.WriteHeader(httpStatus)
+	err = tmpl.Execute(w, data)
+	if err != nil {
+		log.Println("Error executing template:", err)
+		http.Error(w, errorMessage, httpStatus)
+	}
+}
+
+// backendError is a custom error type for backend errors
+type backendError string
+
+func (e backendError) Error() string {
+	return string(e)
+}
+
+// ============================================================================
+// PAGE HANDLERS (Methods on ClientServer)
+// ============================================================================
+
+// HomePage handles requests to the homepage
+func (cs *ClientServer) HomePage(w http.ResponseWriter, r *http.Request) {
+	// Handle / and /categories
 	if r.URL.Path != "/" && r.URL.Path != "/categories" {
 		notFoundHandler(w, r, notFoundMessage, http.StatusNotFound)
 		return
@@ -74,18 +121,9 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 		ActivePage: r.URL.Path,
 	}
 
-	/*
-		data := BasePageData{
-			Categories: categoryData.Data.Categories,
-			User:       nil, // or retrieve user from session/cookie when you implement auth
-		}
-		tmpl.ExecuteTemplate(w, "base", data)
-	*/
-
-	// tmpl, err := template.ParseGlob(resolver.GetPath("frontend/html/**/*.html"))
 	tmpl, err := template.ParseFiles(
 		"frontend/html/layouts/base.html",
-		"frontend/html/pages/home.html", // render homepage for actual content
+		"frontend/html/pages/home.html",
 		"frontend/html/partials/navbar.html",
 		"frontend/html/partials/category_details.html",
 		"frontend/html/partials/categories.html",
@@ -94,7 +132,6 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println("Error loading home.html:", err)
 		notFoundHandler(w, r, "Failed to load page", http.StatusInternalServerError)
-
 		return
 	}
 
@@ -105,18 +142,17 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Register Handler GET.
-func RegisterPage(w http.ResponseWriter, r *http.Request) {
+// RegisterPage handles GET requests to /register
+func (cs *ClientServer) RegisterPage(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-
 	renderTemplate(w, "register", domain.RegisterFormErrors{})
 }
 
-// Register Handler POST.
-func RegisterPost(w http.ResponseWriter, r *http.Request) {
+// RegisterPost handles POST requests to /register
+func (cs *ClientServer) RegisterPost(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -137,25 +173,28 @@ func RegisterPost(w http.ResponseWriter, r *http.Request) {
 		Email:    email,
 	}
 
-	// FrontEnd Validation - Quick feedback for user
+	// FRONTEND VALIDATION - Quick feedback for user
 	data.UsernameError = validation.ValidateUsername(username)
 	data.EmailError = validation.ValidateEmail(email)
 	data.Password = validation.ValidatePassword(password)
 
-	// If errors, re-render register page with errors
+	// If frontend validation fails, re-render register page with errors
 	if data.UsernameError != "" || data.EmailError != "" || data.Password != "" {
 		renderTemplate(w, "register", data)
 		return
 	}
 
-	// Sending validated data to backend for backend Registration
+	// BACKEND REGISTRATION - Send validated data to backend
 	backendReq := domain.BackendRegisterRequest{
 		Username: username,
 		Email:    email,
 		Password: password,
 	}
 
-	backendResp, backendErr := registerWithBackend(r.Context(), backendReq)
+	ctx, cancel := context.WithTimeout(r.Context(), requestTimeout)
+	defer cancel()
+
+	backendResp, backendErr := cs.registerWithBackend(ctx, backendReq)
 	if backendErr != nil {
 		// Backend validation/registration failed
 		data.UsernameError = ""
@@ -179,50 +218,49 @@ func RegisterPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// SUCCESS - User registered, redirect to login or home
+	// SUCCESS - User registered, redirect to login or homepage
 	log.Printf("User registered successfully: %s (ID: %s)", username, backendResp.UserID)
-	http.Redirect(w, r, "/", http.StatusSeeOther)
 	// http.Redirect(w, r, "/login", http.StatusSeeOther)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-// backendError is a custom error type for backend errors.
-type backendError string
+// ============================================================================
+// API REQUEST METHODS (Methods on ClientServer)
+// ============================================================================
 
-func (e backendError) Error() string {
-	return string(e)
-}
-
-// registerWithBackend - Makes HTTP request to backend register endpoint.
-func registerWithBackend(ctx context.Context, req domain.BackendRegisterRequest) (*domain.BackendRegisterResponse, error) {
+// registerWithBackend sends registration request to backend API
+// The HTTP client includes the cookie jar, so cookies will be automatically
+// handled for all subsequent requests
+func (cs *ClientServer) registerWithBackend(ctx context.Context, req domain.BackendRegisterRequest) (*domain.BackendRegisterResponse, error) {
 	// Marshal request to JSON
 	reqBody, err := json.Marshal(req)
 	if err != nil {
-		return nil, err
+		return nil, backendError("Failed to marshal request: " + err.Error())
 	}
 
-	// Create HTTP request to backend
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, backendURL, bytes.NewBuffer(reqBody))
+	// Create HTTP request to backend with context
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, backendRegisterURL, bytes.NewBuffer(reqBody))
 	if err != nil {
-		return nil, err
+		return nil, backendError("Failed to create request: " + err.Error())
 	}
 
 	httpReq.Header.Set("Content-Type", "application/json")
 
-	// Execute request
-	client := &http.Client{}
-	resp, err := client.Do(httpReq)
+	// Execute request using the client's HTTP client (with cookie jar)
+	// THIS IS THE KEY: cs.HTTPClient maintains the cookie jar!
+	resp, err := cs.HTTPClient.Do(httpReq)
 	if err != nil {
-		return nil, err
+		return nil, backendError("Registration request failed: " + err.Error())
 	}
 	defer resp.Body.Close()
 
 	// Handle different response statuses
 	if resp.StatusCode != http.StatusCreated {
-		// Backend returns an error
+		// Backend returned an error
 		var errResp domain.BackendErrorResponse
 		err = json.NewDecoder(resp.Body).Decode(&errResp)
 		if err != nil {
-			return nil, backendError("Error decoding BackendErrorResponse JSON")
+			return nil, backendError("Registration failed. Please try again.")
 		}
 
 		if errResp.Message != "" {
@@ -235,37 +273,8 @@ func registerWithBackend(ctx context.Context, req domain.BackendRegisterRequest)
 	var successResp domain.BackendRegisterResponse
 	err = json.NewDecoder(resp.Body).Decode(&successResp)
 	if err != nil {
-		return nil, err
+		return nil, backendError("Failed to decode response: " + err.Error())
 	}
 
 	return &successResp, nil
-}
-
-func notFoundHandler(w http.ResponseWriter, _ *http.Request, errorMessage string, httpStatus int) {
-	resolver := path.NewResolver()
-
-	tmpl, err := template.ParseFiles(resolver.GetPath("frontend/html/pages/not_found.html"))
-	if err != nil {
-		http.Error(w, errorMessage, httpStatus)
-		log.Println("Error loading not_found_page.html:", err)
-
-		return
-	}
-
-	data := struct {
-		StatusText   string
-		ErrorMessage string
-		StatusCode   int
-	}{
-		StatusText:   http.StatusText(httpStatus),
-		ErrorMessage: errorMessage,
-		StatusCode:   httpStatus,
-	}
-
-	w.WriteHeader(httpStatus)
-	err = tmpl.Execute(w, data)
-	if err != nil {
-		log.Println("Error executing template:", err)
-		http.Error(w, errorMessage, httpStatus)
-	}
 }
