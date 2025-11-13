@@ -12,10 +12,6 @@ import (
 	"github.com/arnald/forum/cmd/client/helpers/validation"
 )
 
-const (
-	backendRegisterURL = backendAPIBase + "/register"
-)
-
 // RegisterPage handles GET requests to /register.
 func (cs *ClientServer) RegisterPage(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {

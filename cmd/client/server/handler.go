@@ -6,17 +6,10 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/arnald/forum/cmd/client/domain"
 	h "github.com/arnald/forum/cmd/client/helpers"
 	"github.com/arnald/forum/internal/pkg/path"
-)
-
-const (
-	notFoundMessage = "Oops! The page you're looking for has vanished into the digital void."
-	backendAPIBase  = "http://localhost:8080/api/v1"
-	requestTimeout  = 15 * time.Second
 )
 
 // ============================================================================
