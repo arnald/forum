@@ -61,6 +61,18 @@ func (cs *ClientServer) SetupRoutes() {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
 	})
+
+	// Login page
+	cs.Router.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			cs.LoginPage(w, r)
+		case http.MethodPost:
+			cs.LoginPost(w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
 }
 
 // ListenAndServe starts the HTTP server.
