@@ -80,10 +80,10 @@
                     type="password"
                     name="password"
                     id="password"
-                    class="form-input {{ if .Password }}input-error{{ end }}"
+                    class="form-input {{ if .PasswordError }}input-error{{ end }}"
                     placeholder="Enter your password"
                     {{if
-                    .Password}}autofocus{{end}}
+                    .PasswordError}}autofocus{{end}}
                   />
                   <label for="togglePassword" class="togglePassword">
                     <img
@@ -106,8 +106,8 @@
                     aria-label="show/hide password"
                   />
                 </div>
-                {{ if .Password }}
-                <span class="error-message">{{ .Password }}</span>
+                {{ if .PasswordError }}
+                <span class="error-message">{{ .PasswordError }}</span>
                 {{ end }}
               </div>
             </div>
