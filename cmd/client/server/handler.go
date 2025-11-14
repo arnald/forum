@@ -13,8 +13,8 @@ import (
 
 	"github.com/arnald/forum/cmd/client/domain"
 	h "github.com/arnald/forum/cmd/client/helpers"
-	"github.com/arnald/forum/cmd/client/helpers/validation"
 	"github.com/arnald/forum/internal/pkg/path"
+	val "github.com/arnald/forum/internal/pkg/validator"
 )
 
 const (
@@ -171,18 +171,30 @@ func (cs *ClientServer) RegisterPost(w http.ResponseWriter, r *http.Request) {
 	data := domain.RegisterFormErrors{
 		Username: username,
 		Email:    email,
+		Password: password,
 	}
 
-	// FRONTEND VALIDATION - Quick feedback for user
-	data.UsernameError = validation.ValidateUsername(username)
-	data.EmailError = validation.ValidateEmail(email)
-	data.Password = validation.ValidatePassword(password)
+	validator := val.New()
 
-	// If frontend validation fails, re-render register page with errors
-	if data.UsernameError != "" || data.EmailError != "" || data.Password != "" {
+	val.ValidateUserRegistration(validator, &data)
+	if !validator.Valid() {
+		data.UsernameError = validator.Errors["Username"]
+		data.EmailError = validator.Errors["Email"]
+		data.PasswordError = validator.Errors["Password"]
 		renderTemplate(w, "register", data)
 		return
 	}
+
+	// FRONTEND VALIDATION - Quick feedback for user
+	// data.UsernameError = validation.ValidateUsername(username)
+	// data.EmailError = validation.ValidateEmail(email)
+	// data.Password = validation.ValidatePassword(password)
+
+	// If frontend validation fails, re-render register page with errors
+	// if data.UsernameError != "" || data.EmailError != "" || data.Password != "" {
+	// 	renderTemplate(w, "register", data)
+	// 	return
+	// }
 
 	// BACKEND REGISTRATION - Send validated data to backend
 	backendReq := domain.BackendRegisterRequest{

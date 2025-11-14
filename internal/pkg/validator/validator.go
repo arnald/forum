@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"slices"
 	"strings"
+	"unicode"
 )
 
 const (
@@ -146,6 +147,58 @@ func maxInt(limit int) func(any) (bool, string) {
 		}
 		return num <= limit, fmt.Sprintf("must be less than or equal to %d", limit)
 	}
+}
+
+func hasLower(value any) (bool, string) {
+	str, ok := value.(string)
+	if !ok {
+		return false, InvalidType
+	}
+	for _, c := range str {
+		if unicode.IsLower(c) {
+			return true, ""
+		}
+	}
+	return false, "must contain at least one lowercase letter"
+}
+
+func hasUpper(value any) (bool, string) {
+	str, ok := value.(string)
+	if !ok {
+		return false, InvalidType
+	}
+	for _, c := range str {
+		if 'A' <= c && c <= 'Z' {
+			return true, ""
+		}
+	}
+	return false, "must contain at least one uppercase letter"
+}
+
+func hasDigit(value any) (bool, string) {
+	str, ok := value.(string)
+	if !ok {
+		return false, InvalidType
+	}
+	for _, c := range str {
+		if '0' <= c && c <= '9' {
+			return true, ""
+		}
+	}
+	return false, "must contain at least one digit"
+}
+
+func hasSpecial(value any) (bool, string) {
+	str, ok := value.(string)
+	if !ok {
+		return false, InvalidType
+	}
+	for _, c := range str {
+		if !(('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || ('0' <= c && c <= '9')) {
+			return true, ""
+		}
+	}
+	return false, "must contain at least one special character"
 }
 
 func validEmail(value any) (bool, string) {

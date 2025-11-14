@@ -6,6 +6,7 @@ type RegisterFormErrors struct {
 	Password      string `json:"password,omitempty"`
 	UsernameError string `json:"username,omitempty"`
 	EmailError    string `json:"email,omitempty"`
+	PasswordError string `json:"password,omitempty"`
 }
 
 // BackendRegisterRequest - matches backend RegisterUserReguestModel.
@@ -14,7 +15,6 @@ type BackendRegisterRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
-
 
 // BackendRegisterResponse - matches backend RegisterUserResponse.
 type BackendRegisterResponse struct {
