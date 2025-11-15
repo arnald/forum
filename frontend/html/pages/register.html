@@ -1,0 +1,153 @@
+{{ define "register" }}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign Up to Forum</title>
+    <!-- Icon -->
+    <link
+      rel="icon"
+      type="image/png"
+      href="/static/images/icons/logo-icon.png"
+    />
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="/static/css/base.css" />
+    <link rel="stylesheet" href="/static/css/signup-login.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Welcome to Forum</h1>
+    </header>
+    <main>
+      <div class="signup-container">
+        <div class="signup-wrapper">
+          <h2 class="signup-title">Sign Up</h2>
+          <div class="text-base">
+            Already a member?
+            <a href="/login">Sign In</a>
+          </div>
+          <div class="btn-box">
+            <button class="signup-provider-btn google">
+              <img
+                src="/static/images/icons/google-logo.png"
+                alt="Google Logo"
+              />
+              <p>Sign up with Google</p>
+            </button>
+            <button class="signup-provider-btn github">
+              <img
+                src="/static/images/icons/github-white-logo.png"
+                alt="Github Logo"
+              />
+              <p>Sign up with Github</p>
+            </button>
+          </div>
+
+          <div class="border">
+            <span class="border-text">or</span>
+          </div>
+
+          <form class="signup" method="post" action="/register">
+            <div class="input-wrapper">
+              <div class="input-box">
+                <label for="username">Username</label>
+                <input
+                  type="text"
+                  name="username"
+                  id="username"
+                  value="{{ .Username }}"
+                  class="form-input {{ if .UsernameError }}input-error{{ end }}"
+                  placeholder="Enter your username"
+                  {{
+                  if
+                  .UsernameError
+                  }}autofocus{{
+                  end
+                  }}
+                />
+                {{ if .UsernameError }}
+                <span class="error-message">{{ .UsernameError }}</span>
+                {{ end }}
+              </div>
+              <div class="input-box">
+                <label for="email">Email address</label>
+                <input
+                  type="email"
+                  name="email"
+                  id="email"
+                  value="{{ .Email }}"
+                  class="form-input {{ if .EmailError }}input-error{{ end }}"
+                  placeholder="Enter your email"
+                  {{
+                  if
+                  .EmailError
+                  }}autofocus{{
+                  end
+                  }}
+                />
+                {{ if .EmailError }}
+                <span class="error-message">{{ .EmailError }}</span>
+                {{ end }}
+              </div>
+              <div class="input-box">
+                <div class="password-wrapper">
+                  <label for="password">Password</label>
+                  <input
+                    type="password"
+                    name="password"
+                    id="password"
+                    class="form-input {{ if .PasswordError }}input-error{{ end }}"
+                    placeholder="Enter your password"
+                    {{if
+                    .PasswordError}}autofocus{{end}}
+                  />
+                  <label for="togglePassword" class="togglePassword">
+                    <img
+                      src="/static/images/icons/eye.png"
+                      alt="Toggle Password Icon"
+                      id="eye-icon"
+                      class="eye-icon"
+                    />
+                    <img
+                      src="/static/images/icons/hidden.png"
+                      alt="Toggle Password Icon"
+                      id="hidden-icon"
+                      class="hidden-icon"
+                    />
+                  </label>
+                  <input
+                    type="checkbox"
+                    id="togglePassword"
+                    class="hidden-checkbox"
+                    aria-label="show/hide password"
+                  />
+                </div>
+                {{ if .PasswordError }}
+                <span class="error-message">{{ .PasswordError }}</span>
+                {{ end }}
+              </div>
+            </div>
+
+            <div class="btn-box">
+              <button type="reset" class="btn-reset-form">Reset Form</button>
+              <button type="submit" class="btn-signup">Sign Up</button>
+            </div>
+          </form>
+        </div>
+        <div class="home-link-container">
+          <a href="/" class="home-link">Go to Homepage</a>
+        </div>
+      </div>
+    </main>
+    <script src="/static/js/script.js"></script>
+  </body>
+</html>
+{{ end }}
