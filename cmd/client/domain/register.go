@@ -3,7 +3,7 @@ package domain
 type RegisterFormErrors struct {
 	Username      string `json:"-"`
 	Email         string `json:"-"`
-	Password      string `json:"password,omitempty"`
+	Password      string `json:"-"`
 	UsernameError string `json:"username,omitempty"`
 	EmailError    string `json:"email,omitempty"`
 	PasswordError string `json:"password,omitempty"`
