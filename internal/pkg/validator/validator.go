@@ -168,7 +168,7 @@ func hasUpper(value any) (bool, string) {
 		return false, InvalidType
 	}
 	for _, c := range str {
-		if 'A' <= c && c <= 'Z' {
+		if unicode.IsUpper(c) {
 			return true, ""
 		}
 	}
@@ -181,7 +181,7 @@ func hasDigit(value any) (bool, string) {
 		return false, InvalidType
 	}
 	for _, c := range str {
-		if '0' <= c && c <= '9' {
+		if unicode.IsDigit(c) {
 			return true, ""
 		}
 	}
@@ -194,7 +194,7 @@ func hasSpecial(value any) (bool, string) {
 		return false, InvalidType
 	}
 	for _, c := range str {
-		if !(('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || ('0' <= c && c <= '9')) {
+		if !unicode.IsLower(c) && !unicode.IsUpper(c) && !unicode.IsDigit(c) {
 			return true, ""
 		}
 	}

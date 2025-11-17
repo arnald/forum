@@ -185,17 +185,6 @@ func (cs *ClientServer) RegisterPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// FRONTEND VALIDATION - Quick feedback for user
-	// data.UsernameError = validation.ValidateUsername(username)
-	// data.EmailError = validation.ValidateEmail(email)
-	// data.Password = validation.ValidatePassword(password)
-
-	// If frontend validation fails, re-render register page with errors
-	// if data.UsernameError != "" || data.EmailError != "" || data.Password != "" {
-	// 	renderTemplate(w, "register", data)
-	// 	return
-	// }
-
 	// BACKEND REGISTRATION - Send validated data to backend
 	backendReq := domain.BackendRegisterRequest{
 		Username: username,

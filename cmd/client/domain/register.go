@@ -19,7 +19,7 @@ type BackendRegisterRequest struct {
 // BackendRegisterResponse - matches backend RegisterUserResponse.
 type BackendRegisterResponse struct {
 	UserID  string `json:"userId"`
-	Message string `json:"Message"`
+	Message string `json:"message"`
 }
 
 // BackendErrorResponse - handles backend validation errors.
