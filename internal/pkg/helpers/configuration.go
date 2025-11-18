@@ -26,6 +26,23 @@ func ParseEnv(content string) map[string]string {
 	return env
 }
 
+func ParseList(list string) []string {
+	if list == "" {
+		return []string{}
+	}
+
+	parts := strings.Split(list, ",")
+	result := make([]string, 0, len(parts))
+
+	for _, part := range parts {
+		trimmed := strings.TrimSpace(part)
+		if trimmed != "" {
+			result = append(result, trimmed)
+		}
+	}
+	return result
+}
+
 // GetEnv Check OS environment -> .env file -> default values.
 func GetEnv(key string, envMap map[string]string, defaultValue string) string {
 	if val, exists := os.LookupEnv(key); exists {

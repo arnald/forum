@@ -41,6 +41,18 @@ type ServerConfig struct {
 	ReadTimeout    time.Duration
 	WriteTimeout   time.Duration
 	IdleTimeout    time.Duration
+	OAuth          OAuthConfig
+}
+
+type OAuthConfig struct {
+	GitHub GitHubOAuthConfig
+}
+
+type GitHubOAuthConfig struct {
+	ClientID     string
+	ClientSecret string
+	RedirectURL  string
+	Scopes       []string
 }
 
 type DatabaseConfig struct {
@@ -122,6 +134,14 @@ func LoadConfig() (*ServerConfig, error) {
 			HandlerTimeouts: HandlerTimeoutsConfig{
 				UserRegister: helpers.GetEnvDuration("HANDLER_TIMEOUT_REGISTER", envMap, userRegisterTimeout),
 				UserLogin:    helpers.GetEnvDuration("HANDLER_TIMEOUT_LOGIN", envMap, userLoginTimeout),
+			},
+		},
+		OAuth: OAuthConfig{
+			GitHub: GitHubOAuthConfig{
+				ClientID:     helpers.GetEnv("GITHUB_CLIENT_ID", envMap, ""),
+				ClientSecret: helpers.GetEnv("GITHUB_CLIENT_SECRET", envMap, ""),
+				RedirectURL:  helpers.GetEnv("GITHUB_REDIRECT_URL", envMap, "http://localhost:8080/api/v1/auth/github/callback"),
+				Scopes:       helpers.ParseList(helpers.GetEnv("GITHUB_SCOPES", envMap, "user:email")),
 			},
 		},
 	}
