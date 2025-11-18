@@ -2,7 +2,8 @@ package oauth
 
 import (
 	"context"
-	"os/user"
+
+	"github.com/arnald/forum/internal/domain/user"
 )
 
 type Repository interface {

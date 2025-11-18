@@ -7,7 +7,7 @@ import (
 
 	"github.com/arnald/forum/internal/domain/user"
 
-	oauth "github.com/arnald/forum/internal/domain/oAuth"
+	"github.com/arnald/forum/internal/domain/oauth"
 )
 
 type Repo struct {

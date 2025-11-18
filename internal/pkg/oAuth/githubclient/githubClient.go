@@ -1,4 +1,4 @@
-package github
+package githubclient
 
 import (
 	"encoding/json"
@@ -13,7 +13,7 @@ const (
 	userEmailURL = "https://api.github.com/user/emails"
 )
 
-type ToeknResponse struct {
+type TokenResponse struct {
 	AccessToken string `json:access_token`
 	TokenType   string `json:token_type`
 	Scope       string `json:scope`
@@ -52,7 +52,7 @@ func ExchangeCode(code, clientID, clientSecret, redirectURL string) (string, err
 		return "", fmt.Errorf("failed to exchange code: %w", err)
 	}
 
-	var tokenResp ToeknResponse
+	var tokenResp TokenResponse
 	err = json.Unmarshal(respBody, &tokenResp)
 	if err != nil {
 		return "", fmt.Errorf("failed to parse token response: %w", err)
