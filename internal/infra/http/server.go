@@ -25,6 +25,7 @@ import (
 	markallasread "github.com/arnald/forum/internal/infra/http/notification/markAllAsRead"
 	markasread "github.com/arnald/forum/internal/infra/http/notification/markAsRead"
 	streamnotification "github.com/arnald/forum/internal/infra/http/notification/streamNotification"
+	oauthlogin "github.com/arnald/forum/internal/infra/http/oauth"
 	createtopic "github.com/arnald/forum/internal/infra/http/topic/createTopic"
 	deletetopic "github.com/arnald/forum/internal/infra/http/topic/deleteTopic"
 	getalltopics "github.com/arnald/forum/internal/infra/http/topic/getAllTopics"
@@ -39,6 +40,7 @@ import (
 	"github.com/arnald/forum/internal/infra/middleware"
 	"github.com/arnald/forum/internal/infra/storage/notifications"
 	"github.com/arnald/forum/internal/infra/storage/sessionstore"
+	oauth "github.com/arnald/forum/internal/pkg/oAuth"
 )
 
 const (
@@ -53,10 +55,15 @@ type Server struct {
 	config         *config.ServerConfig
 	router         *http.ServeMux
 	sessionManager session.Manager
+	oauth          *OAuth
 	notifications  *notifications.NotificationService
 	middleware     *middleware.Middleware
 	db             *sql.DB
 	logger         logger.Logger
+}
+
+type OAuth struct {
+	stateManager *oauth.StateManager
 }
 
 func NewServer(cfg *config.ServerConfig, db *sql.DB, logger logger.Logger, appServices app.Services) *Server {
@@ -69,6 +76,7 @@ func NewServer(cfg *config.ServerConfig, db *sql.DB, logger logger.Logger, appSe
 	}
 	httpServer.initSessionManager()
 	httpServer.initNotifications()
+	httpServer.initOAuthServices()
 	httpServer.initMiddleware(httpServer.sessionManager)
 	httpServer.AddHTTPRoutes()
 	return httpServer
@@ -98,6 +106,15 @@ func (server *Server) AddHTTPRoutes() {
 	)
 	server.router.HandleFunc(apiContext+"/register",
 		userRegister.NewHandler(server.config, server.appServices, server.sessionManager, server.logger).UserRegister,
+	)
+	server.router.HandleFunc(apiContext+"/auth/github/login",
+		oauthlogin.NewGitHubHandler(
+			server.config,
+			&server.appServices.UserServices.Queries.UserLoginGithub,
+			server.oauth.stateManager,
+			server.sessionManager,
+			server.logger,
+		).Login,
 	)
 
 	// Topic routes
@@ -278,4 +295,10 @@ func (server *Server) initNotifications() {
 
 func (server *Server) initMiddleware(sessionManager session.Manager) {
 	server.middleware = middleware.NewMiddleware(sessionManager)
+}
+
+func (server *Server) initOAuthServices() {
+	server.oauth = &OAuth{
+		stateManager: oauth.NewStateManager(10 * time.Second),
+	}
 }

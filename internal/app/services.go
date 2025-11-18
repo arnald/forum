@@ -5,6 +5,7 @@ import (
 	categoryQueries "github.com/arnald/forum/internal/app/categories/queries"
 	commentCommands "github.com/arnald/forum/internal/app/comments/commands"
 	commentQueries "github.com/arnald/forum/internal/app/comments/queries"
+	oauthservice "github.com/arnald/forum/internal/app/oauth"
 	topicCommands "github.com/arnald/forum/internal/app/topics/commands"
 	topicQueries "github.com/arnald/forum/internal/app/topics/queries"
 	userCommands "github.com/arnald/forum/internal/app/user/commands"
@@ -13,6 +14,7 @@ import (
 	voteQueries "github.com/arnald/forum/internal/app/votes/queries"
 	"github.com/arnald/forum/internal/domain/category"
 	"github.com/arnald/forum/internal/domain/comment"
+	"github.com/arnald/forum/internal/domain/oauth"
 	"github.com/arnald/forum/internal/domain/topic"
 	"github.com/arnald/forum/internal/domain/user"
 	"github.com/arnald/forum/internal/domain/vote"
@@ -21,6 +23,7 @@ import (
 )
 
 type Queries struct {
+	UserLoginGithub    oauthservice.GitHubLoginService
 	GetTopic           topicQueries.GetTopicRequestHandler
 	GetAllTopics       topicQueries.GetAllTopicsRequestHandler
 	GetComment         commentQueries.GetCommentRequestHandler
@@ -56,12 +59,13 @@ type Services struct {
 	UserServices UserServices
 }
 
-func NewServices(userRepo user.Repository, categoryRepo category.Repository, topicRepo topic.Repository, commentRepo comment.Repository, voteRepo vote.Repository) Services {
+func NewServices(userRepo user.Repository, categoryRepo category.Repository, topicRepo topic.Repository, commentRepo comment.Repository, voteRepo vote.Repository, oauth oauth.Repository) Services {
 	uuidProvider := uuid.NewProvider()
 	encryption := bcrypt.NewProvider()
 	return Services{
 		UserServices: UserServices{
 			Queries: Queries{
+				*oauthservice.NewGitHubLoginService(oauth),
 				topicQueries.NewGetTopicHandler(topicRepo, commentRepo),
 				topicQueries.NewGetAllTopicsHandler(topicRepo),
 				commentQueries.NewGetCommentHandler(commentRepo),
