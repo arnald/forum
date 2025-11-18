@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/arnald/forum/cmd/client/domain"
-	"github.com/arnald/forum/cmd/client/helpers/validation"
+	val "github.com/arnald/forum/internal/pkg/validator"
 )
 
 // RegisterPage handles GET requests to /register.
@@ -41,15 +41,16 @@ func (cs *ClientServer) RegisterPost(w http.ResponseWriter, r *http.Request) {
 	data := domain.RegisterFormErrors{
 		Username: username,
 		Email:    email,
+		Password: password,
 	}
 
-	// FRONTEND VALIDATION - Quick feedback for user
-	data.UsernameError = validation.ValidateUsername(username)
-	data.EmailError = validation.ValidateEmail(email)
-	data.Password = validation.ValidatePassword(password)
+	validator := val.New()
 
-	// If frontend validation fails, re-render register page with errors
-	if data.UsernameError != "" || data.EmailError != "" || data.Password != "" {
+	val.ValidateUserRegistration(validator, &data)
+	if !validator.Valid() {
+		data.UsernameError = validator.Errors["Username"]
+		data.EmailError = validator.Errors["Email"]
+		data.PasswordError = validator.Errors["Password"]
 		renderTemplate(w, "register", data)
 		return
 	}
@@ -146,4 +147,19 @@ func (cs *ClientServer) registerWithBackend(ctx context.Context, req domain.Back
 		return nil, backendError("Failed to decode response " + err.Error())
 	}
 	return &target, nil
+}
+
+func DecodeBackendResponse[T any](resp *http.Response, target *T) error {
+	wrapper := struct {
+		Data T `json:"data"`
+	}{}
+
+	err := json.NewDecoder(resp.Body).Decode(&wrapper)
+	if err != nil {
+		return err
+	}
+
+	*target = wrapper.Data
+
+	return nil
 }

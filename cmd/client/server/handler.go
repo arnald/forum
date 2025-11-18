@@ -128,18 +128,3 @@ func (cs *ClientServer) HomePage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to render page", http.StatusInternalServerError)
 	}
 }
-
-func DecodeBackendResponse[T any](resp *http.Response, target *T) error {
-	wrapper := struct {
-		Data T `json:"data"`
-	}{}
-
-	err := json.NewDecoder(resp.Body).Decode(&wrapper)
-	if err != nil {
-		return err
-	}
-
-	*target = wrapper.Data
-
-	return nil
-}

@@ -39,6 +39,10 @@ func ValidateUserRegistration(v *Validator, data any) {
 				required,
 				minLength(MinPasswordLength),
 				maxLength(MaxPasswordLength),
+				hasLower,
+				hasUpper,
+				hasDigit,
+				hasSpecial,
 			},
 		},
 	}
