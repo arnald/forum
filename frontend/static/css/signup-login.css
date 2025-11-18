@@ -1,0 +1,234 @@
+/*----- SignUp Page -----*/
+/* :root {
+  --primary-color: #0aa564;
+  --primary-color-light: #07c073;
+  --secondary-color: #5f3dc4;
+  --secondary-color-light: #845ef7;
+  --dark-background: #222;
+  --white-background: #eee;
+  --white-background-light: #fff;
+  --grey-color: #555;
+  --grey-color-light: #ccc;
+  --grey-color-dark: #444;
+} */
+.signup-container {
+  padding: 0.5rem;
+}
+.signup-wrapper {
+  max-width: 400px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1rem 2rem;
+  background-color: var(--white-background-light);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  border-radius: 8px;
+}
+.signup-title {
+  color: var(--dark-background);
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+  margin-top: 2rem;
+  font-size: 2.3rem;
+}
+.log-in-wrapper {
+  padding: 1rem 2rem;
+  background-color: var(--white-background-light);
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+  border-radius: 5px;
+}
+.text-base a {
+  font-size: 1.1rem;
+  margin-left: 0.3rem;
+  color: var(--dark-background);
+  text-decoration-line: underline;
+  text-decoration-color: var(--secondary-color-light);
+  text-underline-offset: 4px;
+  text-decoration-thickness: 2px;
+  transition: all 0.3s;
+}
+.text-base a:hover {
+  text-decoration-thickness: 4px;
+}
+.btn-box {
+  display: flex;
+  flex-direction: column;
+  row-gap: 1rem;
+  width: 100%;
+  margin-top: 1rem;
+}
+.signup-provider-btn {
+  width: 100%;
+  font-family: inherit;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.2rem 0.4rem;
+  border-radius: 5px;
+  cursor: pointer;
+  border: none;
+}
+.signup-provider-btn img {
+  width: 30px;
+}
+.signup-provider-btn p {
+  font-size: 1rem;
+  padding-left: 0.5rem;
+}
+/* Google btn */
+.signup-provider-btn.google {
+  border: 2px solid var(--primary-color-light);
+  background-color: var(--white-background-light);
+  transition: all 0.3s ease;
+}
+.signup-provider-btn.google:hover {
+  border: 2px solid var(--primary-color);
+}
+/* Github btn */
+.signup-provider-btn.github {
+  border: 2px solid #111;
+  background-color: #111;
+  color: var(--white-background-light);
+  transition: all 0.3s ease;
+}
+.signup-provider-btn.github:hover {
+  border: 2px solid var(--grey-color);
+}
+.border {
+  position: relative;
+  margin: 2rem 0;
+  height: 1px;
+  background-color: var(--grey-color);
+}
+.border-text {
+  position: absolute;
+  padding: 0.2rem 0.6rem;
+  color: var(--tertiary-color-dark);
+  left: 44%;
+  top: -13px;
+  background-color: #fff;
+}
+/*--- Signup Form ---*/
+.input-wrapper {
+  display: flex;
+  flex-direction: column;
+  row-gap: 1rem;
+}
+.input-box input,
+.password-box input {
+  width: 100%;
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--grey-color-dark);
+  border-radius: 5px;
+}
+.input-box label {
+  margin-left: 3px;
+}
+.input-box input::placeholder {
+  color: var(--grey-color);
+}
+.password-wrapper {
+  position: relative;
+}
+.eye-icon {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+.togglePassword {
+  position: absolute;
+  right: 10px;
+  top: 70%;
+  transform: translateY(-50%);
+  padding: 0.3rem;
+  z-index: 2;
+  cursor: pointer;
+}
+.hidden-checkbox {
+  display: none;
+}
+.password-box {
+  margin-top: 1rem;
+}
+.login-text {
+  margin-top: 1rem;
+}
+.login-text a {
+  color: #000;
+}
+/*--- Buttons ---*/
+.btn-reset-form {
+  max-width: 50%;
+  font-family: inherit;
+  font-size: 1.2rem;
+  font-weight: 700;
+  padding: 0.3rem 0.6rem;
+  border: none;
+  background-color: var(--grey-color-light);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.btn-reset-form:hover {
+  background-color: var(--grey-color-dark);
+  color: var(--white-background-light);
+}
+.btn-signup {
+  position: relative;
+  width: 100%;
+  font-family: inherit;
+  font-size: 1.2rem;
+  font-weight: 700;
+  padding: 0.7rem 1rem;
+  border: none;
+  background-color: var(--white-background-light);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-signup:hover {
+  background-color: var(--primary-color);
+  color: var(--white-background-light);
+}
+.btn-signup::after {
+  content: "→";
+  font-size: 1.6rem;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-60%) translateX(-100%);
+  left: 70%;
+  transition: all 0.3s;
+}
+.btn-signup:hover.btn-signup::after {
+  left: 72%;
+}
+.home-link-container {
+  display: flex;
+  justify-content: center;
+}
+.home-link {
+  padding: 0.8rem 1.6rem;
+  background-color: var(--secondary-color-light);
+  color: var(--white-background-light);
+  text-decoration: none;
+  border-radius: 8px;
+  margin: 2rem;
+  transition: all 0.3s;
+}
+.home-link:hover {
+  background-color: var(--secondary-color);
+  transform: translateY(-3px);
+}
+/* Input Errors */
+.error-message {
+  /* hidden by default */
+  color: red; /* or use var(--error-color) */
+  font-size: 0.9rem;
+  margin-left: 3px;
+}
+.error-message.show {
+  display: inline-block;
+}

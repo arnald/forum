@@ -2,42 +2,30 @@ package main
 
 import (
 	"log"
-	"net/http"
 
 	"github.com/arnald/forum/cmd/client/config"
-	"github.com/arnald/forum/cmd/client/handler"
-	"github.com/arnald/forum/internal/pkg/path"
+	"github.com/arnald/forum/cmd/client/server"
 )
 
 func main() {
+	// Load configuration
 	cfg, err := config.LoadClientConfig()
 	if err != nil {
 		log.Fatalf("Configuration error: %v", err)
 	}
 
-	router := setupRoutes()
-	client := &http.Server{
-		Addr:              ":" + cfg.Port,
-		Handler:           router,
-		ReadHeaderTimeout: cfg.HTTPTimeouts.ReadHeader,
-		ReadTimeout:       cfg.HTTPTimeouts.Read,
-		WriteTimeout:      cfg.HTTPTimeouts.Write,
-		IdleTimeout:       cfg.HTTPTimeouts.Idle,
-	}
-
-	log.Printf("Client started port: %s (%s environment)", cfg.Port, cfg.Environment)
-	err = client.ListenAndServe()
+	// Create client server
+	clientServer, err := server.NewClientServer(cfg)
 	if err != nil {
-		log.Fatal("Client error: ", err)
+		log.Fatalf("Failed to create client server: %v", err)
 	}
-}
 
-func setupRoutes() *http.ServeMux {
-	router := http.NewServeMux()
+	// Setup routes
+	clientServer.SetupRoutes()
 
-	resolver := path.NewResolver()
-	router.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(resolver.GetPath("frontend/static/")))))
-	router.HandleFunc("/", handler.HomePage)
-
-	return router
+	// Start server
+	err = clientServer.ListenAndServe()
+	if err != nil {
+		log.Fatalf("Server error: %v", err)
+	}
 }
