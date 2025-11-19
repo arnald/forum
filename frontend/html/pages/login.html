@@ -60,7 +60,7 @@
               <!-- Login Type Selector -->
               <div class="login-type-selector">
                 <p class="login-type-title">Choose Type of Login</p>
-                <label class="radio-label">
+                <label class="login-radio-label">
                   <input
                     type="radio"
                     name="loginType"
@@ -71,7 +71,7 @@
                   />
                   <span>Username</span>
                 </label>
-                <label class="radio-label">
+                <label class="login-radio-label">
                   <input
                     type="radio"
                     name="loginType"
@@ -82,20 +82,48 @@
                   <span>Email</span>
                 </label>
               </div>
-              <div class="input-box">
-                <label for="identifier">Username / Email</label>
+              <!-- Username Input -->
+              <div class="input-box" id="usernameBox">
+                <label for="username">Username</label>
                 <input
                   type="text"
-                  name="identifier"
-                  id="identifier"
-                  value="{{ .Identifier }}"
-                  class="form-input {{ if .IdentifierError }}input-error{{ end }}"
-                  placeholder="Enter username or email"
-                  {{if
-                  .IdentifierError}}autofocus{{end}}
+                  name="username"
+                  id="username"
+                  value="{{ .Username }}"
+                  class="form-input {{ if .UsernameError }}input-error{{ end }}"
+                  placeholder="Enter your username"
+                  {{
+                  if
+                  .UsernameError
+                  }}autofocus{{
+                  end
+                  }}
                 />
-                {{ if .IdentifierError }}
-                <span class="error-message">{{ .IdentifierError }}</span>
+                {{ if .UsernameError }}
+                <span class="error-message">{{ .UsernameError }}</span>
+                {{ end }}
+              </div>
+
+              <!-- Email Input -->
+              <!-- When page is loaded we have to hide emailBox -->
+              <div class="input-box" id="emailBox" style="display: none">
+                <label for="email">Email address</label>
+                <input
+                  type="email"
+                  name="email"
+                  id="email"
+                  value="{{ .Email }}"
+                  class="form-input {{ if .EmailError }}input-error{{ end }}"
+                  placeholder="Enter your email"
+                  {{
+                  if
+                  .EmailError
+                  }}autofocus{{
+                  end
+                  }}
+                />
+                {{ if .EmailError }}
+                <span class="error-message">{{ .EmailError }}</span>
                 {{ end }}
               </div>
               <div class="input-box">

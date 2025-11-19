@@ -1,11 +1,13 @@
 package domain
 
 type LoginFormErrors struct {
-	Identifier      string        `json:"-"`
-	Password        string        `json:"-"`
-	IdentifierError string        `json:"-"`
-	PasswordError   string        `json:"-"`
-	User            *LoggedInUser `json:"-"`
+	Username      string        `json:"-"`
+	Email         string        `json:"-"`
+	Password      string        `json:"-"`
+	UsernameError string        `json:"username,omitempty"`
+	EmailError    string        `json:"email,omitempty"`
+	PasswordError string        `json:"password,omitempty"`
+	User          *LoggedInUser `json:"-"`
 }
 
 // BackendLoginRequest - sent to backend

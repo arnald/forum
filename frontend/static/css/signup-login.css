@@ -113,6 +113,18 @@
   row-gap: 1rem;
 }
 /* Login Type Selector */
+.login-type-title {
+  font-weight: bold;
+}
+.login-radio-label:nth-of-type(2) {
+  margin-left: 1rem;
+}
+.login-type-radio {
+  width: 12px;
+  height: 12px;
+  accent-color: var(--primary-color);
+  cursor: pointer;
+}
 .input-box input,
 .password-box input {
   width: 100%;
@@ -225,12 +237,13 @@
   transform: translateY(-3px);
 }
 /* Input Errors */
-.error-message {
-  /* hidden by default */
-  color: red; /* or use var(--error-color) */
-  font-size: 0.9rem;
-  margin-left: 3px;
+.form-input.input-error {
+  border: 2px solid #e63946;
 }
-.error-message.show {
-  display: inline-block;
+.error-message {
+  color: #e63946;
+  font-size: 0.85rem;
+  margin-left: 3px;
+  /* margin-top: 4px; */
+  display: block;
 }
