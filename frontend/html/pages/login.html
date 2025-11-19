@@ -57,6 +57,31 @@
 
           <form class="signup" method="post" action="/login">
             <div class="input-wrapper">
+              <!-- Login Type Selector -->
+              <div class="login-type-selector">
+                <p class="login-type-title">Choose Type of Login</p>
+                <label class="radio-label">
+                  <input
+                    type="radio"
+                    name="loginType"
+                    id="loginTypeUsername"
+                    value="username"
+                    class="login-type-radio"
+                    checked
+                  />
+                  <span>Username</span>
+                </label>
+                <label class="radio-label">
+                  <input
+                    type="radio"
+                    name="loginType"
+                    id="loginTypeEmail"
+                    value="email"
+                    class="login-type-radio"
+                  />
+                  <span>Email</span>
+                </label>
+              </div>
               <div class="input-box">
                 <label for="identifier">Username / Email</label>
                 <input

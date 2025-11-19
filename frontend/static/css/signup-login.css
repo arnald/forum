@@ -112,6 +112,7 @@
   flex-direction: column;
   row-gap: 1rem;
 }
+/* Login Type Selector */
 .input-box input,
 .password-box input {
   width: 100%;
@@ -130,7 +131,8 @@
 .password-wrapper {
   position: relative;
 }
-.eye-icon {
+.eye-icon,
+.hidden-icon {
   width: 20px;
   height: 20px;
   display: block;
