@@ -7,8 +7,8 @@ type BackendErrorResponse struct {
 
 // LoggedInUser - user data to pass to templates and store in session
 type LoggedInUser struct {
-	ID        string
-	Username  string
-	Email     string
-	AvatarURL string // For future navbar avatar display
+	ID       string
+	Username string
+	Email    string
+	// AvatarURL string // For future navbar avatar display
 }
