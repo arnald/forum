@@ -116,6 +116,15 @@ func (server *Server) AddHTTPRoutes() {
 			server.logger,
 		).Login,
 	)
+	server.router.HandleFunc(apiContext+"/auth/github/callback",
+		oauthlogin.NewGitHubHandler(
+			server.config,
+			&server.appServices.UserServices.Queries.UserLoginGithub,
+			server.oauth.stateManager,
+			server.sessionManager,
+			server.logger,
+		).Callback,
+	)
 
 	// Topic routes
 	server.router.HandleFunc(apiContext+"/topics/create",

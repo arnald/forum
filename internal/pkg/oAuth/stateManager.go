@@ -49,7 +49,7 @@ func (sm *StateManager) Generate() (string, error) {
 func (sm *StateManager) Verify(state string) error {
 	sm.mu.Lock()
 	createdAt, exists := sm.states[state]
-	sm.mu.RUnlock()
+	sm.mu.Unlock()
 
 	if !exists {
 		return ErrStateNotFound

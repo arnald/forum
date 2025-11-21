@@ -20,8 +20,8 @@ func NewOAuthRepository(db *sql.DB) *Repo {
 
 func (r *Repo) GetUserByProviderID(ctx context.Context, provider oauth.Provider, providerUserID string) (*user.User, error) {
 	query := `
-	SELECT u.id, u.username, u.email, u.password, u.created_at
-	FROM user u
+	SELECT u.id, u.username, u.email, u.password_hash, u.created_at
+	FROM users u
 	INNER JOIN oauth_providers op ON u.id = op.user_id
 	WHERE op.provider = ? AND op.provider_user_id = ?
 	`
@@ -49,7 +49,7 @@ func (r *Repo) GetUserByProviderID(ctx context.Context, provider oauth.Provider,
 	return &u, nil
 }
 
-func (r *Repo) CreateOAuthUser(ctx context.Context, oatuhUser *oauth.User) (*user.User, error) {
+func (r *Repo) CreateOAuthUser(ctx context.Context, oauthUser *oauth.User) (*user.User, error) {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, err
@@ -57,18 +57,32 @@ func (r *Repo) CreateOAuthUser(ctx context.Context, oatuhUser *oauth.User) (*use
 	defer tx.Rollback()
 
 	userID := "test" // TODO: create UUID for user in application layer, pass it on to this functio
+
 	insertUserQuery := `
-	INSERT INTO oauth_providers (user_id, provider, provider_user_id, email, username, avatar_url, created_at, updated_at)
-	VALUES (?, ?, ?, ?, ?, ?, ?, ?,)
+        INSERT INTO users (id, username, email, password_hash)
+        VALUES (?, ?, ?, '')
+    `
+
+	_, err = tx.ExecContext(ctx, insertUserQuery,
+		userID,
+		oauthUser.Username,
+		oauthUser.Email,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create user: %w", err)
+	}
+	insertUserQuery = `
+	INSERT INTO oauth_providers (user_id, provider, provider_user_id, email, username, avatar_url)
+	VALUES (?, ?, ?, ?, ?, ?)
 	`
 
 	_, err = tx.ExecContext(ctx, insertUserQuery,
 		userID,
-		string(oatuhUser.Provider),
-		oatuhUser.ProviderID,
-		oatuhUser.Email,
-		oatuhUser.Username,
-		oatuhUser.AvatarURL,
+		string(oauthUser.Provider),
+		oauthUser.ProviderID,
+		oauthUser.Email,
+		oauthUser.Username,
+		oauthUser.AvatarURL,
 	)
 
 	if err != nil {
@@ -82,8 +96,8 @@ func (r *Repo) CreateOAuthUser(ctx context.Context, oatuhUser *oauth.User) (*use
 
 	return &user.User{
 		ID:       userID,
-		Username: oatuhUser.Username,
-		Email:    oatuhUser.Email,
+		Username: oauthUser.Username,
+		Email:    oauthUser.Email,
 		Password: "",
 	}, nil
 }

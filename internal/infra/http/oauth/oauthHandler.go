@@ -61,3 +61,91 @@ func (h *GitHubHandler) Login(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, authURL, http.StatusTemporaryRedirect)
 
 }
+
+func (h *GitHubHandler) Callback(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(
+			w,
+			"Method not allowed",
+			http.StatusMethodNotAllowed,
+		)
+		return
+	}
+
+	code := r.URL.Query().Get("code")
+	state := r.URL.Query().Get("state")
+
+	errParam := r.URL.Query().Get("error")
+	if errParam != "" {
+		h.logger.PrintError(fmt.Errorf("github oauth error: %s", errParam), nil)
+		http.Error(
+			w,
+			"problem with oatuh, see logger",
+			http.StatusInternalServerError,
+		)
+		return
+	}
+
+	if code == "" {
+		h.logger.PrintError(fmt.Errorf("no code in callback"), nil)
+		http.Error(
+			w,
+			"no code in callback",
+			http.StatusInternalServerError,
+		)
+		return
+	}
+
+	err := h.stateManager.Verify(state)
+	if err != nil {
+		h.logger.PrintError(err, nil)
+		http.Error(
+			w,
+			"problem with oauth STATE, SEE LOGGER",
+			http.StatusInternalServerError,
+		)
+		return
+	}
+
+	user, err := h.loginService.Login(
+		r.Context(),
+		code,
+		h.config.OAuth.GitHub.ClientID,
+		h.config.OAuth.GitHub.ClientSecret,
+		h.config.OAuth.GitHub.RedirectURL,
+	)
+
+	if err != nil {
+		h.logger.PrintError(err, map[string]string{"action": "github_login"})
+		http.Error(
+			w,
+			"error at github_login",
+			http.StatusInternalServerError,
+		)
+		return
+	}
+
+	sessionID, err := h.sessionManager.CreateSession(r.Context(), user.ID)
+	if err != nil {
+		h.logger.PrintError(err, nil)
+		http.Error(
+			w,
+			"error at creating session",
+			http.StatusInternalServerError,
+		)
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:  "access_token",
+		Value: sessionID.AccessToken,
+		Path:  "/",
+	})
+
+	h.logger.PrintInfo(
+		"USER LOGGED IN VIA GITHUB",
+		map[string]string{
+			"user_id":  user.ID,
+			"username": user.Username,
+		})
+
+}
