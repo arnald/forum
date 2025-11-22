@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/arnald/forum/cmd/client/domain"
+	"github.com/arnald/forum/cmd/client/helpers"
 	val "github.com/arnald/forum/internal/pkg/validator"
 )
 
@@ -142,24 +143,9 @@ func (cs *ClientServer) registerWithBackend(ctx context.Context, req domain.Back
 
 	// Success response
 	target := domain.BackendRegisterResponse{}
-	err = DecodeBackendResponse(resp, &target)
+	err = helpers.DecodeBackendResponse(resp, &target)
 	if err != nil {
 		return nil, backendError("Failed to decode response " + err.Error())
 	}
 	return &target, nil
-}
-
-func DecodeBackendResponse[T any](resp *http.Response, target *T) error {
-	wrapper := struct {
-		Data T `json:"data"`
-	}{}
-
-	err := json.NewDecoder(resp.Body).Decode(&wrapper)
-	if err != nil {
-		return err
-	}
-
-	*target = wrapper.Data
-
-	return nil
 }

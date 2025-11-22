@@ -5,6 +5,13 @@ type BackendErrorResponse struct {
 	Message string `json:"message"`
 }
 
+// BackendMeResponse - response from backend /me endpoint
+type BackendMeResponse struct {
+	ID       string `json:"id"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+}
+
 // LoggedInUser - user data to pass to templates and store in session
 type LoggedInUser struct {
 	ID       string

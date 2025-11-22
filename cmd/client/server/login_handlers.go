@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/arnald/forum/cmd/client/domain"
+	"github.com/arnald/forum/cmd/client/helpers"
 	"github.com/arnald/forum/cmd/client/helpers/validation"
 )
 
@@ -186,7 +187,7 @@ func (cs *ClientServer) sendLoginRequest(ctx context.Context, backendURL string,
 
 	// Success response
 	target := domain.BackendLoginResponse{}
-	err = DecodeBackendResponse(resp, &target)
+	err = helpers.DecodeBackendResponse(resp, &target)
 	if err != nil {
 		return nil, backendError("Failed to decode response: " + err.Error())
 	}
