@@ -11,6 +11,7 @@ import (
 
 	"github.com/arnald/forum/cmd/client/domain"
 	"github.com/arnald/forum/cmd/client/helpers"
+	"github.com/arnald/forum/cmd/client/helpers/templates"
 	"github.com/arnald/forum/cmd/client/helpers/validation"
 )
 
@@ -20,7 +21,7 @@ func (cs *ClientServer) LoginPage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	renderTemplate(w, "login", domain.LoginFormErrors{})
+	templates.RenderTemplate(w, "login", domain.LoginFormErrors{})
 }
 
 // LoginPost handles POST requests to /login.
@@ -68,7 +69,7 @@ func (cs *ClientServer) handleEmailLogin(w http.ResponseWriter, r *http.Request,
 
 	// If frontend validation fails, re-render login page with errors
 	if data.EmailError != "" || data.PasswordError != "" {
-		renderTemplate(w, "login", data)
+		templates.RenderTemplate(w, "login", data)
 		return
 	}
 
@@ -81,7 +82,7 @@ func (cs *ClientServer) handleEmailLogin(w http.ResponseWriter, r *http.Request,
 		// Backend validation/login failed
 		data.EmailError = ""
 		data.PasswordError = backendErr.Error()
-		renderTemplate(w, "login", data)
+		templates.RenderTemplate(w, "login", data)
 		return
 	}
 
@@ -106,7 +107,7 @@ func (cs *ClientServer) handleUsernameLogin(w http.ResponseWriter, r *http.Reque
 
 	// If frontend validation fails, re-render login page with errors
 	if data.UsernameError != "" || data.PasswordError != "" {
-		renderTemplate(w, "login", data)
+		templates.RenderTemplate(w, "login", data)
 		return
 	}
 
@@ -119,7 +120,7 @@ func (cs *ClientServer) handleUsernameLogin(w http.ResponseWriter, r *http.Reque
 		// Backend validation/login failed
 		data.UsernameError = ""
 		data.PasswordError = backendErr.Error()
-		renderTemplate(w, "login", data)
+		templates.RenderTemplate(w, "login", data)
 		return
 	}
 

@@ -1,4 +1,3 @@
-// File: cmd/client/middleware/auth.go
 package middleware
 
 import (

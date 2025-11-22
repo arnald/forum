@@ -10,6 +10,7 @@ import (
 
 	"github.com/arnald/forum/cmd/client/domain"
 	"github.com/arnald/forum/cmd/client/helpers"
+	"github.com/arnald/forum/cmd/client/helpers/templates"
 	val "github.com/arnald/forum/internal/pkg/validator"
 )
 
@@ -19,7 +20,7 @@ func (cs *ClientServer) RegisterPage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	renderTemplate(w, "register", domain.RegisterFormErrors{})
+	templates.RenderTemplate(w, "register", domain.RegisterFormErrors{})
 }
 
 // RegisterPost handles POST requests to /register.
@@ -52,7 +53,7 @@ func (cs *ClientServer) RegisterPost(w http.ResponseWriter, r *http.Request) {
 		data.UsernameError = validator.Errors["Username"]
 		data.EmailError = validator.Errors["Email"]
 		data.PasswordError = validator.Errors["Password"]
-		renderTemplate(w, "register", data)
+		templates.RenderTemplate(w, "register", data)
 		return
 	}
 
@@ -86,7 +87,7 @@ func (cs *ClientServer) RegisterPost(w http.ResponseWriter, r *http.Request) {
 			data.Password = errorMsg
 		}
 
-		renderTemplate(w, "register", data)
+		templates.RenderTemplate(w, "register", data)
 		return
 	}
 
