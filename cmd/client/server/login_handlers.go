@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/arnald/forum/cmd/client/domain"
 	"github.com/arnald/forum/cmd/client/helpers"
@@ -84,6 +85,9 @@ func (cs *ClientServer) handleEmailLogin(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
+	// Set cookies for session persistence
+	cs.setSessionCookies(w, backendResp.AccessToken, backendResp.RefreshToken)
+
 	// SUCCESS - User logged in, redirect to homepage
 	log.Printf("User logged in successfully with email: %s (ID: %s)", backendResp.Username, backendResp.UserID)
 	http.Redirect(w, r, "/", http.StatusSeeOther)
@@ -118,6 +122,9 @@ func (cs *ClientServer) handleUsernameLogin(w http.ResponseWriter, r *http.Reque
 		renderTemplate(w, "login", data)
 		return
 	}
+
+	// Set cookies for session persistence
+	cs.setSessionCookies(w, backendResp.AccessToken, backendResp.RefreshToken)
 
 	// SUCCESS - User logged in, redirect to homepage
 	log.Printf("User logged in successfully with username: %s (ID: %s)", backendResp.Username, backendResp.UserID)
@@ -193,4 +200,30 @@ func (cs *ClientServer) sendLoginRequest(ctx context.Context, backendURL string,
 	}
 
 	return &target, nil
+}
+
+// setSessionCookies sets the access and refresh tokens as cookies
+func (cs *ClientServer) setSessionCookies(w http.ResponseWriter, accessToken, refreshToken string) {
+	accessCookie := &http.Cookie{
+		Name:     "access_token",
+		Value:    accessToken,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   false, // Set to true in production with HTTPS
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   int(5 * time.Minute.Seconds()), // 5 minutes
+	}
+
+	refreshCookie := &http.Cookie{
+		Name:     "refresh_token",
+		Value:    refreshToken,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   false, // Set to true in production with HTTPS
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   int(7 * 24 * time.Hour.Seconds()), // 7 days
+	}
+
+	http.SetCookie(w, accessCookie)
+	http.SetCookie(w, refreshCookie)
 }
