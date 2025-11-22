@@ -30,6 +30,7 @@ import (
 	getalltopics "github.com/arnald/forum/internal/infra/http/topic/getAllTopics"
 	gettopic "github.com/arnald/forum/internal/infra/http/topic/getTopic"
 	updatetopic "github.com/arnald/forum/internal/infra/http/topic/updateTopic"
+	getme "github.com/arnald/forum/internal/infra/http/user/getMe"
 	userLogin "github.com/arnald/forum/internal/infra/http/user/login"
 	userRegister "github.com/arnald/forum/internal/infra/http/user/register"
 	castvote "github.com/arnald/forum/internal/infra/http/vote/castVote"
@@ -99,6 +100,12 @@ func (server *Server) AddHTTPRoutes() {
 	server.router.HandleFunc(apiContext+"/register",
 		userRegister.NewHandler(server.config, server.appServices, server.sessionManager, server.logger).UserRegister,
 	)
+	// New handler for retrieving current user data from backend
+	server.router.HandleFunc(apiContext+"/me",
+		middlewareChain(
+			getme.NewHandler(server.logger).GetMe,
+			server.middleware.Authorization.Required,
+		))
 
 	// Topic routes
 	server.router.HandleFunc(apiContext+"/topics/create",
