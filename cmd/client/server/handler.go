@@ -9,6 +9,7 @@ import (
 
 	"github.com/arnald/forum/cmd/client/domain"
 	h "github.com/arnald/forum/cmd/client/helpers"
+	"github.com/arnald/forum/cmd/client/middleware"
 	"github.com/arnald/forum/internal/pkg/path"
 )
 
@@ -103,9 +104,13 @@ func (cs *ClientServer) HomePage(w http.ResponseWriter, r *http.Request) {
 
 	h.PrepareCategories(categoryData.Data.Categories)
 
+	// Get user from context (set by middleware)
+	user := middleware.GetUserFromContext(r.Context())
+
 	pageData := domain.HomePageData{
 		Categories: categoryData.Data.Categories,
 		ActivePage: r.URL.Path,
+		User:       user,
 	}
 
 	tmpl, err := template.ParseFiles(

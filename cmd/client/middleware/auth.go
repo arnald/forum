@@ -1,3 +1,4 @@
+// File: cmd/client/middleware/auth.go
 package middleware
 
 import (
@@ -72,7 +73,7 @@ func getCurrentUser(ctx context.Context, httpClient *http.Client, r *http.Reques
 
 	// Decode response using the helper from server package
 	var meResp domain.BackendMeResponse
-	err = helpers.DecodeBackendResponse(resp, &meReq)
+	err = helpers.DecodeBackendResponse(resp, &meResp)
 	if err != nil {
 		log.Printf("Failed to decode /me response: %v", err)
 		return nil, err

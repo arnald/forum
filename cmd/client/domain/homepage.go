@@ -4,4 +4,5 @@ package domain
 type HomePageData struct {
 	ActivePage string
 	Categories []Category
+	User       *LoggedInUser
 }

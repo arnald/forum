@@ -6,6 +6,7 @@ import (
 	"net/http/cookiejar"
 
 	"github.com/arnald/forum/cmd/client/config"
+	"github.com/arnald/forum/cmd/client/middleware"
 	"github.com/arnald/forum/internal/pkg/path"
 )
 
@@ -47,8 +48,19 @@ func (cs *ClientServer) SetupRoutes() {
 		http.StripPrefix("/static/", http.FileServer(http.Dir(resolver.GetPath("frontend/static/")))),
 	)
 
+	// Create auth middleware
+	authMiddleware := middleware.AuthMiddleware(cs.HTTPClient)
+
+	///////////////////////////////////////////////////////////////
+	// Public Routes (with optional auth - shows user if logged in).
+	///////////////////////////////////////////////////////////////
+
 	// Homepage
-	cs.Router.HandleFunc("/", cs.HomePage)
+	cs.Router.HandleFunc("/", applyMiddleware(cs.HomePage, authMiddleware))
+
+	///////////////////////////////////////////////////////////////
+	// Auth Routes (no user context needed, but can apply middleware for consistency).
+	///////////////////////////////////////////////////////////////
 
 	// Register page
 	cs.Router.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
@@ -73,6 +85,13 @@ func (cs *ClientServer) SetupRoutes() {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
 	})
+
+	///////////////////////////////////////////////////////////////
+	// Protected Routes (require authentication).
+	///////////////////////////////////////////////////////////////
+
+	// Logout route - clears cookies
+	cs.Router.HandleFunc("/logout", cs.Logout)
 }
 
 // ListenAndServe starts the HTTP server.
@@ -88,4 +107,13 @@ func (cs *ClientServer) ListenAndServe() error {
 
 	log.Printf("Client started on port: %s (%s environment)", cs.Config.Port, cs.Config.Environment)
 	return server.ListenAndServe()
+}
+
+// applyMiddleware chains middleware to a handler.
+// Usage: applyMiddleware(handler, middleware1, middleware2, ...).
+func applyMiddleware(handler http.HandlerFunc, middlewares ...func(http.HandlerFunc) http.HandlerFunc) http.HandlerFunc {
+	for _, middleware := range middlewares {
+		handler = middleware(handler)
+	}
+	return handler
 }
