@@ -18,9 +18,10 @@ import (
 )
 
 const (
-	notFoundMessage    = "Oops! The page you're looking for has vanished into the digital void."
-	backendAPIBase     = "http://localhost:8080/api/v1"
-	backendRegisterURL = backendAPIBase + "/register"
+	notFoundMessage       = "Oops! The page you're looking for has vanished into the digital void."
+	backendAPIBase        = "http://localhost:8080/api/v1"
+	backendRegisterURL    = backendAPIBase + "/register"
+	backendGithubRegister = backendAPIBase + "/auth/github/login"
 	// backendLoginURL    = backendAPIBase + "/login".
 	requestTimeout = 15 * time.Second
 )
@@ -277,6 +278,50 @@ func (cs *ClientServer) registerWithBackend(ctx context.Context, req domain.Back
 		return nil, backendError("Failed to decode response " + err.Error())
 	}
 	return &target, nil
+}
+
+func (cs *ClientServer) GitHubRegister(w http.ResponseWriter, r *http.Request) {
+	// if r.Method != http.MethodPost {
+	// 	http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	// 	return
+	// }
+
+	http.Redirect(w, r, backendGithubRegister, http.StatusTemporaryRedirect)
+}
+
+func (cs *ClientServer) GithubCallback(w http.ResponseWriter, r *http.Request) {
+	accessToken := r.URL.Query().Get("access_token")
+	refreshToken := r.URL.Query().Get("refresh_token")
+
+	if accessToken == "" || refreshToken == "" {
+		http.Error(w, "Github session not found", http.StatusBadRequest)
+		return
+	}
+
+	accessCookie := &http.Cookie{
+		Name:     "access_token",
+		Value:    accessToken,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   false,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   int(5 * time.Minute.Seconds()),
+	}
+
+	refreshCookie := &http.Cookie{
+		Name:     "refresh_token",
+		Value:    refreshToken,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   false,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   int(7 * 24 * time.Hour.Seconds()),
+	}
+
+	http.SetCookie(w, accessCookie)
+	http.SetCookie(w, refreshCookie)
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func DecodeBackendResponse[T any](resp *http.Response, target *T) error {

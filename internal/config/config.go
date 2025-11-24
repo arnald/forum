@@ -45,7 +45,8 @@ type ServerConfig struct {
 }
 
 type OAuthConfig struct {
-	GitHub GitHubOAuthConfig
+	GitHub      GitHubOAuthConfig
+	FrontendURL string
 }
 
 type GitHubOAuthConfig struct {
@@ -143,6 +144,7 @@ func LoadConfig() (*ServerConfig, error) {
 				RedirectURL:  helpers.GetEnv("GITHUB_REDIRECT_URL", envMap, "http://localhost:8080/api/v1/auth/github/callback"),
 				Scopes:       helpers.ParseList(helpers.GetEnv("GITHUB_SCOPES", envMap, "user:email")),
 			},
+			FrontendURL: helpers.GetEnv("FRONTEND_CALLBACK_URL", envMap, "http://localhost:3001/auth/github/callback"),
 		},
 	}
 

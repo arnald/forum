@@ -125,7 +125,7 @@ func (h *GitHubHandler) Callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sessionID, err := h.sessionManager.CreateSession(r.Context(), user.ID)
+	session, err := h.sessionManager.CreateSession(r.Context(), user.ID)
 	if err != nil {
 		h.logger.PrintError(err, nil)
 		http.Error(
@@ -135,11 +135,13 @@ func (h *GitHubHandler) Callback(w http.ResponseWriter, r *http.Request) {
 		)
 	}
 
-	http.SetCookie(w, &http.Cookie{
-		Name:  "access_token",
-		Value: sessionID.AccessToken,
-		Path:  "/",
-	})
+	params := url.Values{}
+	params.Add("access_token", session.AccessToken)
+	params.Add("refresh_token", session.RefreshToken)
+
+	frontendCallbackURL := fmt.Sprintf("%s?%s", h.config.OAuth.FrontendURL, params.Encode())
+
+	http.Redirect(w, r, frontendCallbackURL, http.StatusTemporaryRedirect)
 
 	h.logger.PrintInfo(
 		"USER LOGGED IN VIA GITHUB",
