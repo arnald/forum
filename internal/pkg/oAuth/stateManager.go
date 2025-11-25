@@ -8,6 +8,11 @@ import (
 	"time"
 )
 
+const (
+	cleanUpInterval = 3
+	bufferSize      = 32
+)
+
 var (
 	ErrStateNotFound = errors.New("state not found")
 	ErrStateExpired  = errors.New("state expired")
@@ -31,7 +36,7 @@ func NewStateManager(ttl time.Duration) *StateManager {
 }
 
 func (sm *StateManager) Generate() (string, error) {
-	b := make([]byte, 32)
+	b := make([]byte, bufferSize)
 	_, err := rand.Read(b)
 	if err != nil {
 		return "", err
@@ -48,29 +53,24 @@ func (sm *StateManager) Generate() (string, error) {
 
 func (sm *StateManager) Verify(state string) error {
 	sm.mu.Lock()
-	createdAt, exists := sm.states[state]
-	sm.mu.Unlock()
+	defer sm.mu.Unlock()
 
+	createdAt, exists := sm.states[state]
 	if !exists {
 		return ErrStateNotFound
 	}
 
 	if time.Now().Unix()-createdAt > int64(sm.ttl.Seconds()) {
-		sm.mu.Lock()
 		delete(sm.states, state)
-		sm.mu.Unlock()
 		return ErrStateExpired
 	}
 
-	sm.mu.Lock()
 	delete(sm.states, state)
-	sm.mu.Unlock()
-
 	return nil
 }
 
 func (sm *StateManager) cleanup() {
-	ticker := time.NewTicker(1 * time.Minute)
+	ticker := time.NewTicker(cleanUpInterval * time.Minute)
 	defer ticker.Stop()
 
 	for range ticker.C {

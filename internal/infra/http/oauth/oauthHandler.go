@@ -1,35 +1,38 @@
 package oauthlogin
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
 
 	oauthservice "github.com/arnald/forum/internal/app/oauth"
 	"github.com/arnald/forum/internal/config"
 	"github.com/arnald/forum/internal/domain/session"
 	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/pkg/helpers"
-	oathstate "github.com/arnald/forum/internal/pkg/oAuth"
+	oauthpkg "github.com/arnald/forum/internal/pkg/oAuth"
 )
 
-type GitHubHandler struct {
+type OAuthHandler struct {
+	provider       oauthpkg.Provider
 	config         *config.ServerConfig
-	loginService   *oauthservice.GitHubLoginService
-	stateManager   *oathstate.StateManager
+	loginService   *oauthservice.OAuthService
+	stateManager   *oauthpkg.StateManager
 	sessionManager session.Manager
 	logger         logger.Logger
 }
 
-func NewGitHubHandler(
+func NewOAuthHandler(
+	provider oauthpkg.Provider,
 	config *config.ServerConfig,
-	loginService *oauthservice.GitHubLoginService,
-	stateManager *oathstate.StateManager,
+	loginService *oauthservice.OAuthService,
+	stateManager *oauthpkg.StateManager,
 	sessionManager session.Manager,
 	logger logger.Logger,
-) *GitHubHandler {
-	return &GitHubHandler{
+) *OAuthHandler {
+	return &OAuthHandler{
+		provider:       provider,
 		config:         config,
 		loginService:   loginService,
 		stateManager:   stateManager,
@@ -38,7 +41,7 @@ func NewGitHubHandler(
 	}
 }
 
-func (h *GitHubHandler) Login(w http.ResponseWriter, r *http.Request) {
+func (h *OAuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	state, err := h.stateManager.Generate()
 	if err != nil {
 		h.logger.PrintError(err, nil)
@@ -50,19 +53,12 @@ func (h *GitHubHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	params := url.Values{}
-	params.Add("client_id", h.config.OAuth.GitHub.ClientID)
-	params.Add("redirect_uri", h.config.OAuth.GitHub.RedirectURL)
-	params.Add("scope", strings.Join(h.config.OAuth.GitHub.Scopes, " "))
-	params.Add("state", state)
-
-	authURL := fmt.Sprintf("https://github.com/login/oauth/authorize?%s", params.Encode())
+	authURL := h.provider.GetAuthURL(state)
 
 	http.Redirect(w, r, authURL, http.StatusTemporaryRedirect)
-
 }
 
-func (h *GitHubHandler) Callback(w http.ResponseWriter, r *http.Request) {
+func (h *OAuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(
 			w,
@@ -72,12 +68,15 @@ func (h *GitHubHandler) Callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx, cancel := context.WithTimeout(r.Context(), h.config.Timeouts.HandlerTimeouts.UserRegister)
+	defer cancel()
+
 	code := r.URL.Query().Get("code")
 	state := r.URL.Query().Get("state")
 
 	errParam := r.URL.Query().Get("error")
 	if errParam != "" {
-		h.logger.PrintError(fmt.Errorf("github oauth error: %s", errParam), nil)
+		h.logger.PrintError(fmt.Errorf("%w: %s", ErrInParameters, errParam), nil)
 		http.Error(
 			w,
 			"problem with oatuh, see logger",
@@ -87,7 +86,7 @@ func (h *GitHubHandler) Callback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if code == "" {
-		h.logger.PrintError(fmt.Errorf("no code in callback"), nil)
+		h.logger.PrintError(ErrCodeMissing, nil)
 		http.Error(
 			w,
 			"no code in callback",
@@ -108,15 +107,15 @@ func (h *GitHubHandler) Callback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user, err := h.loginService.Login(
-		r.Context(),
+		ctx,
 		code,
-		h.config.OAuth.GitHub.ClientID,
-		h.config.OAuth.GitHub.ClientSecret,
-		h.config.OAuth.GitHub.RedirectURL,
+		h.provider,
 	)
-
 	if err != nil {
-		h.logger.PrintError(err, map[string]string{"action": "github_login"})
+		h.logger.PrintError(err, map[string]string{
+			"action":   "oauth_login",
+			"provider": h.provider.Name(),
+		})
 		http.Error(
 			w,
 			"error at github_login",
@@ -144,10 +143,10 @@ func (h *GitHubHandler) Callback(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, frontendCallbackURL, http.StatusTemporaryRedirect)
 
 	h.logger.PrintInfo(
-		"USER LOGGED IN VIA GITHUB",
+		"User logged in via "+h.provider.Name(),
 		map[string]string{
 			"user_id":  user.ID,
 			"username": user.Username,
+			"provider": h.provider.Name(),
 		})
-
 }

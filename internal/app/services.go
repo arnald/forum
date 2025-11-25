@@ -23,7 +23,7 @@ import (
 )
 
 type Queries struct {
-	UserLoginGithub    oauthservice.GitHubLoginService
+	UserLoginGithub    oauthservice.OAuthService
 	GetTopic           topicQueries.GetTopicRequestHandler
 	GetAllTopics       topicQueries.GetAllTopicsRequestHandler
 	GetComment         commentQueries.GetCommentRequestHandler
@@ -59,13 +59,13 @@ type Services struct {
 	UserServices UserServices
 }
 
-func NewServices(userRepo user.Repository, categoryRepo category.Repository, topicRepo topic.Repository, commentRepo comment.Repository, voteRepo vote.Repository, oauth oauth.Repository) Services {
+func NewServices(userRepo user.Repository, categoryRepo category.Repository, topicRepo topic.Repository, commentRepo comment.Repository, voteRepo vote.Repository, oauthRepo oauth.Repository) Services {
 	uuidProvider := uuid.NewProvider()
 	encryption := bcrypt.NewProvider()
 	return Services{
 		UserServices: UserServices{
 			Queries: Queries{
-				*oauthservice.NewGitHubLoginService(oauth),
+				*oauthservice.NewOAuthService(oauthRepo),
 				topicQueries.NewGetTopicHandler(topicRepo, commentRepo),
 				topicQueries.NewGetAllTopicsHandler(topicRepo),
 				commentQueries.NewGetCommentHandler(commentRepo),

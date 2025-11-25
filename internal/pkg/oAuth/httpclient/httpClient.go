@@ -2,6 +2,7 @@ package httpclient
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,11 +10,13 @@ import (
 	"time"
 )
 
+const clientTimeOut = 10
+
 var defaultClient = &http.Client{
-	Timeout: 10 * time.Second,
+	Timeout: clientTimeOut * time.Second,
 }
 
-func Post(url string, headers map[string]string, body interface{}) ([]byte, error) {
+func Post(ctx context.Context, url string, headers map[string]string, body interface{}) ([]byte, error) {
 	var reqBody []byte
 	var err error
 
@@ -24,7 +27,7 @@ func Post(url string, headers map[string]string, body interface{}) ([]byte, erro
 		}
 	}
 
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(reqBody))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(reqBody))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -35,23 +38,23 @@ func Post(url string, headers map[string]string, body interface{}) ([]byte, erro
 
 	resp, err := defaultClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to execute request: %w", err)
+		return nil, fmt.Errorf("%w: %w", ErrFailedToExecuteRequest, err)
 	}
 	defer resp.Body.Close()
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %w", err)
+		return nil, fmt.Errorf("%w: %w", ErrFailedToReadResponseBody, err)
 	}
 
-	if resp.StatusCode >= 400 {
-		return nil, fmt.Errorf("request failed with status %d: %s", resp.StatusCode, string(respBody))
+	if resp.StatusCode >= http.StatusBadRequest {
+		return nil, fmt.Errorf("%w %d: %s", ErrRequestFailedWithStatus, resp.StatusCode, string(respBody))
 	}
 	return respBody, nil
 }
 
-func Get(url string, headers map[string]string) ([]byte, error) {
-	req, err := http.NewRequest("GET", url, nil)
+func Get(ctx context.Context, url string, headers map[string]string) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -71,7 +74,7 @@ func Get(url string, headers map[string]string) ([]byte, error) {
 		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
-	if resp.StatusCode >= 400 {
+	if resp.StatusCode >= http.StatusBadRequest {
 		return nil, fmt.Errorf("request failed with status %d: %s", resp.StatusCode, string(respBody))
 	}
 	return respBody, nil

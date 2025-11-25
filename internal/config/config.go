@@ -31,6 +31,7 @@ var (
 )
 
 type ServerConfig struct {
+	OAuth          OAuthConfig
 	Host           string
 	Port           string
 	Environment    string
@@ -41,12 +42,11 @@ type ServerConfig struct {
 	ReadTimeout    time.Duration
 	WriteTimeout   time.Duration
 	IdleTimeout    time.Duration
-	OAuth          OAuthConfig
 }
 
 type OAuthConfig struct {
-	GitHub      GitHubOAuthConfig
 	FrontendURL string
+	GitHub      GitHubOAuthConfig
 }
 
 type GitHubOAuthConfig struct {

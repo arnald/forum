@@ -41,13 +41,15 @@ import (
 	"github.com/arnald/forum/internal/infra/storage/notifications"
 	"github.com/arnald/forum/internal/infra/storage/sessionstore"
 	oauth "github.com/arnald/forum/internal/pkg/oAuth"
+	"github.com/arnald/forum/internal/pkg/oAuth/githubclient"
 )
 
 const (
-	apiContext   = "/api/v1"
-	readTimeout  = 5 * time.Second
-	writeTimeout = 10 * time.Second
-	idleTimeout  = 15 * time.Second
+	apiContext               = "/api/v1"
+	readTimeout              = 5 * time.Second
+	writeTimeout             = 10 * time.Second
+	idleTimeout              = 15 * time.Second
+	stateManagerDefaultLimit = 10
 )
 
 type Server struct {
@@ -63,7 +65,8 @@ type Server struct {
 }
 
 type OAuth struct {
-	stateManager *oauth.StateManager
+	stateManager   *oauth.StateManager
+	githubProvider *githubclient.GitHubProvider
 }
 
 func NewServer(cfg *config.ServerConfig, db *sql.DB, logger logger.Logger, appServices app.Services) *Server {
@@ -108,7 +111,8 @@ func (server *Server) AddHTTPRoutes() {
 		userRegister.NewHandler(server.config, server.appServices, server.sessionManager, server.logger).UserRegister,
 	)
 	server.router.HandleFunc(apiContext+"/auth/github/login",
-		oauthlogin.NewGitHubHandler(
+		oauthlogin.NewOAuthHandler(
+			server.oauth.githubProvider,
 			server.config,
 			&server.appServices.UserServices.Queries.UserLoginGithub,
 			server.oauth.stateManager,
@@ -117,7 +121,8 @@ func (server *Server) AddHTTPRoutes() {
 		).Login,
 	)
 	server.router.HandleFunc(apiContext+"/auth/github/callback",
-		oauthlogin.NewGitHubHandler(
+		oauthlogin.NewOAuthHandler(
+			server.oauth.githubProvider,
 			server.config,
 			&server.appServices.UserServices.Queries.UserLoginGithub,
 			server.oauth.stateManager,
@@ -308,6 +313,12 @@ func (server *Server) initMiddleware(sessionManager session.Manager) {
 
 func (server *Server) initOAuthServices() {
 	server.oauth = &OAuth{
-		stateManager: oauth.NewStateManager(10 * time.Second),
+		stateManager: oauth.NewStateManager(stateManagerDefaultLimit * time.Second),
+		githubProvider: githubclient.NewProvider(
+			server.config.OAuth.GitHub.ClientID,
+			server.config.OAuth.GitHub.ClientSecret,
+			server.config.OAuth.GitHub.RedirectURL,
+			server.config.OAuth.GitHub.Scopes,
+		),
 	}
 }

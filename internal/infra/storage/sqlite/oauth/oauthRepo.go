@@ -3,11 +3,11 @@ package oauthrepo
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
-	"github.com/arnald/forum/internal/domain/user"
-
 	"github.com/arnald/forum/internal/domain/oauth"
+	"github.com/arnald/forum/internal/domain/user"
 )
 
 type Repo struct {
@@ -31,6 +31,7 @@ func (r *Repo) GetUserByProviderID(ctx context.Context, provider oauth.Provider,
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare statement: %w", err)
 	}
+	defer stmt.Close()
 
 	err = stmt.QueryRowContext(ctx, string(provider), providerUserID).Scan(
 		&u.ID,
@@ -40,8 +41,8 @@ func (r *Repo) GetUserByProviderID(ctx context.Context, provider oauth.Provider,
 		&u.CreatedAt,
 	)
 
-	if err == sql.ErrNoRows {
-		return nil, nil
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, err
 	}
 	if err != nil {
 		return nil, err
@@ -84,7 +85,6 @@ func (r *Repo) CreateOAuthUser(ctx context.Context, oauthUser *oauth.User) (*use
 		oauthUser.Username,
 		oauthUser.AvatarURL,
 	)
-
 	if err != nil {
 		return nil, err
 	}
@@ -116,6 +116,7 @@ func (r *Repo) LinkOAuthProvider(ctx context.Context, userID string, oauthUser *
 	if err != nil {
 		return fmt.Errorf("failed to prepare statement: %w", err)
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx,
 		userID,
@@ -143,6 +144,7 @@ func (r *Repo) GetOAuthProvider(ctx context.Context, userID string, provider oau
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare statement: %w", err)
 	}
+	defer stmt.Close()
 
 	err = stmt.QueryRowContext(ctx, userID, string(provider)).Scan(
 		ctx,
@@ -152,7 +154,7 @@ func (r *Repo) GetOAuthProvider(ctx context.Context, userID string, provider oau
 		&oauthUser.AvatarURL,
 	)
 
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return nil, err
 	}
 

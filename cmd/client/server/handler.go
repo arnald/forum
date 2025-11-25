@@ -23,7 +23,9 @@ const (
 	backendRegisterURL    = backendAPIBase + "/register"
 	backendGithubRegister = backendAPIBase + "/auth/github/login"
 	// backendLoginURL    = backendAPIBase + "/login".
-	requestTimeout = 15 * time.Second
+	requestTimeout     = 15 * time.Second
+	accessTokenMaxAge  = 7
+	refreshTokenMaxAge = 7 * 24
 )
 
 // ============================================================================
@@ -305,7 +307,7 @@ func (cs *ClientServer) GithubCallback(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 		Secure:   false,
 		SameSite: http.SameSiteLaxMode,
-		MaxAge:   int(5 * time.Minute.Seconds()),
+		MaxAge:   int(accessTokenMaxAge * time.Minute.Seconds()),
 	}
 
 	refreshCookie := &http.Cookie{
@@ -315,7 +317,7 @@ func (cs *ClientServer) GithubCallback(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 		Secure:   false,
 		SameSite: http.SameSiteLaxMode,
-		MaxAge:   int(7 * 24 * time.Hour.Seconds()),
+		MaxAge:   int(refreshTokenMaxAge * time.Hour.Seconds()),
 	}
 
 	http.SetCookie(w, accessCookie)

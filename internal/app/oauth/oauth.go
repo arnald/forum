@@ -6,32 +6,35 @@ import (
 
 	"github.com/arnald/forum/internal/domain/oauth"
 	"github.com/arnald/forum/internal/domain/user"
-	"github.com/arnald/forum/internal/pkg/oAuth/githubclient"
+	oauthpkg "github.com/arnald/forum/internal/pkg/oAuth"
 )
 
-type GitHubLoginService struct {
+type OAuthService struct {
 	oauthRepo oauth.Repository
 }
 
-func NewGitHubLoginService(oauthRepo oauth.Repository) *GitHubLoginService {
-	return &GitHubLoginService{
+func NewOAuthService(oauthRepo oauth.Repository) *OAuthService {
+	return &OAuthService{
 		oauthRepo: oauthRepo,
 	}
 }
 
-func (s *GitHubLoginService) Login(ctx context.Context, code, clientID, clientSecret, redirectURL string) (*user.User, error) {
-	accessToken, err := githubclient.ExchangeCode(code, clientID, clientSecret, redirectURL)
+func (s *OAuthService) Login(ctx context.Context, code string, provider oauthpkg.Provider) (*user.User, error) {
+	accessToken, err := provider.ExchangeCode(ctx, code)
 	if err != nil {
 		return nil, fmt.Errorf("failed to exchange code: %w", err)
 	}
 
-	githubUser, err := githubclient.GetUser(accessToken)
+	providerUserInfo, err := provider.GetUserInfo(ctx, accessToken)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user info: %w", err)
 	}
 
-	gitHubUserID := fmt.Sprintf("%d", githubUser.ID)
-	existingUser, err := s.oauthRepo.GetUserByProviderID(ctx, oauth.ProviderGitHub, gitHubUserID)
+	gitHubUserID := providerUserInfo.ProviderID
+
+	// TODO: PROVIDER NAME VALIDATION
+	providerName := oauth.Provider(provider.Name())
+	existingUser, err := s.oauthRepo.GetUserByProviderID(ctx, providerName, gitHubUserID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check existing user: %w", err)
 	}
@@ -42,11 +45,11 @@ func (s *GitHubLoginService) Login(ctx context.Context, code, clientID, clientSe
 
 	oauthUser := &oauth.User{
 		ProviderID: gitHubUserID,
-		Provider:   oauth.ProviderGitHub,
-		Email:      githubUser.Email,
-		Username:   githubUser.Login,
-		AvatarURL:  githubUser.AvatarURL,
-		Name:       githubUser.Name,
+		Provider:   providerName,
+		Email:      providerUserInfo.Email,
+		Username:   providerUserInfo.Username,
+		AvatarURL:  providerUserInfo.AvatarURL,
+		Name:       providerUserInfo.Name,
 	}
 
 	newUser, err := s.oauthRepo.CreateOAuthUser(ctx, oauthUser)
