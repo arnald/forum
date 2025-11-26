@@ -8,6 +8,7 @@ const (
 )
 
 type User struct {
+	UserId     string
 	ProviderID string
 	Provider   Provider
 	Email      string

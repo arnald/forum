@@ -138,7 +138,13 @@ func (h *OAuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 	params.Add("access_token", session.AccessToken)
 	params.Add("refresh_token", session.RefreshToken)
 
-	frontendCallbackURL := fmt.Sprintf("%s?%s", h.config.OAuth.FrontendURL, params.Encode())
+	var frontendCallbackURL string
+	switch h.provider.Name() {
+	case "github":
+		frontendCallbackURL = fmt.Sprintf("%s?%s", h.config.OAuth.GitHub.FrontendCallbackURL, params.Encode())
+	case "google":
+		frontendCallbackURL = fmt.Sprintf("%s?%s", h.config.OAuth.Google.FrontendCallbackURL, params.Encode())
+	}
 
 	http.Redirect(w, r, frontendCallbackURL, http.StatusTemporaryRedirect)
 

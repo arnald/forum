@@ -7,15 +7,18 @@ import (
 	"github.com/arnald/forum/internal/domain/oauth"
 	"github.com/arnald/forum/internal/domain/user"
 	oauthpkg "github.com/arnald/forum/internal/pkg/oAuth"
+	"github.com/arnald/forum/internal/pkg/uuid"
 )
 
 type OAuthService struct {
-	oauthRepo oauth.Repository
+	oauthRepo    oauth.Repository
+	uuidProvider uuid.Provider
 }
 
-func NewOAuthService(oauthRepo oauth.Repository) *OAuthService {
+func NewOAuthService(oauthRepo oauth.Repository, uuidProvider uuid.Provider) *OAuthService {
 	return &OAuthService{
-		oauthRepo: oauthRepo,
+		oauthRepo:    oauthRepo,
+		uuidProvider: uuidProvider,
 	}
 }
 
@@ -30,11 +33,11 @@ func (s *OAuthService) Login(ctx context.Context, code string, provider oauthpkg
 		return nil, fmt.Errorf("failed to get user info: %w", err)
 	}
 
-	gitHubUserID := providerUserInfo.ProviderID
+	providerID := providerUserInfo.ProviderID
 
 	// TODO: PROVIDER NAME VALIDATION
 	providerName := oauth.Provider(provider.Name())
-	existingUser, err := s.oauthRepo.GetUserByProviderID(ctx, providerName, gitHubUserID)
+	existingUser, err := s.oauthRepo.GetUserByProviderID(ctx, providerName, providerID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check existing user: %w", err)
 	}
@@ -44,7 +47,8 @@ func (s *OAuthService) Login(ctx context.Context, code string, provider oauthpkg
 	}
 
 	oauthUser := &oauth.User{
-		ProviderID: gitHubUserID,
+		UserId:     s.uuidProvider.NewUUID(),
+		ProviderID: providerID,
 		Provider:   providerName,
 		Email:      providerUserInfo.Email,
 		Username:   providerUserInfo.Username,

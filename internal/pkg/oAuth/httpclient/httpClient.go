@@ -79,3 +79,30 @@ func Get(ctx context.Context, url string, headers map[string]string) ([]byte, er
 	}
 	return respBody, nil
 }
+
+func PostWithURLEncodedParams(ctx context.Context, url string, headers map[string]string, body io.Reader) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	for key, value := range headers {
+		req.Header.Set(key, value)
+	}
+
+	resp, err := defaultClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %w", ErrFailedToExecuteRequest, err)
+	}
+	defer resp.Body.Close()
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %w", ErrFailedToReadResponseBody, err)
+	}
+
+	if resp.StatusCode >= http.StatusBadRequest {
+		return nil, fmt.Errorf("%w %d: %s", ErrRequestFailedWithStatus, resp.StatusCode, string(respBody))
+	}
+	return respBody, nil
+}

@@ -42,6 +42,7 @@ import (
 	"github.com/arnald/forum/internal/infra/storage/sessionstore"
 	oauth "github.com/arnald/forum/internal/pkg/oAuth"
 	"github.com/arnald/forum/internal/pkg/oAuth/githubclient"
+	"github.com/arnald/forum/internal/pkg/oAuth/googleclient"
 )
 
 const (
@@ -67,6 +68,7 @@ type Server struct {
 type OAuth struct {
 	stateManager   *oauth.StateManager
 	githubProvider *githubclient.GitHubProvider
+	googleProvider *googleclient.GoogleProvider
 }
 
 func NewServer(cfg *config.ServerConfig, db *sql.DB, logger logger.Logger, appServices app.Services) *Server {
@@ -123,6 +125,26 @@ func (server *Server) AddHTTPRoutes() {
 	server.router.HandleFunc(apiContext+"/auth/github/callback",
 		oauthlogin.NewOAuthHandler(
 			server.oauth.githubProvider,
+			server.config,
+			&server.appServices.UserServices.Queries.UserLoginGithub,
+			server.oauth.stateManager,
+			server.sessionManager,
+			server.logger,
+		).Callback,
+	)
+	server.router.HandleFunc(apiContext+"/auth/google/login",
+		oauthlogin.NewOAuthHandler(
+			server.oauth.googleProvider,
+			server.config,
+			&server.appServices.UserServices.Queries.UserLoginGithub,
+			server.oauth.stateManager,
+			server.sessionManager,
+			server.logger,
+		).Login,
+	)
+	server.router.HandleFunc(apiContext+"/auth/google/callback",
+		oauthlogin.NewOAuthHandler(
+			server.oauth.googleProvider,
 			server.config,
 			&server.appServices.UserServices.Queries.UserLoginGithub,
 			server.oauth.stateManager,
@@ -313,12 +335,18 @@ func (server *Server) initMiddleware(sessionManager session.Manager) {
 
 func (server *Server) initOAuthServices() {
 	server.oauth = &OAuth{
-		stateManager: oauth.NewStateManager(stateManagerDefaultLimit * time.Second),
+		stateManager: oauth.NewStateManager(stateManagerDefaultLimit * time.Minute),
 		githubProvider: githubclient.NewProvider(
 			server.config.OAuth.GitHub.ClientID,
 			server.config.OAuth.GitHub.ClientSecret,
 			server.config.OAuth.GitHub.RedirectURL,
 			server.config.OAuth.GitHub.Scopes,
+		),
+		googleProvider: googleclient.NewProvider(
+			server.config.OAuth.Google.ClientID,
+			server.config.OAuth.Google.ClientSecret,
+			server.config.OAuth.Google.RedirectURL,
+			server.config.OAuth.Google.Scopes,
 		),
 	}
 }

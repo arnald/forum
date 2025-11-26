@@ -65,7 +65,7 @@ func NewServices(userRepo user.Repository, categoryRepo category.Repository, top
 	return Services{
 		UserServices: UserServices{
 			Queries: Queries{
-				*oauthservice.NewOAuthService(oauthRepo),
+				*oauthservice.NewOAuthService(oauthRepo, uuidProvider),
 				topicQueries.NewGetTopicHandler(topicRepo, commentRepo),
 				topicQueries.NewGetAllTopicsHandler(topicRepo),
 				commentQueries.NewGetCommentHandler(commentRepo),

@@ -42,7 +42,7 @@ func (r *Repo) GetUserByProviderID(ctx context.Context, provider oauth.Provider,
 	)
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, err
+		return nil, nil
 	}
 	if err != nil {
 		return nil, err
@@ -57,15 +57,13 @@ func (r *Repo) CreateOAuthUser(ctx context.Context, oauthUser *oauth.User) (*use
 	}
 	defer tx.Rollback()
 
-	userID := "test" // TODO: create UUID for user in application layer, pass it on to this functio
-
 	insertUserQuery := `
         INSERT INTO users (id, username, email, password_hash)
         VALUES (?, ?, ?, '')
     `
 
 	_, err = tx.ExecContext(ctx, insertUserQuery,
-		userID,
+		oauthUser.UserId,
 		oauthUser.Username,
 		oauthUser.Email,
 	)
@@ -78,7 +76,7 @@ func (r *Repo) CreateOAuthUser(ctx context.Context, oauthUser *oauth.User) (*use
 	`
 
 	_, err = tx.ExecContext(ctx, insertUserQuery,
-		userID,
+		oauthUser.UserId,
 		string(oauthUser.Provider),
 		oauthUser.ProviderID,
 		oauthUser.Email,
@@ -95,7 +93,7 @@ func (r *Repo) CreateOAuthUser(ctx context.Context, oauthUser *oauth.User) (*use
 	}
 
 	return &user.User{
-		ID:       userID,
+		ID:       oauthUser.UserId,
 		Username: oauthUser.Username,
 		Email:    oauthUser.Email,
 		Password: "",
