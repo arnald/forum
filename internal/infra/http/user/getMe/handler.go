@@ -24,7 +24,7 @@ type GetMeResponse struct {
 	Email    string `json:"email"`
 }
 
-// GetMe handler retrieves the current user from the session in the context
+// GetMe handler retrieves the current user from the session in the context.
 func (h *Handler) GetMe(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		h.logger.PrintError(logger.ErrInvalidRequestMethod, nil)

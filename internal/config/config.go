@@ -31,6 +31,7 @@ var (
 )
 
 type ServerConfig struct {
+	OAuth          OAuthConfig
 	Host           string
 	Port           string
 	Environment    string
@@ -43,6 +44,28 @@ type ServerConfig struct {
 	IdleTimeout    time.Duration
 }
 
+type OAuthConfig struct {
+	FrontendCallbackURL string
+	GitHub              GitHubOAuthConfig
+	Google              GoogleOAuthConfig
+}
+
+type GitHubOAuthConfig struct {
+	ClientID            string
+	ClientSecret        string
+	RedirectURL         string
+	FrontendCallbackURL string
+	Scopes              []string
+}
+
+type GoogleOAuthConfig struct {
+	ClientID            string
+	ClientSecret        string
+	RedirectURL         string
+	FrontendCallbackURL string
+	TokenURL            string
+	Scopes              []string
+}
 type DatabaseConfig struct {
 	Driver         string
 	Path           string
@@ -123,6 +146,24 @@ func LoadConfig() (*ServerConfig, error) {
 				UserRegister: helpers.GetEnvDuration("HANDLER_TIMEOUT_REGISTER", envMap, userRegisterTimeout),
 				UserLogin:    helpers.GetEnvDuration("HANDLER_TIMEOUT_LOGIN", envMap, userLoginTimeout),
 			},
+		},
+		OAuth: OAuthConfig{
+			GitHub: GitHubOAuthConfig{
+				ClientID:            helpers.GetEnv("GITHUB_CLIENT_ID", envMap, ""),
+				ClientSecret:        helpers.GetEnv("GITHUB_CLIENT_SECRET", envMap, ""),
+				RedirectURL:         helpers.GetEnv("GITHUB_REDIRECT_URL", envMap, "http://localhost:8080/api/v1/auth/github/callback"),
+				Scopes:              helpers.ParseList(helpers.GetEnv("GITHUB_SCOPES", envMap, "user:email")),
+				FrontendCallbackURL: helpers.GetEnv("RONTEND_GITHUB_CALLBACK_URL", envMap, "http://localhost:3001/auth/github/callback"),
+			},
+			Google: GoogleOAuthConfig{
+				ClientID:            helpers.GetEnv("GOOGLE_CLIENT_ID", envMap, ""),
+				ClientSecret:        helpers.GetEnv("GOOGLE_CLIENT_SECRET", envMap, ""),
+				RedirectURL:         helpers.GetEnv("GOOGLE_REDIRECT_URL", envMap, "http://localhost:8080/api/v1/auth/github/callback"),
+				Scopes:              helpers.ParseList(helpers.GetEnv("GOOGLE_SCOPES", envMap, "")),
+				FrontendCallbackURL: helpers.GetEnv("FRONTEND_GOOGLE_CALLBACK_URL", envMap, ""),
+				TokenURL:            helpers.GetEnv("GOOGLE_TOKEN_URL", envMap, ""),
+			},
+			FrontendCallbackURL: helpers.GetEnv("FRONTEND_CALLBACK_URL", envMap, ""),
 		},
 	}
 

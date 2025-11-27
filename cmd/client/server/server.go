@@ -92,6 +92,10 @@ func (cs *ClientServer) SetupRoutes() {
 
 	// Logout route - clears cookies
 	cs.Router.HandleFunc("/logout", cs.Logout)
+	// OAuth Register
+	cs.Router.HandleFunc("/auth/github/login", cs.GitHubRegister)
+	cs.Router.HandleFunc("/auth/google/login", cs.GoogleRegister)
+	cs.Router.HandleFunc("/auth/callback", cs.Callback)
 }
 
 // ListenAndServe starts the HTTP server.

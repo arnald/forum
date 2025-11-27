@@ -15,6 +15,11 @@ import (
 	"github.com/arnald/forum/cmd/client/helpers/validation"
 )
 
+const (
+	accessTokenMaxAge  = 7
+	refreshTokenMaxAge = 7 * 24
+)
+
 // LoginPage handles GET requests to /login.
 func (cs *ClientServer) LoginPage(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
@@ -56,7 +61,7 @@ func (cs *ClientServer) LoginPost(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleEmailLogin processes email-based login
+// handleEmailLogin processes email-based login.
 func (cs *ClientServer) handleEmailLogin(w http.ResponseWriter, r *http.Request, data domain.LoginFormErrors) {
 	email := strings.TrimSpace(r.FormValue("email"))
 	password := strings.TrimSpace(r.FormValue("password"))
@@ -94,7 +99,7 @@ func (cs *ClientServer) handleEmailLogin(w http.ResponseWriter, r *http.Request,
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-// handleUsernameLogin processes username-based login
+// handleUsernameLogin processes username-based login.
 func (cs *ClientServer) handleUsernameLogin(w http.ResponseWriter, r *http.Request, data domain.LoginFormErrors) {
 	username := strings.TrimSpace(r.FormValue("username"))
 	password := strings.TrimSpace(r.FormValue("password"))
@@ -136,7 +141,7 @@ func (cs *ClientServer) handleUsernameLogin(w http.ResponseWriter, r *http.Reque
 // API REQUEST METHODS (Methods on ClientServer)
 // ============================================================================
 
-// loginWithBackendEmail sends login request to backend email endpoint
+// loginWithBackendEmail sends login request to backend email endpoint.
 func (cs *ClientServer) loginWithBackendEmail(ctx context.Context, email string, password string) (*domain.BackendLoginResponse, error) {
 	req := domain.BackendLoginRequest{
 		Email:    email,
@@ -145,7 +150,7 @@ func (cs *ClientServer) loginWithBackendEmail(ctx context.Context, email string,
 	return cs.sendLoginRequest(ctx, backendLoginEmailURL, req)
 }
 
-// loginWithBackendUsername sends login request to backend username endpoint
+// loginWithBackendUsername sends login request to backend username endpoint.
 func (cs *ClientServer) loginWithBackendUsername(ctx context.Context, username string, password string) (*domain.BackendLoginResponse, error) {
 	req := domain.BackendLoginRequest{
 		Username: username,
@@ -203,7 +208,7 @@ func (cs *ClientServer) sendLoginRequest(ctx context.Context, backendURL string,
 	return &target, nil
 }
 
-// setSessionCookies sets the access and refresh tokens as cookies
+// setSessionCookies sets the access and refresh tokens as cookies.
 func (cs *ClientServer) setSessionCookies(w http.ResponseWriter, accessToken, refreshToken string) {
 	accessCookie := &http.Cookie{
 		Name:     "access_token",
@@ -212,7 +217,7 @@ func (cs *ClientServer) setSessionCookies(w http.ResponseWriter, accessToken, re
 		HttpOnly: true,
 		Secure:   false, // Set to true in production with HTTPS
 		SameSite: http.SameSiteLaxMode,
-		MaxAge:   int(5 * time.Minute.Seconds()), // 5 minutes
+		MaxAge:   int(float64(accessTokenMaxAge) * time.Minute.Seconds()),
 	}
 
 	refreshCookie := &http.Cookie{
@@ -222,7 +227,7 @@ func (cs *ClientServer) setSessionCookies(w http.ResponseWriter, accessToken, re
 		HttpOnly: true,
 		Secure:   false, // Set to true in production with HTTPS
 		SameSite: http.SameSiteLaxMode,
-		MaxAge:   int(7 * 24 * time.Hour.Seconds()), // 7 days
+		MaxAge:   int(float64(refreshTokenMaxAge) * time.Hour.Seconds()),
 	}
 
 	http.SetCookie(w, accessCookie)

@@ -16,37 +16,37 @@ const (
 	backendMeURL   string     = "http://localhost:8080/api/v1/me"
 )
 
-// AuthMiddleware wraps a handler and injects authenticated user data into context
+// AuthMiddleware wraps a handler and injects authenticated user data into context.
 func AuthMiddleware(httpClient *http.Client) func(http.HandlerFunc) http.HandlerFunc {
 	return func(next http.HandlerFunc) http.HandlerFunc {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 
-			// Try to get user from /me endpoint
+			// Try to get user from /me endpoint.
 			user, err := getCurrentUser(ctx, httpClient, r)
 			if err == nil && user != nil {
-				// User authenticated, add to context
+				// User authenticated, add to context.
 				ctx = context.WithValue(ctx, userContextKey, user)
 			}
-			// If error or no user, continue without user context
-			// This allows optional auth for certain pages
+			// If error or no user, continue without user context.
+			// This allows optional auth for certain pages.
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }
 
-// getCurrentUser fetches the current user from the backend /me endpoint
+// getCurrentUser fetches the current user from the backend /me endpoint.
 func getCurrentUser(ctx context.Context, httpClient *http.Client, r *http.Request) (*domain.LoggedInUser, error) {
-	// Create a new request to the backend /me endpoint
+	// Create a new request to the backend /me endpoint.
 	meReq, err := http.NewRequestWithContext(ctx, http.MethodGet, backendMeURL, nil)
 	if err != nil {
 		log.Printf("Failed to create /me request: %v", err)
 		return nil, err
 	}
 
-	// Copy cookies from the original request to the /me request
-	// This includes access_token and refresh_token cookies
+	// Copy cookies from the original request to the /me request.
+	// This includes access_token and refresh_token cookies.
 	for _, cookie := range r.Cookies() {
 		meReq.AddCookie(cookie)
 	}
@@ -60,7 +60,7 @@ func getCurrentUser(ctx context.Context, httpClient *http.Client, r *http.Reques
 	}
 	defer resp.Body.Close()
 
-	// If not authorized, return nil (user not authenticated)
+	// If not authorized, return nil (user not authenticated).
 	if resp.StatusCode == http.StatusUnauthorized {
 		return nil, nil
 	}
@@ -70,7 +70,7 @@ func getCurrentUser(ctx context.Context, httpClient *http.Client, r *http.Reques
 		return nil, err
 	}
 
-	// Decode response using the helper from server package
+	// Decode response using the helper from server package.
 	var meResp domain.BackendMeResponse
 	err = helpers.DecodeBackendResponse(resp, &meResp)
 	if err != nil {
@@ -78,7 +78,7 @@ func getCurrentUser(ctx context.Context, httpClient *http.Client, r *http.Reques
 		return nil, err
 	}
 
-	// Convert backend response to LoggedInUser domain model
+	// Convert backend response to LoggedInUser domain model.
 	user := &domain.LoggedInUser{
 		ID:       meResp.ID,
 		Username: meResp.Username,
@@ -88,7 +88,7 @@ func getCurrentUser(ctx context.Context, httpClient *http.Client, r *http.Reques
 	return user, nil
 }
 
-// GetUserFromContext retrieves the authenticated user from context
+// GetUserFromContext retrieves the authenticated user from context.
 func GetUserFromContext(ctx context.Context) *domain.LoggedInUser {
 	user, ok := ctx.Value(userContextKey).(*domain.LoggedInUser)
 	if !ok {

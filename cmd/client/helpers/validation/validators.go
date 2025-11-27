@@ -36,8 +36,8 @@ func IsValidEmail(email string) bool {
 	return err == nil
 }
 
-// IsValidEmailFormat is a simple check for email-like format
-// Used to distinguish between email and username inputs
+// IsValidEmailFormat is a simple check for email-like format.
+// Used to distinguish between email and username inputs.
 func IsValidEmailFormat(s string) bool {
 	return strings.Contains(s, "@") && strings.Contains(s, ".")
 }

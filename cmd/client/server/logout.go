@@ -2,7 +2,7 @@ package server
 
 import "net/http"
 
-// Logout handles user logout by clearing session cookies
+// Logout handles user logout by clearing session cookies.
 func (cs *ClientServer) Logout(w http.ResponseWriter, r *http.Request) {
 	// Clear access token cookie
 	accessCookie := &http.Cookie{
