@@ -81,6 +81,9 @@ linters:
             - revive
         path: (.+)_test\.go
         text: 'unused-parameter:'
+      - linters:
+            - tagliatelle
+        path: internal/pkg/oAuth/ # Disabled it because third party apis need snake case json tags
     paths:
       - frontend/
 

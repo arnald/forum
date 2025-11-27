@@ -61,6 +61,11 @@ func (cs *ClientServer) SetupRoutes() {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
 	})
+
+	// OAuth Register
+	cs.Router.HandleFunc("/auth/github/login", cs.GitHubRegister)
+	cs.Router.HandleFunc("/auth/google/login", cs.GoogleRegister)
+	cs.Router.HandleFunc("/auth/callback", cs.Callback)
 }
 
 // ListenAndServe starts the HTTP server.

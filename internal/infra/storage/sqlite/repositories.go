@@ -6,11 +6,13 @@ import (
 	"github.com/arnald/forum/internal/domain/category"
 	"github.com/arnald/forum/internal/domain/comment"
 	"github.com/arnald/forum/internal/domain/notification"
+	"github.com/arnald/forum/internal/domain/oauth"
 	"github.com/arnald/forum/internal/domain/topic"
 	"github.com/arnald/forum/internal/domain/user"
 	"github.com/arnald/forum/internal/domain/vote"
 	"github.com/arnald/forum/internal/infra/storage/sqlite/categories"
 	"github.com/arnald/forum/internal/infra/storage/sqlite/comments"
+	oauthrepo "github.com/arnald/forum/internal/infra/storage/sqlite/oauth"
 	"github.com/arnald/forum/internal/infra/storage/sqlite/topics"
 	"github.com/arnald/forum/internal/infra/storage/sqlite/users"
 	"github.com/arnald/forum/internal/infra/storage/sqlite/votes"
@@ -23,6 +25,7 @@ type Repositories struct {
 	CommentRepo      comment.Repository
 	VoteRepo         vote.Repository
 	NotificationRepo notification.Repository
+	OauthRepo        oauth.Repository
 }
 
 func NewRepositories(db *sql.DB) *Repositories {
@@ -32,5 +35,6 @@ func NewRepositories(db *sql.DB) *Repositories {
 		TopicRepo:    topics.NewRepo(db),
 		CommentRepo:  comments.NewRepo(db),
 		VoteRepo:     votes.NewRepo(db),
+		OauthRepo:    oauthrepo.NewOAuthRepository(db),
 	}
 }
