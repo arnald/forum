@@ -64,9 +64,8 @@ func (cs *ClientServer) SetupRoutes() {
 
 	// OAuth Register
 	cs.Router.HandleFunc("/auth/github/login", cs.GitHubRegister)
-	cs.Router.HandleFunc("/auth/github/callback", cs.GithubCallback)
 	cs.Router.HandleFunc("/auth/google/login", cs.GoogleRegister)
-	cs.Router.HandleFunc("/auth/google/callback", cs.GoogleCallback)
+	cs.Router.HandleFunc("/auth/callback", cs.Callback)
 }
 
 // ListenAndServe starts the HTTP server.

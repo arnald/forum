@@ -42,7 +42,7 @@ func (r *Repo) GetUserByProviderID(ctx context.Context, provider oauth.Provider,
 	)
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, nil
+		return nil, ErrUserNotFound
 	}
 	if err != nil {
 		return nil, err
@@ -50,12 +50,24 @@ func (r *Repo) GetUserByProviderID(ctx context.Context, provider oauth.Provider,
 	return &u, nil
 }
 
-func (r *Repo) CreateOAuthUser(ctx context.Context, oauthUser *oauth.User) (*user.User, error) {
+func (r *Repo) CreateOAuthUser(ctx context.Context, oauthUser *oauth.User) (userResult *user.User, err error) {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err != nil {
+			rollbackErr := tx.Rollback()
+			if rollbackErr != nil {
+				err = fmt.Errorf("%w: %w: %w", ErrTransactionRollbackFailed, err, rollbackErr)
+			}
+			return
+		}
+		commitErr := tx.Commit()
+		if commitErr != nil {
+			err = fmt.Errorf("%w: %w", ErrTransactionCommitFailed, commitErr)
+		}
+	}()
 
 	insertUserQuery := `
         INSERT INTO users (id, username, email, password_hash)
@@ -63,7 +75,7 @@ func (r *Repo) CreateOAuthUser(ctx context.Context, oauthUser *oauth.User) (*use
     `
 
 	_, err = tx.ExecContext(ctx, insertUserQuery,
-		oauthUser.UserId,
+		oauthUser.UserID,
 		oauthUser.Username,
 		oauthUser.Email,
 	)
@@ -76,7 +88,7 @@ func (r *Repo) CreateOAuthUser(ctx context.Context, oauthUser *oauth.User) (*use
 	`
 
 	_, err = tx.ExecContext(ctx, insertUserQuery,
-		oauthUser.UserId,
+		oauthUser.UserID,
 		string(oauthUser.Provider),
 		oauthUser.ProviderID,
 		oauthUser.Email,
@@ -87,13 +99,8 @@ func (r *Repo) CreateOAuthUser(ctx context.Context, oauthUser *oauth.User) (*use
 		return nil, err
 	}
 
-	err = tx.Commit()
-	if err != nil {
-		return nil, err
-	}
-
 	return &user.User{
-		ID:       oauthUser.UserId,
+		ID:       oauthUser.UserID,
 		Username: oauthUser.Username,
 		Email:    oauthUser.Email,
 		Password: "",

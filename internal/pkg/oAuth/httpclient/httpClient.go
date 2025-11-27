@@ -12,11 +12,19 @@ import (
 
 const clientTimeOut = 10
 
-var defaultClient = &http.Client{
-	Timeout: clientTimeOut * time.Second,
+type Client struct {
+	httpClient *http.Client
 }
 
-func Post(ctx context.Context, url string, headers map[string]string, body interface{}) ([]byte, error) {
+func NewClient() *Client {
+	return &Client{
+		httpClient: &http.Client{
+			Timeout: clientTimeOut * time.Second,
+		},
+	}
+}
+
+func (c *Client) Post(ctx context.Context, url string, headers map[string]string, body interface{}) ([]byte, error) {
 	var reqBody []byte
 	var err error
 
@@ -36,7 +44,7 @@ func Post(ctx context.Context, url string, headers map[string]string, body inter
 		req.Header.Set(key, value)
 	}
 
-	resp, err := defaultClient.Do(req)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrFailedToExecuteRequest, err)
 	}
@@ -53,7 +61,7 @@ func Post(ctx context.Context, url string, headers map[string]string, body inter
 	return respBody, nil
 }
 
-func Get(ctx context.Context, url string, headers map[string]string) ([]byte, error) {
+func (c *Client) Get(ctx context.Context, url string, headers map[string]string) ([]byte, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -63,24 +71,24 @@ func Get(ctx context.Context, url string, headers map[string]string) ([]byte, er
 		req.Header.Set(key, value)
 	}
 
-	resp, err := defaultClient.Do(req)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to execute request: %w", err)
+		return nil, fmt.Errorf("%w: %w", ErrFailedToExecuteRequest, err)
 	}
 	defer resp.Body.Close()
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %w", err)
+		return nil, fmt.Errorf("%w: %w", ErrFailedToReadResponseBody, err)
 	}
 
 	if resp.StatusCode >= http.StatusBadRequest {
-		return nil, fmt.Errorf("request failed with status %d: %s", resp.StatusCode, string(respBody))
+		return nil, fmt.Errorf("%w %d: %s", ErrRequestFailedWithStatus, resp.StatusCode, string(respBody))
 	}
 	return respBody, nil
 }
 
-func PostWithURLEncodedParams(ctx context.Context, url string, headers map[string]string, body io.Reader) ([]byte, error) {
+func (c *Client) PostWithURLEncodedParams(ctx context.Context, url string, headers map[string]string, body io.Reader) ([]byte, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -90,7 +98,7 @@ func PostWithURLEncodedParams(ctx context.Context, url string, headers map[strin
 		req.Header.Set(key, value)
 	}
 
-	resp, err := defaultClient.Do(req)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrFailedToExecuteRequest, err)
 	}

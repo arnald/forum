@@ -82,7 +82,8 @@ func (p *GitHubProvider) ExchangeCode(ctx context.Context, code string) (string,
 		"Content-Type": "application/json",
 	}
 
-	respBody, err := httpclient.Post(ctx, tokerURL, headers, body)
+	client := httpclient.NewClient()
+	respBody, err := client.Post(ctx, tokerURL, headers, body)
 	if err != nil {
 		return "", fmt.Errorf("%w: %w", ErrFailedToExchangeCode, err)
 	}
@@ -121,7 +122,8 @@ func (p *GitHubProvider) fetchUser(ctx context.Context, accessToken string) (*Gi
 		"Accept":        "application/json",
 	}
 
-	respoBody, err := httpclient.Get(ctx, userURL, headers)
+	client := httpclient.NewClient()
+	respoBody, err := client.Get(ctx, userURL, headers)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrFailedToGetUser, err)
 	}
@@ -149,7 +151,8 @@ func (p *GitHubProvider) getPrimaryEmail(ctx context.Context, accessToken string
 		"Accept":        "application/json",
 	}
 
-	respBody, err := httpclient.Get(ctx, userEmailURL, headers)
+	client := httpclient.NewClient()
+	respBody, err := client.Get(ctx, userEmailURL, headers)
 	if err != nil {
 		return "", fmt.Errorf("failed to get emails: %w", err)
 	}

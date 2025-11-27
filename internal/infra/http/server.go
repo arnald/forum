@@ -346,6 +346,7 @@ func (server *Server) initOAuthServices() {
 			server.config.OAuth.Google.ClientID,
 			server.config.OAuth.Google.ClientSecret,
 			server.config.OAuth.Google.RedirectURL,
+			server.config.OAuth.Google.TokenURL,
 			server.config.OAuth.Google.Scopes,
 		),
 	}

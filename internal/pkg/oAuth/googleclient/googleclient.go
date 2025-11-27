@@ -12,7 +12,6 @@ import (
 )
 
 const (
-	tokenURL    = "https://oauth2.googleapis.com/token"
 	userInfoURL = "https://www.googleapis.com/oauth2/v2/userinfo"
 	authURL     = "https://accounts.google.com/o/oauth2/v2/auth"
 )
@@ -21,14 +20,16 @@ type GoogleProvider struct {
 	clientID     string
 	clientSecret string
 	redirectURL  string
+	tokenURL     string
 	scopes       []string
 }
 
-func NewProvider(clientID, clientSecret, redirectURL string, scopes []string) *GoogleProvider {
+func NewProvider(clientID, clientSecret, redirectURL string, tokenURL string, scopes []string) *GoogleProvider {
 	return &GoogleProvider{
 		clientID:     clientID,
 		clientSecret: clientSecret,
 		redirectURL:  redirectURL,
+		tokenURL:     tokenURL,
 		scopes:       scopes,
 	}
 }
@@ -36,21 +37,21 @@ func NewProvider(clientID, clientSecret, redirectURL string, scopes []string) *G
 type TokenResponse struct {
 	AccessToken  string `json:"access_token"`
 	TokenType    string `json:"token_type"`
-	ExpiresIn    int    `json:"expires_in"`
 	RefreshToken string `json:"refresh_token,omitempty"`
 	Scope        string `json:"scope"`
 	IDToken      string `json:"id_token,omitempty"`
+	ExpiresIn    int    `json:"expires_in"`
 }
 
 type GoogleUser struct {
 	ID            string `json:"id"`
 	Email         string `json:"email"`
-	VerifiedEmail bool   `json:"verified_email"`
 	Name          string `json:"name"`
 	GivenName     string `json:"given_name"`
 	FamilyName    string `json:"family_name"`
 	Picture       string `json:"picture"`
 	Locale        string `json:"locale"`
+	VerifiedEmail bool   `json:"verified_email"`
 }
 
 func (p *GoogleProvider) Name() string {
@@ -82,8 +83,8 @@ func (p *GoogleProvider) ExchangeCode(ctx context.Context, code string) (string,
 		"Accept":       "application/json",
 		"Content-Type": "application/x-www-form-urlencoded",
 	}
-
-	respBody, err := httpclient.PostWithURLEncodedParams(ctx, tokenURL, headers, strings.NewReader(formData.Encode()))
+	client := httpclient.NewClient()
+	respBody, err := client.PostWithURLEncodedParams(ctx, p.tokenURL, headers, strings.NewReader(formData.Encode()))
 	if err != nil {
 		return "", fmt.Errorf("%w: %w", ErrFailedToExchangeCode, err)
 	}
@@ -122,7 +123,8 @@ func (p *GoogleProvider) fetchUser(ctx context.Context, accessToken string) (*Go
 		"Accept":        "application/json",
 	}
 
-	respoBody, err := httpclient.Get(ctx, userInfoURL, headers)
+	client := httpclient.NewClient()
+	respoBody, err := client.Get(ctx, userInfoURL, headers)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrFailedToGetUser, err)
 	}

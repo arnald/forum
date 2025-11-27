@@ -45,24 +45,26 @@ type ServerConfig struct {
 }
 
 type OAuthConfig struct {
-	GitHub GitHubOAuthConfig
-	Google GoogleOAuthConfig
+	FrontendCallbackURL string
+	GitHub              GitHubOAuthConfig
+	Google              GoogleOAuthConfig
 }
 
 type GitHubOAuthConfig struct {
 	ClientID            string
 	ClientSecret        string
 	RedirectURL         string
-	Scopes              []string
 	FrontendCallbackURL string
+	Scopes              []string
 }
 
 type GoogleOAuthConfig struct {
 	ClientID            string
 	ClientSecret        string
 	RedirectURL         string
-	Scopes              []string
 	FrontendCallbackURL string
+	TokenURL            string
+	Scopes              []string
 }
 type DatabaseConfig struct {
 	Driver         string
@@ -159,7 +161,9 @@ func LoadConfig() (*ServerConfig, error) {
 				RedirectURL:         helpers.GetEnv("GOOGLE_REDIRECT_URL", envMap, "http://localhost:8080/api/v1/auth/github/callback"),
 				Scopes:              helpers.ParseList(helpers.GetEnv("GOOGLE_SCOPES", envMap, "")),
 				FrontendCallbackURL: helpers.GetEnv("FRONTEND_GOOGLE_CALLBACK_URL", envMap, ""),
+				TokenURL:            helpers.GetEnv("GOOGLE_TOKEN_URL", envMap, ""),
 			},
+			FrontendCallbackURL: helpers.GetEnv("FRONTEND_CALLBACK_URL", envMap, ""),
 		},
 	}
 

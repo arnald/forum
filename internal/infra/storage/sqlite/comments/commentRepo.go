@@ -54,7 +54,7 @@ func (r *Repo) CreateComment(ctx context.Context, comment *comment.Comment) erro
 	return nil
 }
 
-func (r *Repo) UpdateComment(ctx context.Context, comment *comment.Comment) error {
+func (r *Repo) UpdateComment(ctx context.Context, comment *comment.Comment) (err error) {
 	tx, err := r.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
