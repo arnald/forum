@@ -12,4 +12,6 @@ const (
 	backendRegisterURL      = backendAPIBase + "/register"
 	backendLoginEmailURL    = backendAPIBase + "/login/email"
 	backendLoginUsernameURL = backendAPIBase + "/login/username"
+	backendGithubRegister   = backendAPIBase + "/auth/github/login"
+	backendGooglebRegister  = backendAPIBase + "/auth/google/login"
 )

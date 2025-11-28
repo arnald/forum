@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/arnald/forum/cmd/client/domain"
 	h "github.com/arnald/forum/cmd/client/helpers"
@@ -15,78 +14,12 @@ import (
 	"github.com/arnald/forum/internal/pkg/path"
 )
 
-const (
-	// notFoundMessage        = "Oops! The page you're looking for has vanished into the digital void."
-	// backendAPIBase         = "http://localhost:8080/api/v1"
-	// backendRegisterURL     = backendAPIBase + "/register".
-	backendGithubRegister  = backendAPIBase + "/auth/github/login"
-	backendGooglebRegister = backendAPIBase + "/auth/google/login"
-	// backendLoginURL    = backendAPIBase + "/login".
-	// requestTimeout     = 15 * time.Second.
-)
-
-// ============================================================================
-// HELPER FUNCTIONS (Package-level, not methods)
-// ============================================================================
-
-// renderTemplate renders a template with the given data.
-// func renderTemplate(w http.ResponseWriter, templateName string, data interface{}) {
-// 	resolver := path.NewResolver()
-// 	tmplPath := resolver.GetPath("frontend/html/pages/" + templateName + ".html")
-
-// 	tmpl, err := template.ParseFiles(tmplPath)
-// 	if err != nil {
-// 		log.Printf("Error parsing %s: %v", tmplPath, err)
-// 		http.Error(w, "Failed to load page", http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	err = tmpl.ExecuteTemplate(w, templateName, data)
-// 	if err != nil {
-// 		log.Printf("Error executing %s template: %v", templateName, err)
-// 		http.Error(w, "Failed to render page", http.StatusInternalServerError)
-// 	}
-// }
-
-// // notFoundHandler renders a 404 error page.
-// func notFoundHandler(w http.ResponseWriter, _ *http.Request, errorMessage string, httpStatus int) {
-// 	resolver := path.NewResolver()
-
-// 	tmpl, err := template.ParseFiles(resolver.GetPath("frontend/html/pages/not_found.html"))
-// 	if err != nil {
-// 		http.Error(w, errorMessage, httpStatus)
-// 		log.Println("Error loading not_found_page.html:", err)
-// 		return
-// 	}
-
-// 	data := struct {
-// 		StatusText   string
-// 		ErrorMessage string
-// 		StatusCode   int
-// 	}{
-// 		StatusText:   http.StatusText(httpStatus),
-// 		ErrorMessage: errorMessage,
-// 		StatusCode:   httpStatus,
-// 	}
-
-// 	w.WriteHeader(httpStatus)
-// 	err = tmpl.Execute(w, data)
-// 	if err != nil {
-// 		log.Println("Error executing template:", err)
-// 		http.Error(w, errorMessage, httpStatus)
-// 	}
-// }
-
 // backendError is a custom error type for backend errors.
 type backendError string
 
 func (e backendError) Error() string {
 	return string(e)
 }
-
-// ============================================================================
-// PAGE HANDLERS (Methods on ClientServer)
-// ============================================================================
 
 // HomePage handles requests to the homepage.
 func (cs *ClientServer) HomePage(w http.ResponseWriter, r *http.Request) {
@@ -144,54 +77,6 @@ func (cs *ClientServer) HomePage(w http.ResponseWriter, r *http.Request) {
 		log.Println("Error executing template:", err)
 		http.Error(w, "Failed to render page", http.StatusInternalServerError)
 	}
-}
-
-func (cs *ClientServer) GitHubRegister(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, backendGithubRegister, http.StatusTemporaryRedirect)
-}
-
-func (cs *ClientServer) Callback(w http.ResponseWriter, r *http.Request) {
-	accessToken := r.URL.Query().Get("access_token")
-	refreshToken := r.URL.Query().Get("refresh_token")
-
-	if accessToken == "" || refreshToken == "" {
-		http.Error(w, "Github session not found", http.StatusBadRequest)
-		return
-	}
-
-	accessCookie := &http.Cookie{
-		Name:     "access_token",
-		Value:    accessToken,
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   false,
-		SameSite: http.SameSiteLaxMode,
-		MaxAge:   int(float64(accessTokenMaxAge) * time.Minute.Seconds()),
-	}
-
-	refreshCookie := &http.Cookie{
-		Name:     "refresh_token",
-		Value:    refreshToken,
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   false,
-		SameSite: http.SameSiteLaxMode,
-		MaxAge:   int(float64(refreshTokenMaxAge) * time.Hour.Seconds()),
-	}
-
-	http.SetCookie(w, accessCookie)
-	http.SetCookie(w, refreshCookie)
-
-	http.Redirect(w, r, "/", http.StatusSeeOther)
-}
-
-func (cs *ClientServer) GoogleRegister(w http.ResponseWriter, r *http.Request) {
-	// if r.Method != http.MethodPost {
-	// 	http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-	// 	return
-	// }
-
-	http.Redirect(w, r, backendGooglebRegister, http.StatusTemporaryRedirect)
 }
 
 func DecodeBackendResponse[T any](resp *http.Response, target *T) error {

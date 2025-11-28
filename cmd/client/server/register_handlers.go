@@ -74,7 +74,6 @@ func (cs *ClientServer) RegisterPost(w http.ResponseWriter, r *http.Request) {
 		data.EmailError = ""
 		data.Password = ""
 
-		// Parse backend error and show appropriate message
 		errorMsg := backendErr.Error()
 
 		// Try to determine which field the error is about
@@ -97,15 +96,10 @@ func (cs *ClientServer) RegisterPost(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-// ============================================================================
-// API REQUEST METHODS (Methods on ClientServer)
-// ============================================================================
-
 // registerWithBackend sends registration request to backend API.
 // The HTTP client includes the cookie jar, so cookies will be automatically.
 // handled for all subsequent requests.
 func (cs *ClientServer) registerWithBackend(ctx context.Context, req domain.BackendRegisterRequest) (*domain.BackendRegisterResponse, error) {
-	// Marshal request to JSON
 	reqBody, err := json.Marshal(req)
 	if err != nil {
 		return nil, backendError("Failed to marshal request: " + err.Error())
@@ -119,17 +113,14 @@ func (cs *ClientServer) registerWithBackend(ctx context.Context, req domain.Back
 
 	httpReq.Header.Set("Content-Type", "application/json")
 
-	// Execute request using the client's HTTP client (with cookie jar)
-	// THIS IS THE KEY: cs.HTTPClient maintains the cookie jar!
+	// Execute request using the client's HTTP client (with cookie jar), cs.HTTPClient maintains the cookie jar!
 	resp, err := cs.HTTPClient.Do(httpReq)
 	if err != nil {
 		return nil, backendError("Registration request failed: " + err.Error())
 	}
 	defer resp.Body.Close()
 
-	// Handle different response statuses
 	if resp.StatusCode != http.StatusCreated {
-		// Backend returned an error
 		var errResp domain.BackendErrorResponse
 		err = json.NewDecoder(resp.Body).Decode(&errResp)
 		if err != nil {

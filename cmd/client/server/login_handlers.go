@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	accessTokenMaxAge  = 7
-	refreshTokenMaxAge = 7 * 24
+	accessTokenMaxAge  = 7 // minutes
+	refreshTokenMaxAge = 7 // days
 )
 
 // LoginPage handles GET requests to /login.
@@ -42,7 +42,6 @@ func (cs *ClientServer) LoginPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get the login type from radio button (username or email)
 	loginType := strings.TrimSpace(r.FormValue("loginType"))
 	password := strings.TrimSpace(r.FormValue("password"))
 
@@ -50,7 +49,6 @@ func (cs *ClientServer) LoginPost(w http.ResponseWriter, r *http.Request) {
 		Password: password,
 	}
 
-	// Validate password (same for both login types)
 	data.PasswordError = validation.ValidatePassword(password)
 
 	// Route based on login type
@@ -137,10 +135,6 @@ func (cs *ClientServer) handleUsernameLogin(w http.ResponseWriter, r *http.Reque
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-// ============================================================================
-// API REQUEST METHODS (Methods on ClientServer)
-// ============================================================================
-
 // loginWithBackendEmail sends login request to backend email endpoint.
 func (cs *ClientServer) loginWithBackendEmail(ctx context.Context, email string, password string) (*domain.BackendLoginResponse, error) {
 	req := domain.BackendLoginRequest{
@@ -167,7 +161,6 @@ func (cs *ClientServer) sendLoginRequest(ctx context.Context, backendURL string,
 		return nil, backendError("Failed to marshal request: " + err.Error())
 	}
 
-	// Create HTTP request to backend with context
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, backendURL, bytes.NewBuffer(reqBody))
 	if err != nil {
 		return nil, backendError("Failed to create request: " + err.Error())
@@ -175,17 +168,14 @@ func (cs *ClientServer) sendLoginRequest(ctx context.Context, backendURL string,
 
 	httpReq.Header.Set("Content-Type", "application/json")
 
-	// Execute request using the client's HTTP client (with cookie jar)
-	// THIS IS THE KEY: cs.HTTPClient maintains the cookie jar!
+	// Execute request using the client's HTTP client (with cookie jar), cs.HTTPClient maintains the cookie jar!
 	resp, err := cs.HTTPClient.Do(httpReq)
 	if err != nil {
 		return nil, backendError("Login request failed: " + err.Error())
 	}
 	defer resp.Body.Close()
 
-	// Handle different response statuses
 	if resp.StatusCode != http.StatusOK {
-		// Backend returned an error
 		var errResp domain.BackendErrorResponse
 		err = json.NewDecoder(resp.Body).Decode(&errResp)
 		if err != nil {

@@ -70,7 +70,6 @@ func getCurrentUser(ctx context.Context, httpClient *http.Client, r *http.Reques
 		return nil, err
 	}
 
-	// Decode response using the helper from server package.
 	var meResp domain.BackendMeResponse
 	err = helpers.DecodeBackendResponse(resp, &meResp)
 	if err != nil {

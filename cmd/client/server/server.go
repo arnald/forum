@@ -51,16 +51,9 @@ func (cs *ClientServer) SetupRoutes() {
 	// Create auth middleware
 	authMiddleware := middleware.AuthMiddleware(cs.HTTPClient)
 
-	///////////////////////////////////////////////////////////////
 	// Public Routes (with optional auth - shows user if logged in).
-	///////////////////////////////////////////////////////////////
-
 	// Homepage
 	cs.Router.HandleFunc("/", applyMiddleware(cs.HomePage, authMiddleware))
-
-	///////////////////////////////////////////////////////////////
-	// Auth Routes (no user context needed, but can apply middleware for consistency).
-	///////////////////////////////////////////////////////////////
 
 	// Register page
 	cs.Router.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
@@ -86,9 +79,7 @@ func (cs *ClientServer) SetupRoutes() {
 		}
 	})
 
-	///////////////////////////////////////////////////////////////
 	// Protected Routes (require authentication).
-	///////////////////////////////////////////////////////////////
 
 	// Logout route - clears cookies
 	cs.Router.HandleFunc("/logout", cs.Logout)
@@ -113,8 +104,6 @@ func (cs *ClientServer) ListenAndServe() error {
 	return server.ListenAndServe()
 }
 
-// applyMiddleware chains middleware to a handler.
-// Usage: applyMiddleware(handler, middleware1, middleware2, ...).
 func applyMiddleware(handler http.HandlerFunc, middlewares ...func(http.HandlerFunc) http.HandlerFunc) http.HandlerFunc {
 	for _, middleware := range middlewares {
 		handler = middleware(handler)
