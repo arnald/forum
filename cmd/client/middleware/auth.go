@@ -79,9 +79,10 @@ func getCurrentUser(ctx context.Context, httpClient *http.Client, r *http.Reques
 
 	// Convert backend response to LoggedInUser domain model.
 	user := &domain.LoggedInUser{
-		ID:       meResp.ID,
-		Username: meResp.Username,
-		Email:    meResp.Email,
+		ID:        meResp.ID,
+		Username:  meResp.Username,
+		Email:     meResp.Email,
+		AvatarURL: meResp.AvatarURL,
 	}
 
 	return user, nil

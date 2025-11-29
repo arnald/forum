@@ -26,6 +26,12 @@ func (cs *ClientServer) LoginPage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+	// if !cookies {
+	// 	templates.RenderTemplate(w, "login", domain.LoginFormErrors{})
+	// }else {
+	// 	verifiyCookies with backend
+	// /me handler, json response with verified user
+	// }
 	templates.RenderTemplate(w, "login", domain.LoginFormErrors{})
 }
 
@@ -89,7 +95,6 @@ func (cs *ClientServer) handleEmailLogin(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	// Set cookies for session persistence
 	cs.setSessionCookies(w, backendResp.AccessToken, backendResp.RefreshToken)
 
 	// SUCCESS - User logged in, redirect to homepage
@@ -155,7 +160,6 @@ func (cs *ClientServer) loginWithBackendUsername(ctx context.Context, username s
 
 // sendLoginRequest sends the login request to the backend API.
 func (cs *ClientServer) sendLoginRequest(ctx context.Context, backendURL string, req domain.BackendLoginRequest) (*domain.BackendLoginResponse, error) {
-	// Marshal request to JSON
 	reqBody, err := json.Marshal(req)
 	if err != nil {
 		return nil, backendError("Failed to marshal request: " + err.Error())
@@ -168,7 +172,6 @@ func (cs *ClientServer) sendLoginRequest(ctx context.Context, backendURL string,
 
 	httpReq.Header.Set("Content-Type", "application/json")
 
-	// Execute request using the client's HTTP client (with cookie jar), cs.HTTPClient maintains the cookie jar!
 	resp, err := cs.HTTPClient.Do(httpReq)
 	if err != nil {
 		return nil, backendError("Login request failed: " + err.Error())
