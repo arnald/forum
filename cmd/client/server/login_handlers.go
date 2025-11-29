@@ -13,6 +13,7 @@ import (
 	"github.com/arnald/forum/cmd/client/helpers"
 	"github.com/arnald/forum/cmd/client/helpers/templates"
 	"github.com/arnald/forum/cmd/client/helpers/validation"
+	"github.com/arnald/forum/cmd/client/middleware"
 )
 
 const (
@@ -26,12 +27,14 @@ func (cs *ClientServer) LoginPage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	// if !cookies {
-	// 	templates.RenderTemplate(w, "login", domain.LoginFormErrors{})
-	// }else {
-	// 	verifiyCookies with backend
-	// /me handler, json response with verified user
-	// }
+
+	// If there is a user redirect him to homepage
+	user := middleware.GetUserFromContext(r.Context())
+	if user != nil {
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+
 	templates.RenderTemplate(w, "login", domain.LoginFormErrors{})
 }
 

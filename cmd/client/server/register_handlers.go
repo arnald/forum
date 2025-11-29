@@ -11,6 +11,7 @@ import (
 	"github.com/arnald/forum/cmd/client/domain"
 	"github.com/arnald/forum/cmd/client/helpers"
 	"github.com/arnald/forum/cmd/client/helpers/templates"
+	"github.com/arnald/forum/cmd/client/middleware"
 	val "github.com/arnald/forum/internal/pkg/validator"
 )
 
@@ -20,6 +21,13 @@ func (cs *ClientServer) RegisterPage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+
+	user := middleware.GetUserFromContext(r.Context())
+	if user != nil {
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+
 	templates.RenderTemplate(w, "register", domain.RegisterFormErrors{})
 }
 

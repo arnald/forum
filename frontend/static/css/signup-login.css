@@ -58,6 +58,7 @@
 .signup-provider-btn {
   width: 100%;
   font-family: inherit;
+  text-decoration: none;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -65,6 +66,9 @@
   border-radius: 5px;
   cursor: pointer;
   border: none;
+}
+.signup-provider-btn:first-child {
+  color: var(--dark-background);
 }
 .signup-provider-btn img {
   width: 30px;

@@ -56,37 +56,39 @@ func (cs *ClientServer) SetupRoutes() {
 	cs.Router.HandleFunc("/", applyMiddleware(cs.HomePage, authMiddleware))
 
 	// Register page
-	cs.Router.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			cs.RegisterPage(w, r)
-		case http.MethodPost:
-			cs.RegisterPost(w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
+	cs.Router.HandleFunc("/register",
+		applyMiddleware(func(w http.ResponseWriter, r *http.Request) {
+			switch r.Method {
+			case http.MethodGet:
+				cs.RegisterPage(w, r)
+			case http.MethodPost:
+				cs.RegisterPost(w, r)
+			default:
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			}
+		}, authMiddleware))
 
 	// Login page
-	cs.Router.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			cs.LoginPage(w, r)
-		case http.MethodPost:
-			cs.LoginPost(w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
+	cs.Router.HandleFunc("/login",
+		applyMiddleware(func(w http.ResponseWriter, r *http.Request) {
+			switch r.Method {
+			case http.MethodGet:
+				cs.LoginPage(w, r)
+			case http.MethodPost:
+				cs.LoginPost(w, r)
+			default:
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			}
+		}, authMiddleware))
+
+	// OAuth Register
+	cs.Router.HandleFunc("/auth/github/login", applyMiddleware(cs.GitHubRegister, authMiddleware))
+	cs.Router.HandleFunc("/auth/google/login", applyMiddleware(cs.GoogleRegister, authMiddleware))
+	cs.Router.HandleFunc("/auth/callback", applyMiddleware(cs.Callback, authMiddleware))
 
 	// Protected Routes (require authentication).
-
 	// Logout route - clears cookies
-	cs.Router.HandleFunc("/logout", cs.Logout)
-	// OAuth Register
-	cs.Router.HandleFunc("/auth/github/login", cs.GitHubRegister)
-	cs.Router.HandleFunc("/auth/google/login", cs.GoogleRegister)
-	cs.Router.HandleFunc("/auth/callback", cs.Callback)
+	cs.Router.HandleFunc("/logout", applyMiddleware(cs.Logout, authMiddleware, middleware.RequireAuth))
 }
 
 // ListenAndServe starts the HTTP server.
