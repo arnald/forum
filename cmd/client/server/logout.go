@@ -33,8 +33,6 @@ func (cs *ClientServer) logoutFromBackend(ctx context.Context, r *http.Request) 
 		logoutReq.AddCookie(cookie)
 	}
 
-	logoutReq.Header.Set("Content-Type", "application/json")
-
 	resp, err := cs.HTTPClient.Do(logoutReq)
 	if err != nil {
 		return err

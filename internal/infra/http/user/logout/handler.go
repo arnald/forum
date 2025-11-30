@@ -29,21 +29,18 @@ func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get user from context (set by Required auth middleware)
 	user := middleware.GetUserFromContext(r)
 	if user == nil {
 		helpers.RespondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
-	// Get session token from cookie
 	sessionToken, _ := middleware.GetTokensFromRequest(r)
 	if sessionToken == "" {
 		helpers.RespondWithError(w, http.StatusUnauthorized, "No session found")
 		return
 	}
 
-	// Delete the session from database
 	err := h.sessionManager.DeleteSession(sessionToken)
 	if err != nil {
 		h.logger.PrintError(err, nil)
