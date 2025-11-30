@@ -100,8 +100,7 @@ func (cs *ClientServer) RegisterPost(w http.ResponseWriter, r *http.Request) {
 
 	// SUCCESS - User registered, redirect to login or homepage
 	log.Printf("User registered successfully: %s (ID: %s)", username, backendResp.UserID)
-	// http.Redirect(w, r, "/login", http.StatusSeeOther)
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
 // registerWithBackend sends registration request to backend API.
