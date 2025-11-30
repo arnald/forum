@@ -33,6 +33,7 @@ import (
 	updatetopic "github.com/arnald/forum/internal/infra/http/topic/updateTopic"
 	getme "github.com/arnald/forum/internal/infra/http/user/getMe"
 	userLogin "github.com/arnald/forum/internal/infra/http/user/login"
+	"github.com/arnald/forum/internal/infra/http/user/logout"
 	userRegister "github.com/arnald/forum/internal/infra/http/user/register"
 	castvote "github.com/arnald/forum/internal/infra/http/vote/castVote"
 	deletevote "github.com/arnald/forum/internal/infra/http/vote/deleteVote"
@@ -113,6 +114,11 @@ func (server *Server) AddHTTPRoutes() {
 	server.router.HandleFunc(apiContext+"/register",
 		userRegister.NewHandler(server.config, server.appServices, server.sessionManager, server.logger).UserRegister,
 	)
+	server.router.HandleFunc(apiContext+"/logout",
+		middlewareChain(
+			logout.NewHandler(server.sessionManager, server.logger).Logout,
+			server.middleware.Authorization.Required,
+		))
 	// New handler for retrieving current user data from backend
 	server.router.HandleFunc(apiContext+"/me",
 		middlewareChain(

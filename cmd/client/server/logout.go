@@ -1,13 +1,52 @@
 package server
 
-import "net/http"
+import (
+	"context"
+	"log"
+	"net/http"
+	"time"
+)
 
-// Logout handles user logout by clearing session cookies.
+// Logout handles user logout by clearing session cookies and backend session.
 func (cs *ClientServer) Logout(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+
+	err := cs.logoutFromBackend(ctx, r)
+	if err != nil {
+		log.Printf("Failed to logout from backend: %v", err)
+	}
+
 	cs.clearSessionCookies(w)
 
-	// Redirect to homepage
 	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+// logoutFromBackend calls the backend logout endpoint to delete the session.
+func (cs *ClientServer) logoutFromBackend(ctx context.Context, r *http.Request) error {
+	logoutReq, err := http.NewRequestWithContext(ctx, http.MethodPost, backendLogoutURL, nil)
+	if err != nil {
+		return err
+	}
+
+	for _, cookie := range r.Cookies() {
+		logoutReq.AddCookie(cookie)
+	}
+
+	logoutReq.Header.Set("Content-Type", "application/json")
+
+	resp, err := cs.HTTPClient.Do(logoutReq)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("Backend logout returned status: %d", resp.StatusCode)
+		return backendError("logout failed")
+	}
+
+	return nil
 }
 
 // clearSessionCookies clears both session cookies (for logout).

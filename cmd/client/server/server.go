@@ -88,7 +88,7 @@ func (cs *ClientServer) SetupRoutes() {
 
 	// Protected Routes (require authentication).
 	// Logout route - clears cookies
-	cs.Router.HandleFunc("/logout", applyMiddleware(cs.Logout, authMiddleware, middleware.RequireAuth))
+	cs.Router.HandleFunc("/logout", applyMiddleware(cs.Logout, middleware.RequireAuth, authMiddleware))
 }
 
 // ListenAndServe starts the HTTP server.
