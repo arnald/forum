@@ -18,7 +18,7 @@ func NewHandler(logger logger.Logger) *Handler {
 	}
 }
 
-type GetMeResponse struct {
+type Response struct {
 	ID       string `json:"id"`
 	Username string `json:"username"`
 	Email    string `json:"email"`
@@ -39,7 +39,7 @@ func (h *Handler) GetMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := GetMeResponse{
+	response := Response{
 		ID:       user.ID,
 		Username: user.Username,
 		Email:    user.Email,

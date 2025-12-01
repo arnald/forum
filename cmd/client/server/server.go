@@ -1,6 +1,9 @@
 package server
 
 import (
+	"bytes"
+	"context"
+	"encoding/json"
 	"log"
 	"net/http"
 	"net/http/cookiejar"
@@ -111,4 +114,26 @@ func applyMiddleware(handler http.HandlerFunc, middlewares ...func(http.HandlerF
 		handler = middleware(handler)
 	}
 	return handler
+}
+
+// Standardized way to make requests to the backend server, used in handlers.
+func (cs *ClientServer) newRequest(ctx context.Context, method string, url string, req any) (*http.Response, error) {
+	reqBody, err := json.Marshal(req)
+	if err != nil {
+		return nil, backendError("Failed to marshal request: " + err.Error())
+	}
+
+	httpReq, err := http.NewRequestWithContext(ctx, method, url, bytes.NewBuffer(reqBody))
+	if err != nil {
+		return nil, backendError("Failed to create request:" + err.Error())
+	}
+
+	httpReq.Header.Set("Content-Type", "application/json")
+
+	resp, err := cs.HTTPClient.Do(httpReq)
+	if err != nil {
+		return nil, backendError("Registration request failed: " + err.Error())
+	}
+
+	return resp, nil
 }

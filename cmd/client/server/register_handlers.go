@@ -1,7 +1,6 @@
 package server
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"log"
@@ -107,23 +106,15 @@ func (cs *ClientServer) RegisterPost(w http.ResponseWriter, r *http.Request) {
 // The HTTP client includes the cookie jar, so cookies will be automatically.
 // handled for all subsequent requests.
 func (cs *ClientServer) registerWithBackend(ctx context.Context, req domain.BackendRegisterRequest) (*domain.BackendRegisterResponse, error) {
-	reqBody, err := json.Marshal(req)
+	resp, err := cs.newRequest(
+		ctx,
+		http.MethodPost,
+		backendRegisterURL,
+		req,
+	)
 	if err != nil {
-		return nil, backendError("Failed to marshal request: " + err.Error())
-	}
-
-	// Create HTTP request to backend with context
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, backendRegisterURL, bytes.NewBuffer(reqBody))
-	if err != nil {
-		return nil, backendError("Failed to create request: " + err.Error())
-	}
-
-	httpReq.Header.Set("Content-Type", "application/json")
-
-	// Execute request using the client's HTTP client (with cookie jar), cs.HTTPClient maintains the cookie jar!
-	resp, err := cs.HTTPClient.Do(httpReq)
-	if err != nil {
-		return nil, backendError("Registration request failed: " + err.Error())
+		defer resp.Body.Close()
+		return nil, err
 	}
 	defer resp.Body.Close()
 

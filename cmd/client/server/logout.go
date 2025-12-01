@@ -7,9 +7,13 @@ import (
 	"time"
 )
 
+const (
+	contextTimeout = 10 * time.Second
+)
+
 // Logout handles user logout by clearing session cookies and backend session.
 func (cs *ClientServer) Logout(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), contextTimeout)
 	defer cancel()
 
 	err := cs.logoutFromBackend(ctx, r)

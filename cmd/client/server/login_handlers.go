@@ -1,7 +1,6 @@
 package server
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"log"
@@ -75,16 +74,6 @@ func (cs *ClientServer) handleEmailLogin(w http.ResponseWriter, r *http.Request,
 
 	data.Email = email
 
-	// FRONTEND VALIDATION
-	data.EmailError = validation.ValidateEmail(email)
-	data.PasswordError = validation.ValidatePassword(password)
-
-	// If frontend validation fails, re-render login page with errors
-	if data.EmailError != "" || data.PasswordError != "" {
-		templates.RenderTemplate(w, "login", data)
-		return
-	}
-
 	// BACKEND LOGIN
 	ctx, cancel := context.WithTimeout(r.Context(), requestTimeout)
 	defer cancel()
@@ -111,16 +100,6 @@ func (cs *ClientServer) handleUsernameLogin(w http.ResponseWriter, r *http.Reque
 	password := strings.TrimSpace(r.FormValue("password"))
 
 	data.Username = username
-
-	// FRONTEND VALIDATION
-	data.UsernameError = validation.ValidateUsername(username)
-	data.PasswordError = validation.ValidatePassword(password)
-
-	// If frontend validation fails, re-render login page with errors
-	if data.UsernameError != "" || data.PasswordError != "" {
-		templates.RenderTemplate(w, "login", data)
-		return
-	}
 
 	// BACKEND LOGIN
 	ctx, cancel := context.WithTimeout(r.Context(), requestTimeout)
@@ -163,21 +142,15 @@ func (cs *ClientServer) loginWithBackendUsername(ctx context.Context, username s
 
 // sendLoginRequest sends the login request to the backend API.
 func (cs *ClientServer) sendLoginRequest(ctx context.Context, backendURL string, req domain.BackendLoginRequest) (*domain.BackendLoginResponse, error) {
-	reqBody, err := json.Marshal(req)
+	resp, err := cs.newRequest(
+		ctx,
+		http.MethodPost,
+		backendURL,
+		req,
+	)
 	if err != nil {
-		return nil, backendError("Failed to marshal request: " + err.Error())
-	}
-
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, backendURL, bytes.NewBuffer(reqBody))
-	if err != nil {
-		return nil, backendError("Failed to create request: " + err.Error())
-	}
-
-	httpReq.Header.Set("Content-Type", "application/json")
-
-	resp, err := cs.HTTPClient.Do(httpReq)
-	if err != nil {
-		return nil, backendError("Login request failed: " + err.Error())
+		defer resp.Body.Close()
+		return nil, err
 	}
 	defer resp.Body.Close()
 

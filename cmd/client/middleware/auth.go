@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"errors"
 	"log"
 	"net/http"
 
@@ -15,6 +16,8 @@ const (
 	userContextKey contextKey = "user"
 	backendMeURL   string     = "http://localhost:8080/api/v1/me"
 )
+
+var ErrUserNotAuthorized = errors.New("user not authorized")
 
 // AuthMiddleware wraps a handler and injects authenticated user data into context.
 func AuthMiddleware(httpClient *http.Client) func(http.HandlerFunc) http.HandlerFunc {
@@ -62,7 +65,7 @@ func getCurrentUser(ctx context.Context, httpClient *http.Client, r *http.Reques
 
 	// If not authorized, return nil (user not authenticated).
 	if resp.StatusCode == http.StatusUnauthorized {
-		return nil, nil
+		return nil, ErrUserNotAuthorized
 	}
 
 	if resp.StatusCode != http.StatusOK {
