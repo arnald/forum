@@ -27,7 +27,7 @@ func CheckTokenExpiration(session *session.Session) (sessionExpired, refreshToke
 }
 
 func GetTokensFromRequest(r *http.Request) (sessionToken, refreshToken string) {
-	cookie, err := r.Cookie("session_token")
+	cookie, err := r.Cookie("access_token")
 	if err == nil {
 		sessionToken = cookie.Value
 	}

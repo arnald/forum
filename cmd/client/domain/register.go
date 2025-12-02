@@ -21,8 +21,3 @@ type BackendRegisterResponse struct {
 	UserID  string `json:"userId"`
 	Message string `json:"message"`
 }
-
-// BackendErrorResponse - handles backend validation errors.
-type BackendErrorResponse struct {
-	Message string `json:"message"`
-}

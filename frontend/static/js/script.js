@@ -47,41 +47,6 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
-/*--- Reset button removes preserved values ---*/
-document.addEventListener("DOMContentLoaded", function () {
-  const resetButtons = document.querySelectorAll(".btn-reset-form");
-
-  resetButtons.forEach((button) => {
-    button.addEventListener("click", function (e) {
-      e.preventDefault();
-
-      const form = this.closest("form");
-
-      const inputs = form.querySelectorAll(
-        'input[type="text"], input[type="email"]'
-      );
-      inputs.forEach((input) => {
-        input.value = "";
-        input.classList.remove("input-error");
-      });
-
-      const passwordInput = form.querySelector('input[type="password"]');
-      if (passwordInput) {
-        passwordInput.value = "";
-        passwordInput.classList.remove("input-error");
-      }
-
-      const errorMessages = form.querySelectorAll(".error-message");
-      errorMessages.forEach((msg) => (msg.textContent = ""));
-
-      // Focus on first field
-      if (inputs.length > 0) {
-        inputs[0].focus();
-      }
-    });
-  });
-});
-
 // ==== Signin ==== //
 /*--- Remove errors after new input ---*/
 document.addEventListener("DOMContentLoaded", () => {
@@ -100,6 +65,79 @@ document.addEventListener("DOMContentLoaded", () => {
           errorSpan.textContent = "";
         }
       }
+    });
+  });
+});
+/*--- Login Type Selector (Username vs Email) ---*/
+document.addEventListener("DOMContentLoaded", function () {
+  const loginTypeRadios = document.querySelectorAll(".login-type-radio");
+  const usernameBox = document.getElementById("usernameBox");
+  const emailBox = document.getElementById("emailBox");
+  const usernameInput = document.getElementById("username");
+  const emailInput = document.getElementById("email");
+
+  loginTypeRadios.forEach((radio) => {
+    radio.addEventListener("change", function () {
+      if (this.value === "username") {
+        usernameBox.style.display = "block";
+        emailBox.style.display = "none";
+        usernameInput.focus();
+        // Clear email input and errors
+        emailInput.value = "";
+        emailInput.classList.remove("input-error");
+        const emailError = emailBox.querySelector(".error-message");
+        if (emailError) emailError.textContent = "";
+      } else if (this.value === "email") {
+        usernameBox.style.display = "none";
+        emailBox.style.display = "block";
+        emailInput.focus();
+        // Clear username input and errors
+        usernameInput.value = "";
+        usernameInput.classList.remove("input-error");
+        const usernameError = usernameBox.querySelector(".error-message");
+        if (usernameError) usernameError.textContent = "";
+      }
+    });
+  });
+});
+
+/*--- Reset button removes preserved values ---*/
+document.addEventListener("DOMContentLoaded", function () {
+  const resetButtons = document.querySelectorAll(".btn-reset-form");
+
+  resetButtons.forEach((button) => {
+    button.addEventListener("click", function (e) {
+      e.preventDefault();
+
+      const form = this.closest("form");
+
+      // Reset all form fields with the form-input class
+      const inputs = form.querySelectorAll(".form-input");
+      inputs.forEach((input) => {
+        input.value = "";
+        input.classList.remove("input-error");
+      });
+
+      // Clear error messages
+      const errorMessages = form.querySelectorAll(".error-message");
+      errorMessages.forEach((msg) => (msg.textContent = ""));
+
+      // Reset login type to Username by default
+      const usernameRadio = form.querySelector("#loginTypeUsername");
+      const emailBox = form.querySelector("#emailBox");
+      const usernameBox = form.querySelector("#usernameBox");
+
+      if (usernameRadio) usernameRadio.checked = true;
+
+      // Show username box, hide email box
+      if (usernameBox && emailBox) {
+        usernameBox.style.display = "block";
+        emailBox.style.display = "none";
+      }
+
+      // Focus username
+      const usernameInput = form.querySelector("#username");
+      if (usernameInput) usernameInput.focus();
     });
   });
 });

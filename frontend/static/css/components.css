@@ -88,6 +88,7 @@
 
 .user-avatar {
   display: flex;
+  width: 30px;
   height: 30px;
   background-color: var(--primary-color-light);
   border-radius: 50%;
@@ -249,7 +250,8 @@
   background-color: var(--grey-color-light);
   color: var(--dark-background);
 }
-.nav-categories-btn:active {
+/* Make the button take the active class */
+.nav-categories-btn.active {
   background-color: var(--primary-color-light);
   color: var(--white-background);
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
