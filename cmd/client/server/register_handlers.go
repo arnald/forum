@@ -14,6 +14,28 @@ import (
 	val "github.com/arnald/forum/internal/pkg/validator"
 )
 
+type RegisterFormErrors struct {
+	Username      string `json:"-"`
+	Email         string `json:"-"`
+	Password      string `json:"-"`
+	UsernameError string `json:"username,omitempty"`
+	EmailError    string `json:"email,omitempty"`
+	PasswordError string `json:"password,omitempty"`
+}
+
+// BackendRegisterRequest - matches backend RegisterUserReguestModel.
+type BackendRegisterRequest struct {
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+// BackendRegisterResponse - matches backend RegisterUserResponse.
+type BackendRegisterResponse struct {
+	UserID  string `json:"userId"`
+	Message string `json:"message"`
+}
+
 // RegisterPage handles GET requests to /register.
 func (cs *ClientServer) RegisterPage(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
@@ -27,7 +49,7 @@ func (cs *ClientServer) RegisterPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	templates.RenderTemplate(w, "register", domain.RegisterFormErrors{})
+	templates.RenderTemplate(w, "register", RegisterFormErrors{})
 }
 
 // RegisterPost handles POST requests to /register.
@@ -47,7 +69,7 @@ func (cs *ClientServer) RegisterPost(w http.ResponseWriter, r *http.Request) {
 	email := strings.TrimSpace(r.FormValue("email"))
 	password := strings.TrimSpace(r.FormValue("password"))
 
-	data := domain.RegisterFormErrors{
+	data := RegisterFormErrors{
 		Username: username,
 		Email:    email,
 		Password: password,
@@ -65,7 +87,7 @@ func (cs *ClientServer) RegisterPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// BACKEND REGISTRATION - Send validated data to backend
-	backendReq := domain.BackendRegisterRequest{
+	backendReq := BackendRegisterRequest{
 		Username: username,
 		Email:    email,
 		Password: password,
@@ -105,7 +127,7 @@ func (cs *ClientServer) RegisterPost(w http.ResponseWriter, r *http.Request) {
 // registerWithBackend sends registration request to backend API.
 // The HTTP client includes the cookie jar, so cookies will be automatically.
 // handled for all subsequent requests.
-func (cs *ClientServer) registerWithBackend(ctx context.Context, req domain.BackendRegisterRequest) (*domain.BackendRegisterResponse, error) {
+func (cs *ClientServer) registerWithBackend(ctx context.Context, req BackendRegisterRequest) (*BackendRegisterResponse, error) {
 	resp, err := cs.newRequest(
 		ctx,
 		http.MethodPost,
@@ -132,7 +154,7 @@ func (cs *ClientServer) registerWithBackend(ctx context.Context, req domain.Back
 	}
 
 	// Success response
-	target := domain.BackendRegisterResponse{}
+	target := BackendRegisterResponse{}
 	err = helpers.DecodeBackendResponse(resp, &target)
 	if err != nil {
 		return nil, backendError("Failed to decode response " + err.Error())
