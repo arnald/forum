@@ -11,10 +11,10 @@ type Category struct {
 	Color       string  `json:"color"`
 	Slug        string  `json:"slug,omitzero"`
 	Description string  `json:"description,omitzero"`
+	ImagePath   string  `json:"imagePath"`
 	Topics      []Topic `json:"topics,omitzero"`
-	Logo        Logo    `json:"logo"`
 	ID          int     `json:"id"`
-	TopicCount  int     `json:"topicCount"`
+	TopicCount  int     `json:"topicscount,omitzero"`
 }
 
 type Logo struct {

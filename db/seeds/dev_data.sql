@@ -11,10 +11,10 @@ INSERT OR IGNORE INTO sessions (token, user_id, expires_at, refresh_token, refre
 ('dev_session_token_3', 'f1433622-9c10-44e5-94b1-1f6a148c9131', DATETIME('now', '+7 days'), 'dev_refresh_token_3', DATETIME('now', '+30 days'));
 
 -- Categories
-INSERT OR IGNORE INTO categories (name, description, created_by) VALUES
-('General Discussion', 'Topics that don''t fit into other categories', 'df16d238-e4dd-4645-9101-54aed9c0fbf4'),
-('Feedback', 'Suggestions and feedback about the forum', '000dec3a-51af-4e7c-ae0c-21436a0a2395'),
-('Off-Topic', 'Anything not related to the forum', 'f1433622-9c10-44e5-94b1-1f6a148c9131');
+INSERT OR IGNORE INTO categories (name, description, created_by, color, slug, image_path) VALUES
+('Get started', 'New to the forum? Here’s what you need to know.', 'df16d238-e4dd-4645-9101-54aed9c0fbf4','FA6400', 'get-started', 'static/images/categories/get_started.png'),
+('Newsroom', 'A place for announcements, AMA events and sneak previews of what’s next.', '000dec3a-51af-4e7c-ae0c-21436a0a2395', '00D16E', 'newsroom', 'static/images/categories/newsroom.png'),
+('Share your Knowledge', 'Ask questions, show off your Sketch skills, or simply browse around.', 'f1433622-9c10-44e5-94b1-1f6a148c9131', 'B24DFF', 'share-your-knowledge', 'static/images/categories/share_your_knowledge.png');
 
 -- Topics
 INSERT OR IGNORE INTO topics (user_id, category_id, title, content) VALUES

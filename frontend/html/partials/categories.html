@@ -6,7 +6,7 @@
     <div class="category-wrapper">
       <div class="category-img-box">
         <a href="/category/{{ .Slug }}" class="category-link">
-          <img class="category-img" src="{{ .Logo.URL }}" alt="{{ .Name }}" />
+          <img class="category-img" src="{{ .ImagePath }}" alt="{{ .Name }}" />
         </a>
       </div>
       <div class="category-info">
@@ -20,8 +20,8 @@
               <span class="category-title">{{ .Name }}</span>
             </div>
           </a>
-          <p class="category-description">{{ .Description }}</p>
-        </div>
+            <p class="category-description">{{ .Description }}</p>
+          </div>
       </div>
     </div>
     <div class="category-posts">

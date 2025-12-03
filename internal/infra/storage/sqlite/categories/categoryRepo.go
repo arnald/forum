@@ -50,7 +50,7 @@ func (r *Repo) CreateCategory(ctx context.Context, category *category.Category) 
 
 func (r *Repo) GetAllCategories(ctx context.Context, page, size int, orderBy, order, filter string) ([]category.Category, error) {
 	query := `
-	SELECT c.id, c.name, c.description, c.created_at, c.created_by
+	SELECT c.id, c.name, c.description, c.slug, c.color, c.image_path, c.created_at, c.created_by
 	FROM categories c
 	WHERE 1=1
 	`
@@ -85,6 +85,9 @@ func (r *Repo) GetAllCategories(ctx context.Context, page, size int, orderBy, or
 			&category.ID,
 			&category.Name,
 			&category.Description,
+			&category.Slug,
+			&category.Color,
+			&category.ImagePath,
 			&category.CreatedAt,
 			&category.CreatedBy,
 		)
