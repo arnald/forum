@@ -87,13 +87,8 @@ func (cs *ClientServer) HomePage(w http.ResponseWriter, r *http.Request) {
 
 	user := middleware.GetUserFromContext(r.Context())
 
-	pageData := &response{
-		User:       user,
-		ActivePage: "home",
-		Categories: categoryData.Categories,
-		Pagination: categoryData.Pagination,
-		Filters:    categoryData.Filters,
-	}
+	categoryData.ActivePage = "home"
+	categoryData.User = user
 
 	tmpl, err := template.ParseFiles(
 		"frontend/html/layouts/base.html",
@@ -109,7 +104,7 @@ func (cs *ClientServer) HomePage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = tmpl.ExecuteTemplate(w, "base", pageData)
+	err = tmpl.ExecuteTemplate(w, "base", categoryData)
 	if err != nil {
 		log.Println("Error executing template:", err)
 		http.Error(w, "Failed to render page", http.StatusInternalServerError)
