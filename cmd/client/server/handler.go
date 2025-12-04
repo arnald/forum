@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -11,6 +10,7 @@ import (
 	"reflect"
 	"strings"
 	"text/template"
+	"unicode"
 
 	"github.com/arnald/forum/cmd/client/domain"
 	"github.com/arnald/forum/cmd/client/helpers"
@@ -28,7 +28,6 @@ type response struct {
 	Filters    any                  `json:"filters"`
 	Pagination any                  `json:"pagination"`
 	User       *domain.LoggedInUser `json:"user"`
-	ActivePage string               `json:"activePage"`
 	Categories []domain.Category    `json:"categories"`
 }
 
@@ -38,8 +37,6 @@ type backendError string
 func (e backendError) Error() string {
 	return string(e)
 }
-
-const backendGetCategoriesDomain = "http://localhost:8080/api/v1/categories/all"
 
 // HomePage handles requests to the homepage.
 func (cs *ClientServer) HomePage(w http.ResponseWriter, r *http.Request) {
@@ -77,7 +74,7 @@ func (cs *ClientServer) HomePage(w http.ResponseWriter, r *http.Request) {
 	defer backendResp.Body.Close()
 
 	var categoryData response
-	err = DecodeBackendResponse(backendResp, &categoryData)
+	err = helpers.DecodeBackendResponse(backendResp, &categoryData)
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
@@ -87,7 +84,6 @@ func (cs *ClientServer) HomePage(w http.ResponseWriter, r *http.Request) {
 
 	user := middleware.GetUserFromContext(r.Context())
 
-	categoryData.ActivePage = "home"
 	categoryData.User = user
 
 	tmpl, err := template.ParseFiles(
@@ -111,21 +107,6 @@ func (cs *ClientServer) HomePage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func DecodeBackendResponse[T any](resp *http.Response, target *T) error {
-	wrapper := struct {
-		Data T `json:"data"`
-	}{}
-
-	err := json.NewDecoder(resp.Body).Decode(&wrapper)
-	if err != nil {
-		return err
-	}
-
-	*target = wrapper.Data
-
-	return nil
-}
-
 var ErrFailedToCreateURL = errors.New("failed to create url with params")
 
 func createURLWithParams(domainURL string, params any) (string, error) {
@@ -135,19 +116,28 @@ func createURLWithParams(domainURL string, params any) (string, error) {
 	}
 
 	typ := val.Type()
-
 	queryParams := url.Values{}
+
 	for i := range val.NumField() {
 		field := val.Field(i)
 		fieldType := typ.Field(i)
-
-		fieldName := strings.ToLower(fieldType.Name[:1]) + fieldType.Name[1:]
 		fieldValue := fmt.Sprintf("%v", field.Interface())
 
+		fieldName := toSnakeCase(fieldType.Name)
 		queryParams.Add(fieldName, fieldValue)
 	}
 
 	completeURL := domainURL + "?" + queryParams.Encode()
-
 	return completeURL, nil
+}
+
+func toSnakeCase(input string) string {
+	var result strings.Builder
+	for i, char := range input {
+		if i > 0 && char >= 'A' && char <= 'Z' {
+			result.WriteRune('_')
+		}
+		result.WriteRune(unicode.ToLower(char))
+	}
+	return result.String()
 }

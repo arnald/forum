@@ -30,9 +30,6 @@ func (cs *ClientServer) CategoriesPage(w http.ResponseWriter, r *http.Request) {
 	if page < 1 {
 		page = 1
 	}
-	if orderBy == "" {
-		orderBy = "created_at"
-	}
 	if order != "asc" && order != "desc" {
 		order = "desc"
 	}
@@ -68,7 +65,7 @@ func (cs *ClientServer) CategoriesPage(w http.ResponseWriter, r *http.Request) {
 	defer backendResp.Body.Close()
 
 	var categoryData response
-	err = DecodeBackendResponse(backendResp, &categoryData)
+	err = helpers.DecodeBackendResponse(backendResp, &categoryData)
 	if err != nil {
 		http.Error(w, "Error decoding the response to json", http.StatusInternalServerError)
 		return
@@ -82,7 +79,6 @@ func (cs *ClientServer) CategoriesPage(w http.ResponseWriter, r *http.Request) {
 
 	user := middleware.GetUserFromContext(r.Context())
 
-	categoryData.ActivePage = "categories"
 	categoryData.User = user
 
 	// Convert pagination values to integers for template comparison
