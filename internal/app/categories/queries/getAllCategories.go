@@ -42,6 +42,11 @@ func (h getAllCategoriesRequestHandler) Handle(ctx context.Context, req GetAllCa
 		return nil, 0, err
 	}
 
+	categories, err = h.repo.PopulateCategoriesWithTopics(ctx, categories)
+	if err != nil {
+		return nil, 0, err
+	}
+
 	count, err := h.repo.GetTotalCategoriesCount(ctx, req.Filter)
 	if err != nil {
 		return nil, 0, err

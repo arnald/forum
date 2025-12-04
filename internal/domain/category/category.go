@@ -12,4 +12,5 @@ type Category struct {
 	Slug        string        `json:"slug"`
 	Topics      []topic.Topic `json:"topics"`
 	ID          int           `json:"id"`
+	TopicCount  int           `json:"topicsCount"`
 }

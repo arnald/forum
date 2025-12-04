@@ -28,9 +28,9 @@ type categoriesRequest struct {
 
 type response struct {
 	Filters    any                  `json:"filters"`
-	Pagination domain.Pagination    `json:"pagination"`
 	User       *domain.LoggedInUser `json:"user"`
 	Categories []domain.Category    `json:"categories"`
+	Pagination domain.Pagination    `json:"pagination"`
 }
 
 // backendError is a custom error type for backend errors.

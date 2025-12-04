@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/arnald/forum/internal/domain/category"
+	"github.com/arnald/forum/internal/domain/topic"
 )
 
 type Repo struct {
@@ -50,8 +51,9 @@ func (r *Repo) CreateCategory(ctx context.Context, category *category.Category) 
 
 func (r *Repo) GetAllCategories(ctx context.Context, page, size int, orderBy, order, filter string) ([]category.Category, error) {
 	query := `
-	SELECT c.id, c.name, c.description, c.slug, c.color, c.image_path, c.created_at, c.created_by
+	SELECT c.id, c.name, c.description, c.slug, c.color, c.image_path, c.created_at, c.created_by, COUNT(t.id) as topic_count
 	FROM categories c
+	LEFT JOIN topics t ON c.id = t.category_id
 	WHERE 1=1
 	`
 	args := make([]interface{}, 0)
@@ -62,7 +64,7 @@ func (r *Repo) GetAllCategories(ctx context.Context, page, size int, orderBy, or
 		args = append(args, filterParam, filterParam)
 	}
 
-	query += " ORDER BY c." + orderBy + " " + order + " LIMIT ? OFFSET ?"
+	query += " GROUP BY c.id ORDER BY c." + orderBy + " " + order + " LIMIT ? OFFSET ?"
 	offset := (page - 1) * size
 	args = append(args, size, offset)
 
@@ -90,16 +92,85 @@ func (r *Repo) GetAllCategories(ctx context.Context, page, size int, orderBy, or
 			&category.ImagePath,
 			&category.CreatedAt,
 			&category.CreatedBy,
+			&category.TopicCount,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("scan failed: %w", err)
 		}
+		category.Topics = make([]topic.Topic, 0)
 		categories = append(categories, category)
 	}
 
 	err = rows.Err()
 	if err != nil {
 		return nil, fmt.Errorf("rows iteration failed: %w", err)
+	}
+
+	return categories, nil
+}
+
+func (r *Repo) PopulateCategoriesWithTopics(ctx context.Context, categories []category.Category) ([]category.Category, error) {
+	if len(categories) == 0 {
+		return categories, nil
+	}
+
+	categoryIDs := make([]int, len(categories))
+	for i, category := range categories {
+		categoryIDs[i] = category.ID
+	}
+
+	placeholders := make([]string, len(categoryIDs))
+	args := make([]interface{}, len(categoryIDs))
+	for i, id := range categoryIDs {
+		placeholders[i] = "?"
+		args[i] = id
+	}
+
+	var queryBuilder strings.Builder
+	queryBuilder.WriteString("SELECT id, title, category_id FROM topics WHERE category_id IN (")
+	queryBuilder.WriteString(strings.Join(placeholders, ","))
+	queryBuilder.WriteString(") ORDER BY created_at DESC")
+	query := queryBuilder.String()
+
+	stmt, err := r.DB.PrepareContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to prepare statement: %w", err)
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.QueryContext(ctx, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query topics: %w", err)
+	}
+	defer rows.Close()
+
+	topicsMap := make(map[int][]topic.Topic)
+
+	for rows.Next() {
+		var topic topic.Topic
+		var categoryID int
+
+		err = rows.Scan(
+			&topic.ID,
+			&topic.Title,
+			&categoryID,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("scan topics failed: %w", err)
+		}
+
+		topicsMap[categoryID] = append(topicsMap[categoryID], topic)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return nil, fmt.Errorf("topics rows iteration failed: %w", err)
+	}
+
+	for i := range categories {
+		if topics, ok := topicsMap[categories[i].ID]; ok {
+			categories[i].Topics = topics
+		}
 	}
 
 	return categories, nil

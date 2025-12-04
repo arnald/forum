@@ -14,15 +14,15 @@ type Category struct {
 	ImagePath   string  `json:"imagePath"`
 	Topics      []Topic `json:"topics,omitzero"`
 	ID          int     `json:"id"`
-	TopicCount  int     `json:"topicscount,omitzero"`
+	TopicCount  int     `json:"topicsCount,omitzero"`
 }
 
 type Pagination struct {
 	Page       int `json:"page"`
 	TotalPages int `json:"totalPages"`
 	TotalItems int `json:"totalItems"`
-	NextPage   int `json:"next_page"`
-	PrevPage   int `json:"prev_page"`
+	NextPage   int `json:"nextPage"`
+	PrevPage   int `json:"prevPage"`
 }
 
 type Logo struct {
