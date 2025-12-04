@@ -17,6 +17,14 @@ type Category struct {
 	TopicCount  int     `json:"topicscount,omitzero"`
 }
 
+type Pagination struct {
+	Page       int `json:"page"`
+	TotalPages int `json:"totalPages"`
+	TotalItems int `json:"totalItems"`
+	NextPage   int `json:"next_page"`
+	PrevPage   int `json:"prev_page"`
+}
+
 type Logo struct {
 	URL    string `json:"url"`
 	ID     int    `json:"id"`

@@ -93,11 +93,11 @@
   </div>
 
   <!-- Pagination -->
-  {{ if gt (index .Pagination "totalPages") 1 }}
+  {{ if gt .Pagination.TotalPages 1 }}
   <div class="pagination-container">
     <div class="pagination">
       <!-- Previous Button -->
-      {{ if (index .Pagination "has_prev") }}
+      {{ if .Pagination "has_prev" }}
         <a href="?page={{ index .Pagination "prev_page" }}&search={{ index .Filters "search" }}&order_by={{ index .Filters "order_by" }}&order={{ index .Filters "order" }}" 
            class="pagination-btn prev-btn">
           <span class="pagination-arrow previous-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8.009 8.009 0 0 1-8 8z"/><path d="M13.293 7.293 8.586 12l4.707 4.707 1.414-1.414L11.414 12l3.293-3.293-1.414-1.414z"/></svg></span> Previous
@@ -107,10 +107,10 @@
       {{ end }}
 
       <!-- Page Number -->
-      <span class="page-number active">{{ index .Pagination "page" }}</span>
+      <span class="page-number active">{{ .Pagination.Page }}</span>
 
       <!-- Next Button -->
-      {{ if (index .Pagination "has_next") }}
+      {{ if .Pagination "has_next" }}
         <a href="?page={{ index .Pagination "next_page" }}&search={{ index .Filters "search" }}&order_by={{ index .Filters "order_by" }}&order={{ index .Filters "order" }}" 
            class="pagination-btn next-btn">
           Next <span class="pagination-arrow next-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8.009 8.009 0 0 1-8 8z"/><path d="M9.293 8.707 12.586 12l-3.293 3.293 1.414 1.414L15.414 12l-4.707-4.707-1.414 1.414z"/></svg></span>
@@ -122,7 +122,7 @@
 
     <!-- Pagination Info -->
     <div class="pagination-info">
-      Page {{ index .Pagination "page" }} of {{ index .Pagination "totalPages" }} ({{ index .Pagination "totalItems" }} categories total)
+      Page {{  .Pagination.Page }} of {{  .Pagination.TotalPages }} ({{ .Pagination.TotalItems }} categories total)
     </div>
   </div>
   {{ end }}

@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -13,6 +12,8 @@ import (
 	"github.com/arnald/forum/cmd/client/helpers/templates"
 	"github.com/arnald/forum/cmd/client/middleware"
 )
+
+const defaltPageSize = 12
 
 // CategoriesPage handles requests to the dedicated categories page.
 func (cs *ClientServer) CategoriesPage(w http.ResponseWriter, r *http.Request) {
@@ -25,19 +26,14 @@ func (cs *ClientServer) CategoriesPage(w http.ResponseWriter, r *http.Request) {
 	search := getQueryStringOr(r, "search", "")
 	orderBy := getQueryStringOr(r, "order_by", "created_at")
 	order := getQueryStringOr(r, "order", "desc")
-	pageSize := 12 // Categories per page
-
-	if page < 1 {
-		page = 1
-	}
-	if order != "asc" && order != "desc" {
-		order = "desc"
-	}
+	pageSize := getQueryIntOr(r, "page_size", defaltPageSize)
 
 	categoriesRequest := &categoriesRequest{
-		OrderBy: orderBy,
-		Order:   order,
-		Search:  search,
+		OrderBy:  orderBy,
+		Order:    order,
+		Search:   search,
+		Page:     page,
+		PageSize: pageSize,
 	}
 
 	backendURL, err := createURLWithParams(backendGetCategoriesDomain, categoriesRequest)
@@ -45,8 +41,6 @@ func (cs *ClientServer) CategoriesPage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error creating URL Params", http.StatusInternalServerError)
 		return
 	}
-	// Add paginationto url
-	backendURL += fmt.Sprintf("&page=%d&limit=%d", page, pageSize)
 
 	ctx, cancel := context.WithTimeout(r.Context(), requestTimeout)
 	defer cancel()
@@ -80,25 +74,6 @@ func (cs *ClientServer) CategoriesPage(w http.ResponseWriter, r *http.Request) {
 	user := middleware.GetUserFromContext(r.Context())
 
 	categoryData.User = user
-
-	// Convert pagination values to integers for template comparison
-	if paginationMap, ok := categoryData.Pagination.(map[string]interface{}); ok {
-		if totalPages, ok := paginationMap["totalPages"].(float64); ok {
-			paginationMap["totalPages"] = int(totalPages)
-		}
-		if totalItems, ok := paginationMap["totalItems"].(float64); ok {
-			paginationMap["totalItems"] = int(totalItems)
-		}
-		if page, ok := paginationMap["page"].(float64); ok {
-			paginationMap["page"] = int(page)
-		}
-		if nextPage, ok := paginationMap["next_page"].(float64); ok {
-			paginationMap["next_page"] = int(nextPage)
-		}
-		if prevPage, ok := paginationMap["prev_page"].(float64); ok {
-			paginationMap["prev_page"] = int(prevPage)
-		}
-	}
 
 	tmpl, err := template.ParseFiles(
 		"frontend/html/layouts/base.html",

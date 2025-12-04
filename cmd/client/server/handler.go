@@ -19,14 +19,16 @@ import (
 )
 
 type categoriesRequest struct {
-	OrderBy string
-	Order   string
-	Search  string
+	OrderBy  string `url:"order_by"`
+	Order    string `url:"order"`
+	Search   string `url:"search"`
+	Page     int    `url:"page"`
+	PageSize int    `url:"page_size"`
 }
 
 type response struct {
 	Filters    any                  `json:"filters"`
-	Pagination any                  `json:"pagination"`
+	Pagination domain.Pagination    `json:"pagination"`
 	User       *domain.LoggedInUser `json:"user"`
 	Categories []domain.Category    `json:"categories"`
 }
@@ -121,9 +123,15 @@ func createURLWithParams(domainURL string, params any) (string, error) {
 	for i := range val.NumField() {
 		field := val.Field(i)
 		fieldType := typ.Field(i)
+
+		fieldName := fieldType.Tag.Get("url")
+		if fieldName == "" {
+			fieldName = strings.ToLower(fieldType.Name[:1]) + fieldType.Name[1:]
+			fieldName = toSnakeCase(fieldName)
+		}
+
 		fieldValue := fmt.Sprintf("%v", field.Interface())
 
-		fieldName := toSnakeCase(fieldType.Name)
 		queryParams.Add(fieldName, fieldValue)
 	}
 
