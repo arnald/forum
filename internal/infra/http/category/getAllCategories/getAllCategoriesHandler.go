@@ -14,9 +14,9 @@ import (
 )
 
 type ResponseModel struct {
-	Filters    map[string]interface{}   `json:"filters"`
-	Categories []category.Category      `json:"categories"`
-	Pagination helpers.PaginationParams `json:"pagination"`
+	Filters    map[string]interface{} `json:"filters"`
+	Pagination map[string]interface{} `json:"pagination"`
+	Categories []category.Category    `json:"categories"`
 }
 
 type Handler struct {
@@ -95,10 +95,10 @@ func (h *Handler) GetAllCategories(w http.ResponseWriter, r *http.Request) {
 		"order":    order,
 	}
 
-	response := map[string]interface{}{
-		"categories": categories,
-		"pagination": paginationMeta,
-		"filters":    appliedFilters,
+	response := ResponseModel{
+		Filters:    appliedFilters,
+		Categories: categories,
+		Pagination: paginationMeta,
 	}
 
 	helpers.RespondWithJSON(w, http.StatusOK, nil, response)

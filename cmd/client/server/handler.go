@@ -1,18 +1,37 @@
 package server
 
 import (
-	"encoding/json"
-	"html/template"
+	"context"
+	"errors"
+	"fmt"
 	"log"
 	"net/http"
-	"os"
+	"net/url"
+	"reflect"
+	"strings"
+	"text/template"
+	"unicode"
 
 	"github.com/arnald/forum/cmd/client/domain"
-	h "github.com/arnald/forum/cmd/client/helpers"
+	"github.com/arnald/forum/cmd/client/helpers"
 	"github.com/arnald/forum/cmd/client/helpers/templates"
 	"github.com/arnald/forum/cmd/client/middleware"
-	"github.com/arnald/forum/internal/pkg/path"
 )
+
+type categoriesRequest struct {
+	OrderBy  string `url:"order_by"`
+	Order    string `url:"order"`
+	Search   string `url:"search"`
+	Page     int    `url:"page"`
+	PageSize int    `url:"page_size"`
+}
+
+type response struct {
+	Filters    any                  `json:"filters"`
+	User       *domain.LoggedInUser `json:"user"`
+	Categories []domain.Category    `json:"categories"`
+	Pagination domain.Pagination    `json:"pagination"`
+}
 
 // backendError is a custom error type for backend errors.
 type backendError string
@@ -23,40 +42,51 @@ func (e backendError) Error() string {
 
 // HomePage handles requests to the homepage.
 func (cs *ClientServer) HomePage(w http.ResponseWriter, r *http.Request) {
-	// Handle / and /categories
-	if r.URL.Path != "/" && r.URL.Path != "/categories" {
-		templates.NotFoundHandler(w, r, notFoundMessage, http.StatusNotFound)
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	resolver := path.NewResolver()
+	defaultCategoriesOptions := &categoriesRequest{
+		OrderBy: "created_at",
+		Order:   "desc",
+		Search:  "",
+	}
 
-	file, err := os.Open(resolver.GetPath("cmd/client/data/categories.json"))
+	backendURL, err := createURLWithParams(backendGetCategoriesDomain, defaultCategoriesOptions)
 	if err != nil {
-		log.Println("Error opening categories.json:", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
-	defer file.Close()
 
-	var categoryData domain.CategoryData
-	err = json.NewDecoder(file).Decode(&categoryData)
+	ctx, cancel := context.WithTimeout(r.Context(), requestTimeout)
+	defer cancel()
+
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet, backendURL, nil)
 	if err != nil {
-		log.Println("Error decoding JSON:", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 
-	h.PrepareCategories(categoryData.Data.Categories)
+	backendResp, err := cs.HTTPClient.Do(httpReq)
+	if err != nil {
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+	defer backendResp.Body.Close()
 
-	// Get user from context (set by middleware)
+	var categoryData response
+	err = helpers.DecodeBackendResponse(backendResp, &categoryData)
+	if err != nil {
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+
+	categoryData.Categories = helpers.PrepareCategories(categoryData.Categories)
+
 	user := middleware.GetUserFromContext(r.Context())
 
-	pageData := domain.HomePageData{
-		Categories: categoryData.Data.Categories,
-		ActivePage: r.URL.Path,
-		User:       user,
-	}
+	categoryData.User = user
 
 	tmpl, err := template.ParseFiles(
 		"frontend/html/layouts/base.html",
@@ -72,24 +102,50 @@ func (cs *ClientServer) HomePage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = tmpl.ExecuteTemplate(w, "base", pageData)
+	err = tmpl.ExecuteTemplate(w, "base", categoryData)
 	if err != nil {
 		log.Println("Error executing template:", err)
 		http.Error(w, "Failed to render page", http.StatusInternalServerError)
 	}
 }
 
-func DecodeBackendResponse[T any](resp *http.Response, target *T) error {
-	wrapper := struct {
-		Data T `json:"data"`
-	}{}
+var ErrFailedToCreateURL = errors.New("failed to create url with params")
 
-	err := json.NewDecoder(resp.Body).Decode(&wrapper)
-	if err != nil {
-		return err
+func createURLWithParams(domainURL string, params any) (string, error) {
+	val := reflect.ValueOf(params).Elem()
+	if !val.IsValid() {
+		return "", ErrFailedToCreateURL
 	}
 
-	*target = wrapper.Data
+	typ := val.Type()
+	queryParams := url.Values{}
 
-	return nil
+	for i := range val.NumField() {
+		field := val.Field(i)
+		fieldType := typ.Field(i)
+
+		fieldName := fieldType.Tag.Get("url")
+		if fieldName == "" {
+			fieldName = strings.ToLower(fieldType.Name[:1]) + fieldType.Name[1:]
+			fieldName = toSnakeCase(fieldName)
+		}
+
+		fieldValue := fmt.Sprintf("%v", field.Interface())
+
+		queryParams.Add(fieldName, fieldValue)
+	}
+
+	completeURL := domainURL + "?" + queryParams.Encode()
+	return completeURL, nil
+}
+
+func toSnakeCase(input string) string {
+	var result strings.Builder
+	for i, char := range input {
+		if i > 0 && char >= 'A' && char <= 'Z' {
+			result.WriteRune('_')
+		}
+		result.WriteRune(unicode.ToLower(char))
+	}
+	return result.String()
 }

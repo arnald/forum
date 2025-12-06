@@ -58,6 +58,9 @@ func (cs *ClientServer) SetupRoutes() {
 	// Homepage
 	cs.Router.HandleFunc("/", applyMiddleware(cs.HomePage, authMiddleware))
 
+	// Categories page
+	cs.Router.HandleFunc("/categories", applyMiddleware(cs.CategoriesPage, authMiddleware))
+
 	// Register page
 	cs.Router.HandleFunc("/register",
 		applyMiddleware(func(w http.ResponseWriter, r *http.Request) {
