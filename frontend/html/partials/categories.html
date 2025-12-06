@@ -20,8 +20,8 @@
               <span class="category-title">{{ .Name }}</span>
             </div>
           </a>
-            <p class="category-description">{{ .Description }}</p>
-          </div>
+          <p class="category-description">{{ .Description }}</p>
+        </div>
       </div>
     </div>
     <div class="category-posts">
@@ -34,7 +34,7 @@
             <span class="left-arrow">&#10147;</span> {{ $topic.Title }}
           </span>
         </a>
-        <span class="category-post-date">Feb 2023</span>
+        <span class="category-post-date">{{ $topic.CreatedAt }}</span>
       </div>
       {{ end }} {{ end }}
     </div>

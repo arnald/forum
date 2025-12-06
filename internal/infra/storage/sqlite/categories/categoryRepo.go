@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/arnald/forum/internal/domain/category"
 	"github.com/arnald/forum/internal/domain/topic"
@@ -127,7 +128,7 @@ func (r *Repo) PopulateCategoriesWithTopics(ctx context.Context, categories []ca
 	}
 
 	var queryBuilder strings.Builder
-	queryBuilder.WriteString("SELECT id, title, category_id FROM topics WHERE category_id IN (")
+	queryBuilder.WriteString("SELECT id, title, category_id, created_at FROM topics WHERE category_id IN (")
 	queryBuilder.WriteString(strings.Join(placeholders, ","))
 	queryBuilder.WriteString(") ORDER BY created_at DESC")
 	query := queryBuilder.String()
@@ -154,9 +155,16 @@ func (r *Repo) PopulateCategoriesWithTopics(ctx context.Context, categories []ca
 			&topic.ID,
 			&topic.Title,
 			&categoryID,
+			&topic.CreatedAt,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("scan topics failed: %w", err)
+		}
+
+		if topic.CreatedAt != "" {
+			if t, err := time.Parse(time.RFC3339, topic.CreatedAt); err == nil {
+				topic.CreatedAt = t.Format("Jan 2006")
+			}
 		}
 
 		topicsMap[categoryID] = append(topicsMap[categoryID], topic)
