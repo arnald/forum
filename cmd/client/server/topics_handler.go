@@ -86,14 +86,24 @@ func (cs *ClientServer) TopicsPage(w http.ResponseWriter, r *http.Request) {
 
 	pageData.User = middleware.GetUserFromContext(r.Context())
 
-	tmpl, err := template.ParseFiles(
+	// Create template with custom functions
+	tmpl := template.New("base").Funcs(template.FuncMap{
+		"truncate": func(s string, length int) string {
+			if len(s) <= length {
+				return s
+			}
+			return s[:length] + "..."
+		},
+	})
+
+	// Parse files with the custom functions available
+	tmpl, err = tmpl.ParseFiles(
 		"frontend/html/layouts/base.html",
 		"frontend/html/pages/all_topics.html",
 		"frontend/html/partials/navbar.html",
 		"frontend/html/partials/footer.html",
 	)
 	if err != nil {
-		log.Println("Error loading templates:", err)
 		templates.NotFoundHandler(w, r, "Failed to load page", http.StatusInternalServerError)
 		return
 	}

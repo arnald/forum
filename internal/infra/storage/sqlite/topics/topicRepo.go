@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/arnald/forum/internal/domain/comment"
 	"github.com/arnald/forum/internal/domain/topic"
@@ -213,6 +214,19 @@ func (r Repo) GetTopicByID(ctx context.Context, topicID int, userID *string) (*t
 		return nil, fmt.Errorf("failed to get topic: %w", err)
 	}
 
+	// Format Dates
+	if topicResult.CreatedAt != "" {
+		if t, err := time.Parse(time.RFC3339, topicResult.CreatedAt); err == nil {
+			topicResult.CreatedAt = t.Format("Jan 2006")
+		}
+	}
+
+	if topicResult.UpdatedAt != "" {
+		if t, err := time.Parse(time.RFC3339, topicResult.UpdatedAt); err == nil {
+			topicResult.UpdatedAt = t.Format("Jan 2006")
+		}
+	}
+
 	if userID != nil && userVote.Valid {
 		vote := int(userVote.Int32)
 		topicResult.UserVote = &vote
@@ -348,6 +362,19 @@ func (r Repo) GetAllTopics(ctx context.Context, page, size, categoryID int, orde
 		err = rows.Scan(scanFields...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan row: %w", err)
+		}
+
+		// Format dates
+		if topic.CreatedAt != "" {
+			if t, err := time.Parse(time.RFC3339, topic.CreatedAt); err == nil {
+				topic.CreatedAt = t.Format("Jan 2006")
+			}
+		}
+
+		if topic.UpdatedAt != "" {
+			if t, err := time.Parse(time.RFC3339, topic.UpdatedAt); err == nil {
+				topic.UpdatedAt = t.Format("Jan 2006")
+			}
 		}
 
 		if userID != nil && userVote.Valid {
