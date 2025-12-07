@@ -46,4 +46,6 @@ type Topic struct {
 	DownvoteCount int    `json:"downvoteCount"`
 	VoteScore     int    `json:"voteScore"`
 	UserVote      *int   `json:"userVote,omitempty"`
+	CategoryName  string `json:"categoryName"`
+	CategoryColor string `json:"categoryColor"`
 }

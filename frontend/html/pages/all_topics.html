@@ -33,6 +33,7 @@
                 <option value="created_at" {{ if eq (index $.Filters "order_by") "created_at" }}selected{{ end }}>Date Created</option>
                 <option value="updated_at" {{ if eq (index $.Filters "order_by") "updated_at" }}selected{{ end }}>Last Updated</option>
                 <option value="title" {{ if eq (index $.Filters "order_by") "title" }}selected{{ end }}>Title</option>
+                <option value="category_id" {{ if eq (index $.Filters "order_by") "category_id" }}selected{{ end }}>Category</option>
               </select>
             </div>
 
@@ -70,6 +71,10 @@
           <div class="topic-row">
             <div class="topic-content-wrapper">
               <div class="topic-text">
+                <div class="color-category">
+                  <span class="category-color" style="background-color: {{ .CategoryColor }}"></span>
+                  <span class="category-name">{{ .CategoryName }}</span>
+                </div>
                 <div class="topic-title">
                   <a href="/topic/{{ .ID }}">{{ .Title }}</a>
                   <p class="topic-preview">{{ truncate .Content 100 }}</p>

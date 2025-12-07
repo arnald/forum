@@ -84,6 +84,10 @@ func (cs *ClientServer) TopicsPage(w http.ResponseWriter, r *http.Request) {
 		pageData.Topics = []domain.Topic{}
 	}
 
+	for i := range pageData.Topics {
+		pageData.Topics[i].CategoryColor = helpers.NormalizeColor(pageData.Topics[i].CategoryColor)
+	}
+
 	pageData.User = middleware.GetUserFromContext(r.Context())
 
 	// Create template with custom functions
