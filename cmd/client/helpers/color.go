@@ -15,12 +15,12 @@ const (
 
 func PrepareCategories(categories []domain.Category) []domain.Category {
 	for i := range categories {
-		categories[i].Color = normalizeColor(categories[i].Color)
+		categories[i].Color = NormalizeColor(categories[i].Color)
 	}
 	return categories
 }
 
-func normalizeColor(color string) string {
+func NormalizeColor(color string) string {
 	// Add # prefix if missing
 	if !strings.HasPrefix(color, "#") {
 		color = "#" + color

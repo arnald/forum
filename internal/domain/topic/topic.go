@@ -11,6 +11,8 @@ type Topic struct {
 	CreatedAt     string
 	UserID        string
 	OwnerUsername string
+	CategoryName  string
+	CategoryColor string
 	Comments      []comment.Comment
 	ID            int
 	CategoryID    int
