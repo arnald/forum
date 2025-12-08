@@ -6,7 +6,7 @@
     <div class="category-wrapper">
       <div class="category-img-box">
         <a href="/category/{{ .Slug }}" class="category-link">
-          <img class="category-img" src="{{ .Logo.URL }}" alt="{{ .Name }}" />
+          <img class="category-img" src="{{ .ImagePath }}" alt="{{ .Name }}" />
         </a>
       </div>
       <div class="category-info">
@@ -34,7 +34,7 @@
             <span class="left-arrow">&#10147;</span> {{ $topic.Title }}
           </span>
         </a>
-        <span class="category-post-date">Feb 2023</span>
+        <span class="category-post-date">{{ $topic.CreatedAt }}</span>
       </div>
       {{ end }} {{ end }}
     </div>

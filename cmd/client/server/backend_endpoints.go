@@ -9,10 +9,11 @@ const (
 )
 
 const (
-	backendRegisterURL      = backendAPIBase + "/register"
-	backendLoginEmailURL    = backendAPIBase + "/login/email"
-	backendLoginUsernameURL = backendAPIBase + "/login/username"
-	backendLogoutURL        = backendAPIBase + "/logout"
-	backendGithubRegister   = backendAPIBase + "/auth/github/login"
-	backendGooglebRegister  = backendAPIBase + "/auth/google/login"
+	backendRegisterURL         = backendAPIBase + "/register"
+	backendLoginEmailURL       = backendAPIBase + "/login/email"
+	backendLoginUsernameURL    = backendAPIBase + "/login/username"
+	backendLogoutURL           = backendAPIBase + "/logout"
+	backendGithubRegister      = backendAPIBase + "/auth/github/login"
+	backendGooglebRegister     = backendAPIBase + "/auth/google/login"
+	backendGetCategoriesDomain = backendAPIBase + "/categories/all"
 )

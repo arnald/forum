@@ -20,6 +20,31 @@ const (
 	refreshTokenMaxAge = 7 // days
 )
 
+type LoginFormErrors struct {
+	User          *domain.LoggedInUser `json:"-"`
+	Username      string               `json:"-"`
+	Email         string               `json:"-"`
+	Password      string               `json:"-"`
+	UsernameError string               `json:"username,omitempty"`
+	EmailError    string               `json:"email,omitempty"`
+	PasswordError string               `json:"password,omitempty"`
+}
+
+// BackendLoginRequest - sent to backend.
+type BackendLoginRequest struct {
+	Email    string `json:"email,omitempty"`
+	Username string `json:"username,omitempty"`
+	Password string `json:"password"`
+}
+
+// BackendLoginResponse - response from backend.
+type BackendLoginResponse struct {
+	UserID       string `json:"userId"`
+	Username     string `json:"username"`
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
+}
+
 // LoginPage handles GET requests to /login.
 func (cs *ClientServer) LoginPage(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
@@ -34,7 +59,7 @@ func (cs *ClientServer) LoginPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	templates.RenderTemplate(w, "login", domain.LoginFormErrors{})
+	templates.RenderTemplate(w, "login", LoginFormErrors{})
 }
 
 // LoginPost handles POST requests to /login.
@@ -53,7 +78,7 @@ func (cs *ClientServer) LoginPost(w http.ResponseWriter, r *http.Request) {
 	loginType := strings.TrimSpace(r.FormValue("loginType"))
 	password := strings.TrimSpace(r.FormValue("password"))
 
-	data := domain.LoginFormErrors{
+	data := LoginFormErrors{
 		Password: password,
 	}
 
@@ -68,7 +93,7 @@ func (cs *ClientServer) LoginPost(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleEmailLogin processes email-based login.
-func (cs *ClientServer) handleEmailLogin(w http.ResponseWriter, r *http.Request, data domain.LoginFormErrors) {
+func (cs *ClientServer) handleEmailLogin(w http.ResponseWriter, r *http.Request, data LoginFormErrors) {
 	email := strings.TrimSpace(r.FormValue("email"))
 	password := strings.TrimSpace(r.FormValue("password"))
 
@@ -95,7 +120,7 @@ func (cs *ClientServer) handleEmailLogin(w http.ResponseWriter, r *http.Request,
 }
 
 // handleUsernameLogin processes username-based login.
-func (cs *ClientServer) handleUsernameLogin(w http.ResponseWriter, r *http.Request, data domain.LoginFormErrors) {
+func (cs *ClientServer) handleUsernameLogin(w http.ResponseWriter, r *http.Request, data LoginFormErrors) {
 	username := strings.TrimSpace(r.FormValue("username"))
 	password := strings.TrimSpace(r.FormValue("password"))
 
@@ -123,8 +148,8 @@ func (cs *ClientServer) handleUsernameLogin(w http.ResponseWriter, r *http.Reque
 }
 
 // loginWithBackendEmail sends login request to backend email endpoint.
-func (cs *ClientServer) loginWithBackendEmail(ctx context.Context, email string, password string) (*domain.BackendLoginResponse, error) {
-	req := domain.BackendLoginRequest{
+func (cs *ClientServer) loginWithBackendEmail(ctx context.Context, email string, password string) (*BackendLoginResponse, error) {
+	req := BackendLoginRequest{
 		Email:    email,
 		Password: password,
 	}
@@ -132,8 +157,8 @@ func (cs *ClientServer) loginWithBackendEmail(ctx context.Context, email string,
 }
 
 // loginWithBackendUsername sends login request to backend username endpoint.
-func (cs *ClientServer) loginWithBackendUsername(ctx context.Context, username string, password string) (*domain.BackendLoginResponse, error) {
-	req := domain.BackendLoginRequest{
+func (cs *ClientServer) loginWithBackendUsername(ctx context.Context, username string, password string) (*BackendLoginResponse, error) {
+	req := BackendLoginRequest{
 		Username: username,
 		Password: password,
 	}
@@ -141,7 +166,7 @@ func (cs *ClientServer) loginWithBackendUsername(ctx context.Context, username s
 }
 
 // sendLoginRequest sends the login request to the backend API.
-func (cs *ClientServer) sendLoginRequest(ctx context.Context, backendURL string, req domain.BackendLoginRequest) (*domain.BackendLoginResponse, error) {
+func (cs *ClientServer) sendLoginRequest(ctx context.Context, backendURL string, req BackendLoginRequest) (*BackendLoginResponse, error) {
 	resp, err := cs.newRequest(
 		ctx,
 		http.MethodPost,
@@ -168,7 +193,7 @@ func (cs *ClientServer) sendLoginRequest(ctx context.Context, backendURL string,
 	}
 
 	// Success response
-	target := domain.BackendLoginResponse{}
+	target := BackendLoginResponse{}
 	err = helpers.DecodeBackendResponse(resp, &target)
 	if err != nil {
 		return nil, backendError("Failed to decode response: " + err.Error())

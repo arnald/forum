@@ -11,10 +11,18 @@ type Category struct {
 	Color       string  `json:"color"`
 	Slug        string  `json:"slug,omitzero"`
 	Description string  `json:"description,omitzero"`
+	ImagePath   string  `json:"imagePath"`
 	Topics      []Topic `json:"topics,omitzero"`
-	Logo        Logo    `json:"logo"`
 	ID          int     `json:"id"`
-	TopicCount  int     `json:"topicCount"`
+	TopicCount  int     `json:"topicsCount,omitzero"`
+}
+
+type Pagination struct {
+	Page       int `json:"page"`
+	TotalPages int `json:"totalPages"`
+	TotalItems int `json:"totalItems"`
+	NextPage   int `json:"nextPage"`
+	PrevPage   int `json:"prevPage"`
 }
 
 type Logo struct {
@@ -25,6 +33,7 @@ type Logo struct {
 }
 
 type Topic struct {
-	Title string `json:"title"`
-	ID    int    `json:"id"`
+	Title     string `json:"title"`
+	CreatedAt string `json:"createdAt"`
+	ID        int    `json:"id"`
 }
