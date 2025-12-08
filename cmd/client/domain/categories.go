@@ -34,6 +34,6 @@ type Logo struct {
 
 type Topic struct {
 	Title     string `json:"title"`
-	ID        int    `json:"id"`
 	CreatedAt string `json:"createdAt"`
+	ID        int    `json:"id"`
 }
