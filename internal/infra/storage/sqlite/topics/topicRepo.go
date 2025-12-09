@@ -216,13 +216,15 @@ func (r Repo) GetTopicByID(ctx context.Context, topicID int, userID *string) (*t
 
 	// Format Dates
 	if topicResult.CreatedAt != "" {
-		if t, err := time.Parse(time.RFC3339, topicResult.CreatedAt); err == nil {
+		t, parseErr := time.Parse(time.RFC3339, topicResult.CreatedAt)
+		if parseErr == nil {
 			topicResult.CreatedAt = t.Format("Jan 2006")
 		}
 	}
 
 	if topicResult.UpdatedAt != "" {
-		if t, err := time.Parse(time.RFC3339, topicResult.UpdatedAt); err == nil {
+		t, parseErr := time.Parse(time.RFC3339, topicResult.UpdatedAt)
+		if parseErr == nil {
 			topicResult.UpdatedAt = t.Format("Jan 2006")
 		}
 	}
@@ -377,13 +379,15 @@ func (r Repo) GetAllTopics(ctx context.Context, page, size, categoryID int, orde
 
 		// Format dates
 		if topic.CreatedAt != "" {
-			if t, err := time.Parse(time.RFC3339, topic.CreatedAt); err == nil {
+			t, parseErr := time.Parse(time.RFC3339, topic.CreatedAt)
+			if parseErr == nil {
 				topic.CreatedAt = t.Format("Jan 2006")
 			}
 		}
 
 		if topic.UpdatedAt != "" {
-			if t, err := time.Parse(time.RFC3339, topic.UpdatedAt); err == nil {
+			t, parseErr := time.Parse(time.RFC3339, topic.UpdatedAt)
+			if parseErr == nil {
 				topic.UpdatedAt = t.Format("Jan 2006")
 			}
 		}

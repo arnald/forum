@@ -316,7 +316,7 @@ func (r *Repo) GetAllCategorieNamesAndIDs(ctx context.Context) ([]category.Categ
 	}
 	defer rows.Close()
 
-	var categories []category.Category
+	categories := make([]category.Category, 0)
 
 	for rows.Next() {
 		var category category.Category
@@ -326,7 +326,6 @@ func (r *Repo) GetAllCategorieNamesAndIDs(ctx context.Context) ([]category.Categ
 			&category.Name,
 			&category.Color,
 		)
-
 		if err != nil {
 			return nil, fmt.Errorf("scan categories failed: %w", err)
 		}
