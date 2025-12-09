@@ -3,6 +3,7 @@ package topicqueries
 import (
 	"context"
 
+	"github.com/arnald/forum/internal/domain/category"
 	"github.com/arnald/forum/internal/domain/topic"
 )
 
@@ -17,30 +18,48 @@ type GetAllTopicsRequest struct {
 	CategoryID int     `json:"categoryId"`
 }
 
+type GetAllTopicsResponse struct {
+	Topics     []topic.Topic
+	Categories []category.Category
+	Count      int
+}
 type GetAllTopicsRequestHandler interface {
-	Handle(ctx context.Context, req GetAllTopicsRequest) ([]topic.Topic, int, error)
+	Handle(ctx context.Context, req GetAllTopicsRequest) (*GetAllTopicsResponse, error)
 }
 
 type getAllTopicsRequestHandler struct {
-	repo topic.Repository
+	topicRepo    topic.Repository
+	categoryRepo category.Repository
 }
 
-func NewGetAllTopicsHandler(repo topic.Repository) GetAllTopicsRequestHandler {
+func NewGetAllTopicsHandler(topicRepo topic.Repository, categoryRepo category.Repository) GetAllTopicsRequestHandler {
 	return getAllTopicsRequestHandler{
-		repo: repo,
+		topicRepo:    topicRepo,
+		categoryRepo: categoryRepo,
 	}
 }
 
-func (h getAllTopicsRequestHandler) Handle(ctx context.Context, req GetAllTopicsRequest) ([]topic.Topic, int, error) {
-	count, err := h.repo.GetTotalTopicsCount(ctx, req.Filter, req.CategoryID)
+func (h getAllTopicsRequestHandler) Handle(ctx context.Context, req GetAllTopicsRequest) (*GetAllTopicsResponse, error) {
+	count, err := h.topicRepo.GetTotalTopicsCount(ctx, req.Filter, req.CategoryID)
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 
-	topics, err := h.repo.GetAllTopics(ctx, req.Page, req.Size, req.CategoryID, req.OrderBy, req.Order, req.Filter, req.UserID)
+	topics, err := h.topicRepo.GetAllTopics(ctx, req.Page, req.Size, req.CategoryID, req.OrderBy, req.Order, req.Filter, req.UserID)
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 
-	return topics, count, nil
+	categories, err := h.categoryRepo.GetAllCategorieNamesAndIDs(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetAllTopicsResponse{
+		Topics:     topics,
+		Count:      count,
+		Categories: categories,
+	}
+
+	return response, nil
 }
