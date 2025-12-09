@@ -5,13 +5,13 @@
   <div class="category">
     <div class="category-wrapper">
       <div class="category-img-box">
-        <a href="/category/{{ .Slug }}" class="category-link">
+        <a href="/topics?search=&category={{ .ID }}" class="category-link">
           <img class="category-img" src="{{ .ImagePath }}" alt="{{ .Name }}" />
         </a>
       </div>
       <div class="category-info">
         <div class="category-info-box">
-          <a href="/category/{{ .Slug }}" class="category-link">
+          <a href="/topics?search=&category={{ .ID }}" class="category-link">
             <div class="category-title-box">
               <span
                 class="category-title-color"
