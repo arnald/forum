@@ -162,7 +162,8 @@ func (r *Repo) PopulateCategoriesWithTopics(ctx context.Context, categories []ca
 		}
 
 		if topic.CreatedAt != "" {
-			if t, err := time.Parse(time.RFC3339, topic.CreatedAt); err == nil {
+			t, parseErr := time.Parse(time.RFC3339, topic.CreatedAt)
+			if parseErr == nil {
 				topic.CreatedAt = t.Format("Jan 2006")
 			}
 		}
@@ -315,7 +316,7 @@ func (r *Repo) GetAllCategorieNamesAndIDs(ctx context.Context) ([]category.Categ
 	}
 	defer rows.Close()
 
-	var categories []category.Category
+	categories := make([]category.Category, 0)
 
 	for rows.Next() {
 		var category category.Category
@@ -325,7 +326,6 @@ func (r *Repo) GetAllCategorieNamesAndIDs(ctx context.Context) ([]category.Categ
 			&category.Name,
 			&category.Color,
 		)
-
 		if err != nil {
 			return nil, fmt.Errorf("scan categories failed: %w", err)
 		}

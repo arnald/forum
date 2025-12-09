@@ -12,6 +12,8 @@ import (
 	"github.com/arnald/forum/cmd/client/middleware"
 )
 
+const defaultPageSize = 10
+
 type topicsRequest struct {
 	OrderBy  string `url:"order_by"`
 	Order    string `url:"order"`
@@ -41,7 +43,7 @@ func (cs *ClientServer) TopicsPage(w http.ResponseWriter, r *http.Request) {
 	orderBy := getQueryStringOr(r, "order_by", "created_at")
 	order := getQueryStringOr(r, "order", "desc")
 	category := getQueryIntOr(r, "category", 0)
-	pageSize := getQueryIntOr(r, "page_size", 10)
+	pageSize := getQueryIntOr(r, "page_size", defaultPageSize)
 
 	topicsReq := &topicsRequest{
 		OrderBy:  orderBy,
