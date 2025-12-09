@@ -5,7 +5,7 @@
     <summary>Categories</summary>
     <div class="details-content">
       {{ range . }}
-      <a href="/category/{{ .Slug }}" class="details-category-link">
+      <a href="/topics?search=&category={{ .ID }}" class="details-category-link">
         <div class="details-text-box">
           <span
             class="category-title-color"
