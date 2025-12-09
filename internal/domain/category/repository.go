@@ -12,4 +12,5 @@ type Repository interface {
 	GetAllCategories(ctx context.Context, page, size int, orderBy, order, filter string) ([]Category, error)
 	PopulateCategoriesWithTopics(ctx context.Context, categories []Category) ([]Category, error)
 	GetTotalCategoriesCount(ctx context.Context, filter string) (int, error)
+	GetAllCategorieNamesAndIDs(ctx context.Context) ([]Category, error)
 }
