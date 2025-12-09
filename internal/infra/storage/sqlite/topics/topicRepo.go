@@ -322,7 +322,13 @@ func (r Repo) GetAllTopics(ctx context.Context, page, size, categoryID int, orde
 		args = append(args, categoryID)
 	}
 
-	query += " ORDER BY t." + orderBy + " " + order + " LIMIT ? OFFSET ?"
+	orderByClause := "t." + orderBy
+
+	if orderBy == "vote_score" {
+		orderByClause = "vote_counts.score"
+	}
+
+	query += " ORDER BY " + orderByClause + " " + order + " LIMIT ? OFFSET ?"
 	offset := (page - 1) * size
 	args = append(args, size, offset)
 

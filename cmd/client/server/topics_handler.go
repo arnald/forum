@@ -25,6 +25,7 @@ type topicsResponse struct {
 	User       *domain.LoggedInUser   `json:"user"`
 	Filters    map[string]interface{} `json:"filters"`
 	Topics     []domain.Topic         `json:"topics"`
+	Categories []domain.Category      `json:"categories"`
 	Pagination domain.Pagination      `json:"pagination"`
 }
 
