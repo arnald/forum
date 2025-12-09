@@ -28,12 +28,24 @@
           <!-- Filter Controls -->
           <div class="filter-controls">
             <div class="filter-group">
+              <label for="category">Category:</label>
+              <select name="category" id="category" class="filter-select">
+                <option value="0">All Categories</option>
+                {{ range .Categories }}
+                <option value="{{ .ID }}" {{ if eq (index $.Filters "category") .ID }}selected{{ end }}>
+                  {{ .Name }}
+                </option>
+                {{ end }}
+              </select>
+            </div>
+            
+            <div class="filter-group">
               <label for="order_by">Sort by:</label>
               <select name="order_by" id="order_by" class="filter-select">
                 <option value="created_at" {{ if eq (index $.Filters "order_by") "created_at" }}selected{{ end }}>Date Created</option>
                 <option value="updated_at" {{ if eq (index $.Filters "order_by") "updated_at" }}selected{{ end }}>Last Updated</option>
                 <option value="title" {{ if eq (index $.Filters "order_by") "title" }}selected{{ end }}>Title</option>
-                <option value="category_id" {{ if eq (index $.Filters "order_by") "category_id" }}selected{{ end }}>Category</option>
+                <option value="vote_score" {{ if eq (index $.Filters "order_by") "vote_score" }}selected{{ end }}>Most Popular</option>
               </select>
             </div>
 
