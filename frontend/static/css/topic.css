@@ -1,0 +1,320 @@
+/*----- Topic Page -----*/
+/* Header */
+.topic-header {
+  margin: 2rem 0;
+}
+.post-title {
+  font-size: 2rem;
+  font-weight: 500;
+  text-shadow: 2px 2px 10px rgba(255, 255, 255, 0.5);
+  margin-bottom: 1rem;
+}
+.topic-category {
+  display: flex;
+  width: max-content;
+  align-items: center;
+  column-gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 8px;
+  background-color: var(--white-background-light);
+  transition: all 0.3s;
+}
+.topic-category:hover {
+  background-color: var(--grey-color-light);
+}
+.topic-category-link {
+  text-decoration: none;
+  color: inherit;
+}
+.topic-category-color {
+  width: 10px;
+  height: 10px;
+  /* hardcoded */
+  background-color: #fa6400;
+}
+
+/*--- Topic Content ---*/
+.topic-content,
+.comment-content {
+  width: 100%;
+  border-radius: 8px;
+  background-color: var(--white-background-light);
+  padding: 1rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Topic Head */
+.topic-head,
+.comment-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.post-meta,
+.comment-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.topic-user-box,
+.comment-img-box {
+  width: max-content;
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background-color: var(--primary-color-light);
+}
+.topic-user-box img,
+.comment-img-box img {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+}
+.post-author-name,
+.comment-author {
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+.post-date,
+.comment-date {
+  color: var(--grey-color);
+}
+
+/* Topic Body */
+.topic-body-container, /* add same styles to comment too */
+.comment-body-container {
+  padding: 0 3.5rem;
+  /* background-color: #068f56;     */
+  line-height: 1.6;
+}
+.img-box {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 1rem 0;
+}
+.post-image,
+.comment-image {
+  max-width: 100%;
+  min-height: 220px;
+  max-height: 600px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+.post-link {
+  margin: 1rem 0;
+}
+.post-link a {
+  font-size: 1.1rem;
+  color: var(--dark-background);
+  transition: all 0.3s;
+}
+.post-link a:hover {
+  color: var(--primary-color);
+}
+.reactions {
+  display: flex;
+  align-items: center;
+  column-gap: 0.5rem;
+  color: var(--grey-color-dark);
+}
+.reaction-box {
+  display: flex;
+  align-items: center;
+  column-gap: 0.3rem;
+  padding: 0.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.reaction-box:hover,
+.reaction-box:hover .btn {
+  background-color: var(--primary-color-light);
+}
+.reaction-box .like-icon {
+  width: 25px;
+  height: 25px;
+}
+.reaction-box .dislike-icon {
+  width: 28px;
+  height: 28px;
+}
+.btn {
+  font-size: 1.1rem;
+  border: none;
+  cursor: pointer;
+  background-color: var(--white-background-light);
+}
+.views-box,
+.comments-box {
+  display: flex;
+  align-items: center;
+  flex-direction: column-reverse;
+}
+.topic-extra-info {
+  display: flex;
+  column-gap: 1rem;
+  margin-left: 2rem;
+}
+/*-- Post Actions --*/
+.post-actions {
+  display: flex;
+  justify-content: space-between;
+  margin: 1rem 0;
+}
+.author-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.action-btn, /* add same styles to comment too */
+.post-comment {
+  height: fit-content;
+  font-family: inherit;
+  font-size: 1.1rem;
+  font-weight: bold;
+  padding: 0.8rem 1.4rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.action-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+}
+.btn-delete {
+  color: var(--white-background-light);
+  background-color: #e63946;
+}
+.btn-comment {
+  color: var(--white-background-light);
+  background-color: var(--secondary-color);
+}
+
+/*--- Add Comment Form ---*/
+.add-comment {
+  display: none;
+  width: 50%;
+  margin: 2rem auto;
+  margin-top: 1rem;
+  background-color: var(--white-background-light);
+  padding: 1rem;
+  border-radius: 8px;
+}
+.add-comment.active {
+  display: block;
+}
+.comment-form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.close-comment-form {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.close-comment-form:hover {
+  transform: rotateZ(90deg);
+}
+.comment-form-field {
+  margin-bottom: 1rem;
+}
+.comment-textarea {
+  resize: vertical;
+  width: 100%;
+  padding: 0.5rem;
+  min-height: 90px;
+  background-color: #ececec;
+  border: none;
+  border-radius: 8px;
+}
+/* File Upload */
+.upload-box {
+  width: 100%;
+  border: 2px dashed var(--grey-color-light);
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.upload-box:hover {
+  border-color: #9ca3af;
+}
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  pointer-events: none; /* clicks go to parent */
+}
+.upload-icon {
+  width: 28px;
+  height: 28px;
+  opacity: 0.7;
+}
+.upload-text {
+  font-size: 0.9rem;
+  color: var(--grey-color);
+}
+.upload-preview {
+  max-width: 100%;
+  width: 100%;
+  object-fit: contain;
+  max-height: 250px;
+  border-radius: 8px;
+  margin-top: 0.5rem;
+}
+.post-comment {
+  background-color: var(--primary-color-light);
+  transition: all 0.3s;
+}
+.post-comment:hover {
+  background-color: var(--primary-color);
+  color: var(--white-background-light);
+}
+/* Error messages */
+.field-error {
+  color: #e63946;
+  font-size: 0.85rem;
+  margin-left: 3px;
+}
+
+/*--- Comments Section ---*/
+/* Comments and Topic have very similar styles,
+    we combine classes above */
+.comments-section {
+  margin-top: 2rem;
+}
+.comment-content {
+  margin-bottom: 2rem;
+}
+.comment-actions {
+  display: flex;
+  justify-content: end;
+  column-gap: 1rem;
+}
+
+@media only screen and (max-width: 800px) {
+  .topic-body-container {
+    padding: 0 2rem;
+  }
+  .add-comment {
+    width: 60%;
+  }
+}
+@media only screen and (max-width: 500px) {
+  .topic-body-container {
+    padding: 0 0.5rem;
+  }
+  .add-comment {
+    width: 100%;
+  }
+}
