@@ -1,0 +1,261 @@
+{{define "content"}}
+<div class="main-container">
+  <div class="topic-container">
+    <div class="topic-header">
+      <p class="post-title">{{ .Topic.Title }}</p>
+      <a href="/topics?category={{ .Category.ID }}" class="topic-category-link">
+        <div class="topic-category">
+          <span
+            class="topic-category-color"
+            style="background-color: {{ .Category.Color }}"
+          ></span>
+          <span class="topic-category-name">{{ .Category.Name }}</span>
+        </div>
+      </a>
+    </div>
+
+    <div class="topic-content">
+      <!-- Topic Header -->
+      <div class="topic-head">
+        <div class="post-meta">
+          <div class="topic-user-box">
+            <img
+              src="/static/images/user-avatar.png"
+              alt="Author Avatar"
+              class="author-avatar"
+            />
+          </div>
+          <span class="post-author-name">{{ .Topic.OwnerUsername }}</span>
+        </div>
+        <span class="post-date">{{ .Topic.CreatedAt }}</span>
+      </div>
+
+      <!-- Topic Body -->
+      <div class="topic-body-container">
+        <div class="topic-body">
+          <p class="post-text">{{ .Topic.Content }}</p>
+
+          <!-- Optional Image -->
+          {{ if .Topic.ImagePath }}
+          <div class="img-box">
+            <img
+              src="{{ .Topic.ImagePath }}"
+              alt="Post Image"
+              class="post-image"
+            />
+          </div>
+          {{ end }}
+        </div>
+
+        <!-- Post Reactions -->
+        <div class="reactions">
+          <div class="reaction-box">
+            <button class="btn like-btn">
+              <img
+                class="like-icon"
+                src="/static/images/icons/icon-like.png"
+                alt="Like the post"
+              />
+            </button>
+            <span class="like-count">{{ .Topic.UpvoteCount }}</span>
+          </div>
+
+          <div class="reaction-box">
+            <button class="btn dislike-btn">
+              <img
+                class="dislike-icon"
+                src="/static/images/icons/icon-dislike.png"
+                alt="Dislike the post"
+              />
+            </button>
+            <span class="dislike-count">{{ .Topic.DownvoteCount }}</span>
+          </div>
+
+          <div class="topic-extra-info">
+            <div class="views-box">
+              <span class="topic-views">Views</span>
+              <span class="views-count">0</span>
+            </div>
+
+            <div class="comments-box">
+              <span class="topic-comments">Comments</span>
+              <span class="comments-count">{{ len .Topic.Comments }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Post Actions (only show if user is the owner) -->
+    {{ if and .User (eq .User.ID .Topic.UserID) }}
+    <div class="post-actions">
+      <div class="author-choices">
+        <button class="action-btn btn-edit" data-type="topic">
+          Edit Topic
+        </button>
+        <button class="action-btn btn-delete" data-type="topic">
+          Delete Topic
+        </button>
+      </div>
+    </div>
+    {{ end }}
+
+    <!-- Edit Topic Form (hidden by default) -->
+    <div class="edit-form edit-topic-form" style="display: none">
+      <div class="comment-form-header">
+        <h3>Edit Topic</h3>
+        <button type="button" class="close-edit-form">✖</button>
+      </div>
+      <form class="topic-edit-form" data-topic-id="{{ .Topic.ID }}">
+        <div class="comment-form-field">
+          <input
+            class="input topic-title-input"
+            name="title"
+            type="text"
+            placeholder="Topic title..."
+            value="{{ .Topic.Title }}"
+            required
+          />
+        </div>
+        <div class="comment-form-field">
+          <textarea
+            class="input comment-textarea"
+            name="content"
+            rows="5"
+            placeholder="Edit your topic content..."
+            required
+          >
+{{ .Topic.Content }}</textarea
+          >
+        </div>
+        <button class="post-comment" type="submit">Save Changes</button>
+      </form>
+    </div>
+
+    <!-- Add Comment Button (only show if user is logged in) -->
+    {{ if .User }}
+    <div class="post-actions">
+      <button class="action-btn btn-comment">Add a Comment</button>
+    </div>
+
+    <!-- Add Comment Form -->
+    <div class="add-comment">
+      <div class="comment-form-header">
+        <h3>Create Comment</h3>
+        <button type="button" class="close-comment-form">✖</button>
+      </div>
+      <form class="comment-form" data-topic-id="{{ .Topic.ID }}">
+        <div class="comment-form-field">
+          <textarea
+            class="input comment-textarea"
+            name="content"
+            rows="5"
+            placeholder="Write your comment..."
+            required
+          ></textarea>
+          <div class="field-error" id="error-comment"></div>
+        </div>
+        <button class="post-comment" type="submit">Post Comment</button>
+      </form>
+    </div>
+    {{ end }}
+
+    <!-- Comments Section -->
+    {{ if .Topic.Comments }}
+    <div class="comments-section">
+      {{ range .Topic.Comments }}
+      <div class="comment-content" data-comment-id="{{ .ID }}">
+        <div class="comment-head">
+          <div class="comment-meta">
+            <div class="comment-img-box">
+              <img
+                src="/static/images/user-avatar.png"
+                alt="User Avatar"
+                class="comment-avatar"
+              />
+            </div>
+            <span class="comment-author">{{ .OwnerUsername }}</span>
+          </div>
+          <span class="comment-date">{{ .CreatedAt }}</span>
+        </div>
+
+        <div class="comment-body-container">
+          <div class="comment-body">
+            <p class="comment-text">{{ .Content }}</p>
+
+            <div class="reactions">
+              <div class="reaction-box">
+                <button class="btn like-btn">
+                  <img
+                    class="like-icon"
+                    src="/static/images/icons/icon-like.png"
+                    alt="Like the comment"
+                  />
+                </button>
+                <span class="like-count">{{ .UpvoteCount }}</span>
+              </div>
+
+              <div class="reaction-box">
+                <button class="btn dislike-btn">
+                  <img
+                    class="dislike-icon"
+                    src="/static/images/icons/icon-dislike.png"
+                    alt="Dislike the comment"
+                  />
+                </button>
+                <span class="dislike-count">{{ .DownvoteCount }}</span>
+              </div>
+            </div>
+
+            <!-- Comment Actions (only show if user is the owner) -->
+            {{ if and $.User (eq $.User.ID .UserID) }}
+            <div class="comment-actions">
+              <button
+                class="action-btn btn-edit"
+                data-type="comment"
+                data-comment-id="{{ .ID }}"
+              >
+                Edit
+              </button>
+              <button
+                class="action-btn btn-delete"
+                data-type="comment"
+                data-comment-id="{{ .ID }}"
+              >
+                Delete
+              </button>
+            </div>
+            {{ end }}
+          </div>
+        </div>
+
+        <!-- Edit Comment Form (hidden by default) -->
+        {{ if and $.User (eq $.User.ID .UserID) }}
+        <div class="edit-form edit-comment-form" style="display: none">
+          <div class="comment-form-header">
+            <h3>Edit Comment</h3>
+            <button type="button" class="close-edit-form">✖</button>
+          </div>
+          <form class="comment-edit-form" data-comment-id="{{ .ID }}">
+            <div class="comment-form-field">
+              <textarea
+                class="input comment-textarea"
+                name="content"
+                rows="5"
+                placeholder="Edit your comment..."
+                required
+              >
+                {{ .Content }}</textarea
+              >
+            </div>
+            <button class="post-comment" type="submit">Save Changes</button>
+          </form>
+        </div>
+        {{ end }}
+      </div>
+      {{ end }}
+    </div>
+    {{ end }}
+  </div>
+</div>
+{{end}}
