@@ -55,7 +55,7 @@ func (cs *ClientServer) HomePage(w http.ResponseWriter, r *http.Request) {
 
 	backendURL, err := createURLWithParams(backendGetCategoriesDomain, defaultCategoriesOptions)
 	if err != nil {
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		http.Error(w, "Error creating URL params", http.StatusInternalServerError)
 		return
 	}
 
@@ -64,13 +64,13 @@ func (cs *ClientServer) HomePage(w http.ResponseWriter, r *http.Request) {
 
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet, backendURL, nil)
 	if err != nil {
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		http.Error(w, "Error creating request", http.StatusInternalServerError)
 		return
 	}
 
 	backendResp, err := cs.HTTPClient.Do(httpReq)
 	if err != nil {
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		http.Error(w, "Error with the response", http.StatusInternalServerError)
 		return
 	}
 	defer backendResp.Body.Close()
@@ -78,7 +78,7 @@ func (cs *ClientServer) HomePage(w http.ResponseWriter, r *http.Request) {
 	var categoryData response
 	err = helpers.DecodeBackendResponse(backendResp, &categoryData)
 	if err != nil {
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		http.Error(w, "Error with decoding response into data struct", http.StatusInternalServerError)
 		return
 	}
 
@@ -97,7 +97,6 @@ func (cs *ClientServer) HomePage(w http.ResponseWriter, r *http.Request) {
 		"frontend/html/partials/footer.html",
 	)
 	if err != nil {
-		log.Println("Error loading home.html:", err)
 		templates.NotFoundHandler(w, r, "Failed to load page", http.StatusInternalServerError)
 		return
 	}

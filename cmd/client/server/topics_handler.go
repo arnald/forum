@@ -65,7 +65,7 @@ func (cs *ClientServer) TopicsPage(w http.ResponseWriter, r *http.Request) {
 
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet, backendURL, nil)
 	if err != nil {
-		http.Error(w, "Error making the request", http.StatusInternalServerError)
+		http.Error(w, "Error creating request", http.StatusInternalServerError)
 		return
 	}
 
@@ -79,7 +79,7 @@ func (cs *ClientServer) TopicsPage(w http.ResponseWriter, r *http.Request) {
 	var pageData topicsResponse
 	err = helpers.DecodeBackendResponse(backendResp, &pageData)
 	if err != nil {
-		http.Error(w, "Error decoding the response to json", http.StatusInternalServerError)
+		http.Error(w, "Error with decoding response into data struct", http.StatusInternalServerError)
 		return
 	}
 
