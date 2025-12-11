@@ -3,13 +3,16 @@
   <div class="topic-container">
     <div class="topic-header">
       <p class="post-title">{{ .Topic.Title }}</p>
-      <a href="/topics?category={{ .Category.ID }}" class="topic-category-link">
+      <a
+        href="/topics?category={{ .Topic.CategoryID }}"
+        class="topic-category-link"
+      >
         <div class="topic-category">
           <span
             class="topic-category-color"
-            style="background-color: {{ .Category.Color }}"
+            style="background-color: {{ .Topic.CategoryColor }}"
           ></span>
-          <span class="topic-category-name">{{ .Category.Name }}</span>
+          <span class="topic-category-name">{{ .Topic.CategoryName }}</span>
         </div>
       </a>
     </div>
