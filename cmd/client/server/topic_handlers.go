@@ -34,9 +34,9 @@ type topicPageResponse struct {
 }
 
 type topicPageData struct {
-	User     *domain.LoggedInUser `json:"user"`
-	Topic    domain.Topic         `json:"topic"`
-	Category domain.Category      `json:"category"`
+	User  *domain.LoggedInUser `json:"user"`
+	Topic domain.Topic         `json:"topic"`
+	// Category domain.Category      `json:"category"`
 }
 
 // TopicPage handles GET requests to /topic/{id}.
@@ -69,6 +69,7 @@ func (cs *ClientServer) TopicPage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error creating request", http.StatusInternalServerError)
 		return
 	}
+	// log.Printf("Request: %v", httpReq)
 
 	backendResp, err := cs.HTTPClient.Do(httpReq)
 	if err != nil {
@@ -94,6 +95,7 @@ func (cs *ClientServer) TopicPage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error with decoding response into data struct", http.StatusInternalServerError)
 		return
 	}
+	// log.Printf("Topic Data %v", topicData)
 
 	// For topic related data in template
 	topic := domain.Topic{
@@ -112,19 +114,20 @@ func (cs *ClientServer) TopicPage(w http.ResponseWriter, r *http.Request) {
 		OwnerUsername: topicData.OwnerUsername,
 		CategoryName:  topicData.CategoryName,
 		CategoryColor: helpers.NormalizeColor(topicData.CategoryColor),
+		Comments:      topicData.Comments,
 	}
 
-	// For category related data in template
-	category := domain.Category{
-		ID:    topicData.CategoryID,
-		Name:  topicData.CategoryName,
-		Color: helpers.NormalizeColor(topicData.CategoryColor),
-	}
+	// // For category related data in template
+	// category := domain.Category{
+	// 	ID:    topicData.CategoryID,
+	// 	Name:  topicData.CategoryName,
+	// 	Color: helpers.NormalizeColor(topicData.CategoryColor),
+	// }
 
 	pageData := &topicPageData{
-		User:     middleware.GetUserFromContext(r.Context()),
-		Topic:    topic,
-		Category: category,
+		User:  middleware.GetUserFromContext(r.Context()),
+		Topic: topic,
+		// Category: category,
 	}
 
 	tmpl, err := template.ParseFiles(

@@ -139,6 +139,8 @@ func (r Repo) GetTopicByID(ctx context.Context, topicID int, userID *string) (*t
 	SELECT
 		t.id, t.user_id, t.title, t.content, t.image_path, t.category_id, t.created_at, t.updated_at,
 		u.username,
+		c.name as category_name,
+		c.color as category_color,
 		COALESCE(vote_counts.upvotes, 0) as upvote_count,
 		COALESCE(vote_counts.downvotes, 0) as downvote_count,
 		COALESCE(vote_counts.score, 0) as vote_score`
@@ -151,6 +153,7 @@ func (r Repo) GetTopicByID(ctx context.Context, topicID int, userID *string) (*t
 	query += `
 	FROM topics t
 	LEFT JOIN users u ON t.user_id = u.id
+	LEFT JOIN categories c ON t.category_id = c.id
 	LEFT JOIN (
 		SELECT
 			topic_id,
@@ -191,6 +194,8 @@ func (r Repo) GetTopicByID(ctx context.Context, topicID int, userID *string) (*t
 		&topicResult.CreatedAt,
 		&topicResult.UpdatedAt,
 		&topicResult.OwnerUsername,
+		&topicResult.CategoryName,
+		&topicResult.CategoryColor,
 		&topicResult.UpvoteCount,
 		&topicResult.DownvoteCount,
 		&topicResult.VoteScore,

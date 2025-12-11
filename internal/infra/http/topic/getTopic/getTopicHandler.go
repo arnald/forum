@@ -17,19 +17,21 @@ import (
 )
 
 type ResponseModel struct {
-	UserVote   *int              `json:"userVote"`
-	Content    string            `json:"content"`
-	ImagePath  string            `json:"imagePath"`
-	UserID     string            `json:"userId"`
-	CreatedAt  string            `json:"createdAt"`
-	UpdatedAt  string            `json:"updatedAt"`
-	Title      string            `json:"title"`
-	Comments   []comment.Comment `json:"comments"`
-	CategoryID int               `json:"categoryId"`
-	Upvotes    int               `json:"upvotes"`
-	Downvotes  int               `json:"downvotes"`
-	Score      int               `json:"score"`
-	TopicID    int               `json:"topicId"`
+	UserVote      *int              `json:"userVote"`
+	Content       string            `json:"content"`
+	ImagePath     string            `json:"imagePath"`
+	UserID        string            `json:"userId"`
+	CreatedAt     string            `json:"createdAt"`
+	UpdatedAt     string            `json:"updatedAt"`
+	Title         string            `json:"title"`
+	CategoryName  string            `json:"categoryName"`
+	CategoryColor string            `json:"categoryColor"`
+	Comments      []comment.Comment `json:"comments"`
+	CategoryID    int               `json:"categoryId"`
+	Upvotes       int               `json:"upvotes"`
+	Downvotes     int               `json:"downvotes"`
+	Score         int               `json:"score"`
+	TopicID       int               `json:"topicId"`
 }
 
 type Handler struct {
@@ -107,19 +109,21 @@ func (h *Handler) GetTopic(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := ResponseModel{
-		TopicID:    topic.ID,
-		CategoryID: topic.CategoryID,
-		Title:      topic.Title,
-		Content:    topic.Content,
-		ImagePath:  topic.ImagePath,
-		UserID:     topic.UserID,
-		CreatedAt:  topic.CreatedAt,
-		UpdatedAt:  topic.UpdatedAt,
-		Comments:   topic.Comments,
-		Upvotes:    topic.UpvoteCount,
-		Downvotes:  topic.DownvoteCount,
-		Score:      topic.VoteScore,
-		UserVote:   topic.UserVote,
+		TopicID:       topic.ID,
+		CategoryID:    topic.CategoryID,
+		CategoryName:  topic.CategoryName,
+		CategoryColor: topic.CategoryColor,
+		Title:         topic.Title,
+		Content:       topic.Content,
+		ImagePath:     topic.ImagePath,
+		UserID:        topic.UserID,
+		CreatedAt:     topic.CreatedAt,
+		UpdatedAt:     topic.UpdatedAt,
+		Comments:      topic.Comments,
+		Upvotes:       topic.UpvoteCount,
+		Downvotes:     topic.DownvoteCount,
+		Score:         topic.VoteScore,
+		UserVote:      topic.UserVote,
 	}
 
 	helpers.RespondWithJSON(w, http.StatusOK, nil, response)
