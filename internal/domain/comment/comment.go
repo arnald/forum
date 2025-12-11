@@ -1,10 +1,8 @@
 package comment
 
-import "time"
-
 type Comment struct {
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
+	CreatedAt     string
+	UpdatedAt     string
 	UserVote      *int
 	UserID        string
 	Content       string
