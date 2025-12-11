@@ -161,10 +161,11 @@ func (r *Repo) PopulateCategoriesWithTopics(ctx context.Context, categories []ca
 			return nil, fmt.Errorf("scan topics failed: %w", err)
 		}
 
+		// Format Date
 		if topic.CreatedAt != "" {
 			t, parseErr := time.Parse(time.RFC3339, topic.CreatedAt)
 			if parseErr == nil {
-				topic.CreatedAt = t.Format("Jan 2006")
+				topic.CreatedAt = t.Format("02/01/2006")
 			}
 		}
 

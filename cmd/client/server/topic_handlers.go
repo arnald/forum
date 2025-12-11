@@ -36,7 +36,6 @@ type topicPageResponse struct {
 type topicPageData struct {
 	User  *domain.LoggedInUser `json:"user"`
 	Topic domain.Topic         `json:"topic"`
-	// Category domain.Category      `json:"category"`
 }
 
 // TopicPage handles GET requests to /topic/{id}.
@@ -117,17 +116,9 @@ func (cs *ClientServer) TopicPage(w http.ResponseWriter, r *http.Request) {
 		Comments:      topicData.Comments,
 	}
 
-	// // For category related data in template
-	// category := domain.Category{
-	// 	ID:    topicData.CategoryID,
-	// 	Name:  topicData.CategoryName,
-	// 	Color: helpers.NormalizeColor(topicData.CategoryColor),
-	// }
-
 	pageData := &topicPageData{
 		User:  middleware.GetUserFromContext(r.Context()),
 		Topic: topic,
-		// Category: category,
 	}
 
 	tmpl, err := template.ParseFiles(

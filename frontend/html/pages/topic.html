@@ -2,7 +2,6 @@
 <div class="main-container">
   <div class="topic-container">
     <div class="topic-header">
-      <p class="post-title">{{ .Topic.Title }}</p>
       <a
         href="/topics?category={{ .Topic.CategoryID }}"
         class="topic-category-link"
@@ -19,6 +18,7 @@
 
     <div class="topic-content">
       <!-- Topic Header -->
+      <p class="post-title">{{ .Topic.Title }}</p>
       <div class="topic-head">
         <div class="post-meta">
           <div class="topic-user-box">
@@ -28,7 +28,8 @@
               class="author-avatar"
             />
           </div>
-          <span class="post-author-name">{{ .Topic.OwnerUsername }}</span>
+          <!-- <span class="post-author-name">{{ .Topic.OwnerUsername }}</span> -->
+          <span class="post-author-name">{{ .Topic.UserID }}</span>
         </div>
         <span class="post-date">{{ .Topic.CreatedAt }}</span>
       </div>
@@ -76,8 +77,8 @@
 
           <div class="topic-extra-info">
             <div class="views-box">
-              <span class="topic-views">Views</span>
-              <span class="views-count">0</span>
+              <span class="topic-views">Vote Score</span>
+              <span class="views-count">{{ .Topic.VoteScore }}</span>
             </div>
 
             <div class="comments-box">

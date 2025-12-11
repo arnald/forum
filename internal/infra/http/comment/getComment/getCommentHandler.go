@@ -92,8 +92,8 @@ func (h *Handler) GetComment(w http.ResponseWriter, r *http.Request) {
 		Username:  comment.OwnerUsername,
 		TopicID:   comment.TopicID,
 		Content:   comment.Content,
-		CreatedAt: comment.CreatedAt.Format("2006-01-02 15:04:05"),
-		UpdatedAt: comment.UpdatedAt.Format("2006-01-02 15:04:05"),
+		CreatedAt: comment.CreatedAt,
+		UpdatedAt: comment.UpdatedAt,
 	}
 
 	helpers.RespondWithJSON(w, http.StatusOK, nil, response)
