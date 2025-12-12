@@ -21,6 +21,7 @@ type ResponseModel struct {
 	Content       string            `json:"content"`
 	ImagePath     string            `json:"imagePath"`
 	UserID        string            `json:"userId"`
+	OwnerUsername string            `json:"ownerUsername"`
 	CreatedAt     string            `json:"createdAt"`
 	UpdatedAt     string            `json:"updatedAt"`
 	Title         string            `json:"title"`
@@ -117,6 +118,7 @@ func (h *Handler) GetTopic(w http.ResponseWriter, r *http.Request) {
 		Content:       topic.Content,
 		ImagePath:     topic.ImagePath,
 		UserID:        topic.UserID,
+		OwnerUsername: topic.OwnerUsername,
 		CreatedAt:     topic.CreatedAt,
 		UpdatedAt:     topic.UpdatedAt,
 		Comments:      topic.Comments,

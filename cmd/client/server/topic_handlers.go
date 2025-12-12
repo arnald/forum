@@ -14,23 +14,29 @@ import (
 	"github.com/arnald/forum/cmd/client/middleware"
 )
 
+const minURLPathLength = 2
+
 type topicPageResponse struct {
-	TopicID       int              `json:"topicId"`
-	CategoryID    int              `json:"categoryId"`
-	Title         string           `json:"title"`
-	Content       string           `json:"content"`
+	UserVote      *int             `json:"userVote"`
 	ImagePath     string           `json:"imagePath"`
+	OwnerUsername string           `json:"ownerUsername"`
+	Content       string           `json:"content"`
+	CategoryColor string           `json:"categoryColor"`
 	UserID        string           `json:"userId"`
 	CreatedAt     string           `json:"createdAt"`
+	Title         string           `json:"title"`
+	CategoryName  string           `json:"categoryName"`
 	UpdatedAt     string           `json:"updatedAt"`
 	Comments      []domain.Comment `json:"comments"`
 	Upvotes       int              `json:"upvotes"`
+	CategoryID    int              `json:"categoryId"`
 	Downvotes     int              `json:"downvotes"`
 	Score         int              `json:"score"`
-	UserVote      *int             `json:"userVote"`
-	OwnerUsername string           `json:"ownerUsername"`
-	CategoryName  string           `json:"categoryName"`
-	CategoryColor string           `json:"categoryColor"`
+	TopicID       int              `json:"topicId"`
+}
+
+type topicPageRequest struct {
+	TopicID string `url:"id"`
 }
 
 type topicPageData struct {
@@ -46,7 +52,7 @@ func (cs *ClientServer) TopicPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pathParts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
-	if len(pathParts) < 2 {
+	if len(pathParts) < minURLPathLength {
 		templates.NotFoundHandler(w, r, "Invalid topic URL", http.StatusBadRequest)
 		return
 	}
@@ -58,7 +64,15 @@ func (cs *ClientServer) TopicPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	backendURL := backendGetTopicByID + "?id=" + topicIDStr
+	requestID := &topicPageRequest{
+		TopicID: topicIDStr,
+	}
+
+	backendURL, err := createURLWithParams(backendGetTopicByID, requestID)
+	if err != nil {
+		http.Error(w, "Error creating URL params", http.StatusInternalServerError)
+		return
+	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), requestTimeout)
 	defer cancel()
@@ -68,7 +82,6 @@ func (cs *ClientServer) TopicPage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error creating request", http.StatusInternalServerError)
 		return
 	}
-	// log.Printf("Request: %v", httpReq)
 
 	backendResp, err := cs.HTTPClient.Do(httpReq)
 	if err != nil {
