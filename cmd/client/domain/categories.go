@@ -52,15 +52,15 @@ type Topic struct {
 }
 
 type Comment struct {
-	ID            int    `json:"id"`
-	TopicID       int    `json:"topicId"`
+	UserVote      *int   `json:"userVote,omitempty"`
 	UserID        string `json:"userId"`
 	Content       string `json:"content"`
 	CreatedAt     string `json:"createdAt"`
 	UpdatedAt     string `json:"updatedAt"`
 	OwnerUsername string `json:"ownerUsername"`
+	ID            int    `json:"id"`
+	TopicID       int    `json:"topicId"`
 	UpvoteCount   int    `json:"upvoteCount"`
 	DownvoteCount int    `json:"downvoteCount"`
 	VoteScore     int    `json:"voteScore"`
-	UserVote      *int   `json:"userVote,omitempty"`
 }

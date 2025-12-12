@@ -25,7 +25,7 @@ INSERT OR IGNORE INTO topics (user_id, category_id, title, content, image_path) 
 
 -- Comments
 INSERT OR IGNORE INTO comments (user_id, topic_id, content) VALUES
-('df16d238-e4dd-4645-9101-54aed9c0fbf4', 1, 'This is a comment on the welcome topic.'),
+('f1433622-9c10-44e5-94b1-1f6a148c9131', 1, 'This is a comment on the welcome topic.'),
 ('000dec3a-51af-4e7c-ae0c-21436a0a2395', 2, 'I really like the new features!'),
 ('f1433622-9c10-44e5-94b1-1f6a148c9131', 3, 'These guidelines are very helpful.');
 
