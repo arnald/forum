@@ -67,6 +67,11 @@ func (cs *ClientServer) SetupRoutes() {
 	// Topic detail page
 	cs.Router.HandleFunc("/topic/", applyMiddleware(cs.TopicPage, authMiddleware))
 
+	// Vote API routes (these are API endpoints, not pages)
+	cs.Router.HandleFunc("/api/vote/cast", applyMiddleware(cs.CastVote, middleware.RequireAuth, authMiddleware))
+	cs.Router.HandleFunc("/api/vote/counts", applyMiddleware(cs.GetVoteCounts, authMiddleware))
+	cs.Router.HandleFunc("/api/vote/delete", applyMiddleware(cs.DeleteVote, middleware.RequireAuth, authMiddleware))
+
 	// Register page
 	cs.Router.HandleFunc("/register",
 		applyMiddleware(func(w http.ResponseWriter, r *http.Request) {
