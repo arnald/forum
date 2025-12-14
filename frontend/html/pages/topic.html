@@ -190,7 +190,7 @@
         <h3>Create Comment</h3>
         <button type="button" class="close-comment-form">✖</button>
       </div>
-      <form enctype="multipart/form-data" class="comment-form" novalidate>
+      <form class="comment-form">
         <input type="hidden" name="topic_id" value="{{ .Topic.ID }}" />
         <div class="comment-form-field">
           <textarea
