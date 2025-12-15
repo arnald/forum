@@ -135,23 +135,83 @@
   border-radius: 8px;
   cursor: pointer;
 }
-.reaction-box:hover,
+/* .reaction-box:hover,
 .reaction-box:hover .btn {
   background-color: var(--primary-color-light);
-}
-.reaction-box .like-icon {
+} */
+/* .reaction-box .like-icon {
   width: 25px;
   height: 25px;
 }
 .reaction-box .dislike-icon {
   width: 28px;
   height: 28px;
-}
+} */
 .btn {
   font-size: 1.1rem;
   border: none;
   cursor: pointer;
   background-color: var(--white-background-light);
+}
+.like-btn:hover,
+.dislike-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  transform: scale(1.1);
+}
+.like-btn:active,
+.dislike-btn:active {
+  transform: scale(0.95);
+}
+/* Active state when user has voted */
+.like-btn.active {
+  background-color: rgba(76, 175, 80, 0.1);
+}
+.dislike-btn.active {
+  background-color: rgba(244, 67, 54, 0.1);
+}
+.like-btn.active .like-icon {
+  filter: brightness(0) saturate(100%) invert(55%) sepia(73%) saturate(471%)
+    hue-rotate(76deg) brightness(95%) contrast(87%);
+}
+.dislike-btn.active .dislike-icon {
+  filter: brightness(0) saturate(100%) invert(35%) sepia(96%) saturate(3249%)
+    hue-rotate(347deg) brightness(95%) contrast(93%);
+}
+.like-icon,
+.dislike-icon {
+  width: 20px;
+  height: 20px;
+  transition: filter 0.2s ease;
+}
+.like-count,
+.dislike-count {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #333;
+  min-width: 20px;
+  text-align: center;
+}
+/* Disable pointer events while request is processing */
+.reaction-box.loading {
+  pointer-events: none;
+  opacity: 0.6;
+}
+/* Animation for count changes */
+@keyframes countUpdate {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.like-count.updating,
+.dislike-count.updating {
+  animation: countUpdate 0.3s ease;
 }
 .views-box,
 .comments-box {
