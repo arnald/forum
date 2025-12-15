@@ -33,7 +33,23 @@ type Logo struct {
 }
 
 type Topic struct {
+<<<<<<< HEAD
 	Title     string `json:"title"`
 	CreatedAt string `json:"createdAt"`
 	ID        int    `json:"id"`
+=======
+	ID            int    `json:"id"`
+	UserID        string `json:"userId"`
+	Title         string `json:"title"`
+	Content       string `json:"content"`
+	ImagePath     string `json:"imagePath"`
+	CategoryID    int    `json:"categoryId"`
+	CreatedAt     string `json:"createdAt"`
+	UpdatedAt     string `json:"updatedAt"`
+	OwnerUsername string `json:"ownerUsername"`
+	UpvoteCount   int    `json:"upvoteCount"`
+	DownvoteCount int    `json:"downvoteCount"`
+	VoteScore     int    `json:"voteScore"`
+	UserVote      *int   `json:"userVote,omitempty"`
+>>>>>>> 6bfb59c (change frontend topic struct to match the backend, add backend endpoint to take all topics)
 }
