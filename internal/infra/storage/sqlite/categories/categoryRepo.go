@@ -161,10 +161,11 @@ func (r *Repo) PopulateCategoriesWithTopics(ctx context.Context, categories []ca
 			return nil, fmt.Errorf("scan topics failed: %w", err)
 		}
 
+		// Format Date
 		if topic.CreatedAt != "" {
 			t, parseErr := time.Parse(time.RFC3339, topic.CreatedAt)
 			if parseErr == nil {
-				topic.CreatedAt = t.Format("Jan 2006")
+				topic.CreatedAt = t.Format("02/01/2006")
 			}
 		}
 
@@ -297,4 +298,46 @@ func (r *Repo) UpdateCategory(ctx context.Context, category *category.Category) 
 		return fmt.Errorf("category with ID %d not found: %w", category.ID, ErrCategoryNotFound)
 	}
 	return nil
+}
+
+func (r *Repo) GetAllCategorieNamesAndIDs(ctx context.Context) ([]category.Category, error) {
+	query := `
+	SELECT id, name, color
+	FROM categories`
+
+	stmt, err := r.DB.PrepareContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to prepare statement: %w", err)
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.QueryContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execture query: %w", err)
+	}
+	defer rows.Close()
+
+	categories := make([]category.Category, 0)
+
+	for rows.Next() {
+		var category category.Category
+
+		err = rows.Scan(
+			&category.ID,
+			&category.Name,
+			&category.Color,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("scan categories failed: %w", err)
+		}
+
+		categories = append(categories, category)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return nil, fmt.Errorf("category rows iteration failed: %w", err)
+	}
+
+	return categories, nil
 }

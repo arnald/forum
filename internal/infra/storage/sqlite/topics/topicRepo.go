@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/arnald/forum/internal/domain/comment"
 	"github.com/arnald/forum/internal/domain/topic"
@@ -138,6 +139,8 @@ func (r Repo) GetTopicByID(ctx context.Context, topicID int, userID *string) (*t
 	SELECT
 		t.id, t.user_id, t.title, t.content, t.image_path, t.category_id, t.created_at, t.updated_at,
 		u.username,
+		c.name as category_name,
+		c.color as category_color,
 		COALESCE(vote_counts.upvotes, 0) as upvote_count,
 		COALESCE(vote_counts.downvotes, 0) as downvote_count,
 		COALESCE(vote_counts.score, 0) as vote_score`
@@ -150,6 +153,7 @@ func (r Repo) GetTopicByID(ctx context.Context, topicID int, userID *string) (*t
 	query += `
 	FROM topics t
 	LEFT JOIN users u ON t.user_id = u.id
+	LEFT JOIN categories c ON t.category_id = c.id
 	LEFT JOIN (
 		SELECT
 			topic_id,
@@ -190,6 +194,8 @@ func (r Repo) GetTopicByID(ctx context.Context, topicID int, userID *string) (*t
 		&topicResult.CreatedAt,
 		&topicResult.UpdatedAt,
 		&topicResult.OwnerUsername,
+		&topicResult.CategoryName,
+		&topicResult.CategoryColor,
 		&topicResult.UpvoteCount,
 		&topicResult.DownvoteCount,
 		&topicResult.VoteScore,
@@ -211,6 +217,21 @@ func (r Repo) GetTopicByID(ctx context.Context, topicID int, userID *string) (*t
 			return nil, fmt.Errorf("topic with ID %d not found: %w", topicID, ErrTopicNotFound)
 		}
 		return nil, fmt.Errorf("failed to get topic: %w", err)
+	}
+
+	// Format Dates
+	if topicResult.CreatedAt != "" {
+		t, parseErr := time.Parse(time.RFC3339, topicResult.CreatedAt)
+		if parseErr == nil {
+			topicResult.CreatedAt = t.Format("02/01/2006")
+		}
+	}
+
+	if topicResult.UpdatedAt != "" {
+		t, parseErr := time.Parse(time.RFC3339, topicResult.UpdatedAt)
+		if parseErr == nil {
+			topicResult.UpdatedAt = t.Format("02/01/2006")
+		}
 	}
 
 	if userID != nil && userVote.Valid {
@@ -254,6 +275,8 @@ func (r Repo) GetAllTopics(ctx context.Context, page, size, categoryID int, orde
     SELECT 
         t.id, t.user_id, t.title, t.content, t.image_path, t.category_id, t.created_at, t.updated_at,
         u.username,
+		c.name as category_name,
+		c.color as category_color,
 		COALESCE(vote_counts.upvotes, 0) as upvote_count,
 		COALESCE(vote_counts.downvotes, 0) as downvote_count,
 		COALESCE(vote_counts.score, 0) as vote_score
@@ -268,6 +291,7 @@ func (r Repo) GetAllTopics(ctx context.Context, page, size, categoryID int, orde
 	query += `
 	FROM topics t
 	LEFT JOIN users u ON t.user_id = u.id
+	LEFT JOIN categories c ON t.category_id = c.id
 	LEFT JOIN (
 		SELECT
 			topic_id,
@@ -305,7 +329,13 @@ func (r Repo) GetAllTopics(ctx context.Context, page, size, categoryID int, orde
 		args = append(args, categoryID)
 	}
 
-	query += " ORDER BY t." + orderBy + " " + order + " LIMIT ? OFFSET ?"
+	orderByClause := "t." + orderBy
+
+	if orderBy == "vote_score" {
+		orderByClause = "vote_counts.score"
+	}
+
+	query += " ORDER BY " + orderByClause + " " + order + " LIMIT ? OFFSET ?"
 	offset := (page - 1) * size
 	args = append(args, size, offset)
 
@@ -336,6 +366,8 @@ func (r Repo) GetAllTopics(ctx context.Context, page, size, categoryID int, orde
 			&topic.CreatedAt,
 			&topic.UpdatedAt,
 			&topic.OwnerUsername,
+			&topic.CategoryName,
+			&topic.CategoryColor,
 			&topic.UpvoteCount,
 			&topic.DownvoteCount,
 			&topic.VoteScore,
@@ -348,6 +380,21 @@ func (r Repo) GetAllTopics(ctx context.Context, page, size, categoryID int, orde
 		err = rows.Scan(scanFields...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan row: %w", err)
+		}
+
+		// Format dates
+		if topic.CreatedAt != "" {
+			t, parseErr := time.Parse(time.RFC3339, topic.CreatedAt)
+			if parseErr == nil {
+				topic.CreatedAt = t.Format("02/01/2006")
+			}
+		}
+
+		if topic.UpdatedAt != "" {
+			t, parseErr := time.Parse(time.RFC3339, topic.UpdatedAt)
+			if parseErr == nil {
+				topic.UpdatedAt = t.Format("02/01/2006")
+			}
 		}
 
 		if userID != nil && userVote.Valid {

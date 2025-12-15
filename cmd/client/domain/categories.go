@@ -33,7 +33,34 @@ type Logo struct {
 }
 
 type Topic struct {
-	Title     string `json:"title"`
-	CreatedAt string `json:"createdAt"`
-	ID        int    `json:"id"`
+	UserVote      *int      `json:"userVote,omitempty"`
+	UserID        string    `json:"userId"`
+	Content       string    `json:"content"`
+	ImagePath     string    `json:"imagePath"`
+	Title         string    `json:"title"`
+	CategoryColor string    `json:"categoryColor"`
+	CategoryName  string    `json:"categoryName"`
+	CreatedAt     string    `json:"createdAt"`
+	UpdatedAt     string    `json:"updatedAt"`
+	OwnerUsername string    `json:"ownerUsername"`
+	Comments      []Comment `json:"comments"`
+	CategoryID    int       `json:"categoryId"`
+	VoteScore     int       `json:"voteScore"`
+	DownvoteCount int       `json:"downvoteCount"`
+	UpvoteCount   int       `json:"upvoteCount"`
+	ID            int       `json:"id"`
+}
+
+type Comment struct {
+	UserVote      *int   `json:"userVote,omitempty"`
+	UserID        string `json:"userId"`
+	Content       string `json:"content"`
+	CreatedAt     string `json:"createdAt"`
+	UpdatedAt     string `json:"updatedAt"`
+	OwnerUsername string `json:"ownerUsername"`
+	ID            int    `json:"id"`
+	TopicID       int    `json:"topicId"`
+	UpvoteCount   int    `json:"upvoteCount"`
+	DownvoteCount int    `json:"downvoteCount"`
+	VoteScore     int    `json:"voteScore"`
 }

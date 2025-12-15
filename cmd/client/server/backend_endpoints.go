@@ -16,4 +16,6 @@ const (
 	backendGithubRegister      = backendAPIBase + "/auth/github/login"
 	backendGooglebRegister     = backendAPIBase + "/auth/google/login"
 	backendGetCategoriesDomain = backendAPIBase + "/categories/all"
+	backendGetTopicsDomain     = backendAPIBase + "/topics/all"
+	backendGetTopicByID        = backendAPIBase + "/topic"
 )

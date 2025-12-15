@@ -254,6 +254,7 @@ func validOrderBy(value any) (bool, string) {
 		"created_at": true,
 		"updated_at": true,
 		"title":      true,
+		"vote_score": true,
 	}
 
 	str, ok := value.(string)

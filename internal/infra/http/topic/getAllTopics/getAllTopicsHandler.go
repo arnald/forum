@@ -8,6 +8,7 @@ import (
 	"github.com/arnald/forum/internal/app"
 	topicQueries "github.com/arnald/forum/internal/app/topics/queries"
 	"github.com/arnald/forum/internal/config"
+	"github.com/arnald/forum/internal/domain/category"
 	"github.com/arnald/forum/internal/domain/topic"
 	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/infra/middleware"
@@ -18,6 +19,7 @@ import (
 type ResponseModel struct {
 	Filters    map[string]interface{}   `json:"filters"`
 	Topics     []topic.Topic            `json:"topics"`
+	Categories []category.Category      `json:"categories"`
 	Pagination helpers.PaginationParams `json:"pagination"`
 }
 
@@ -82,7 +84,7 @@ func (h *Handler) GetAllTopics(w http.ResponseWriter, r *http.Request) {
 		)
 		return
 	}
-	topics, totalCount, err := h.UserServices.UserServices.Queries.GetAllTopics.Handle(ctx, topicQueries.GetAllTopicsRequest{
+	allTopics, err := h.UserServices.UserServices.Queries.GetAllTopics.Handle(ctx, topicQueries.GetAllTopicsRequest{
 		Page:       pagination.Page,
 		Size:       pagination.Limit,
 		Offset:     pagination.Offset,
@@ -98,12 +100,12 @@ func (h *Handler) GetAllTopics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	totalPages := (totalCount + pagination.Limit - 1) / pagination.Limit
+	totalPages := (allTopics.Count + pagination.Limit - 1) / pagination.Limit
 
 	paginationMeta := map[string]interface{}{
 		"page":        pagination.Page,
 		"limit":       pagination.Limit,
-		"total":       totalCount,
+		"total":       allTopics.Count,
 		"total_pages": totalPages,
 		"has_next":    pagination.Page < totalPages,
 		"has_prev":    pagination.Page > 1,
@@ -125,16 +127,17 @@ func (h *Handler) GetAllTopics(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := map[string]interface{}{
-		"topics":     topics,
+		"topics":     allTopics.Topics,
 		"pagination": paginationMeta,
 		"filters":    appliedFilters,
+		"categories": allTopics.Categories,
 	}
 
 	helpers.RespondWithJSON(w, http.StatusOK, nil, response)
 
 	h.Logger.PrintInfo("Topics retrieved successfully", map[string]string{
 		"page":  strconv.Itoa(pagination.Page),
-		"count": strconv.Itoa(len(topics)),
-		"total": strconv.Itoa(totalCount),
+		"count": strconv.Itoa(len(allTopics.Topics)),
+		"total": strconv.Itoa(allTopics.Count),
 	})
 }

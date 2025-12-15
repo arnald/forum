@@ -31,6 +31,13 @@ body {
   background: linear-gradient(to right bottom, #0072ff, #00c6ff);
 }
 
+h1,
+h2,
+h3 {
+  font-family: "Poppins", Impact, Haettenschweiler, "Arial Narrow Bold",
+    sans-serif;
+}
+
 h1 {
   font-size: 3.5rem;
   color: var(--dark-background);

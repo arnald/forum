@@ -1,0 +1,160 @@
+{{ define "content" }}
+<div class="main-container">
+  <div class="category-container">
+    <div class="category-content">
+      <h1 class="forum-title">All Topics</h1>
+
+      <!-- Search and Filter Section -->
+      <div class="topics-filter-section">
+        <form method="GET" action="/topics" class="topics-filter-form">
+          <!-- Search Bar -->
+          <div class="search-wrapper">
+            <input 
+            type="text" 
+            name="search" 
+            placeholder="Search topics..." 
+            value="{{ index .Filters "search" }}"
+            maxlength="100" 
+            class="search-input"
+            />
+            <button type="submit" class="search-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Filter Controls -->
+          <div class="filter-controls">
+            <div class="filter-group">
+              <label for="category">Category:</label>
+              <select name="category" id="category" class="filter-select">
+                <option value="0">All Categories</option>
+                {{ range .Categories }}
+                <option value="{{ .ID }}" {{ if eq (index $.Filters "category") .ID }}selected{{ end }}>
+                  {{ .Name }}
+                </option>
+                {{ end }}
+              </select>
+            </div>
+            
+            <div class="filter-group">
+              <label for="order_by">Sort by:</label>
+              <select name="order_by" id="order_by" class="filter-select">
+                <option value="created_at" {{ if eq (index $.Filters "order_by") "created_at" }}selected{{ end }}>Date Created</option>
+                <option value="updated_at" {{ if eq (index $.Filters "order_by") "updated_at" }}selected{{ end }}>Last Updated</option>
+                <option value="title" {{ if eq (index $.Filters "order_by") "title" }}selected{{ end }}>Title</option>
+                <option value="vote_score" {{ if eq (index $.Filters "order_by") "vote_score" }}selected{{ end }}>Most Popular</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="order">Order:</label>
+              <select name="order" id="order" class="filter-select">
+                <option value="desc" {{ if eq (index $.Filters "order") "desc" }}selected{{ end }}>Descending</option>
+                <option value="asc" {{ if eq (index $.Filters "order") "asc" }}selected{{ end }}>Ascending</option>
+              </select>
+            </div>
+
+            <div class="filter-buttons">
+              <button type="submit" class="apply-btn">Apply</button>
+              <a href="/topics" class="clear-btn">Clear</a>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Topic List -->
+      <div class="topic-list">
+        <div class="topic-row">
+          <div class="head-wrapper">
+            <span class="topic-title-head">TOPIC</span>
+            <div class="other-heads">
+              <span class="topic-poster-head">AUTHOR</span>
+              <span class="topic-replies-head">SCORE</span>
+              <span class="topic-replies-head">UPDATED</span>
+            </div>
+          </div>
+        </div>
+
+        {{ if .Topics }}
+          {{ range .Topics }}
+          <div class="topic-row">
+            <div class="topic-content-wrapper">
+              <div class="topic-text">
+                <div class="color-category">
+                  <span class="category-color" style="background-color: {{ .CategoryColor }}"></span>
+                  <span class="category-name">{{ .CategoryName }}</span>
+                </div>
+                <div class="topic-title">
+                  <a href="/topic/{{ .ID }}">{{ .Title }}</a>
+                  <p class="topic-preview">{{ truncate .Content 100 }}</p>
+                </div>
+              </div>
+
+              <div class="topic-meta">
+                <span class="topic-author">{{ .OwnerUsername }}</span>
+                <span class="topic-score">
+                  <span class="upvotes">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 32 32"><path d="M27 11h-8.52L19 9.8A6.42 6.42 0 0 0 13 1a1 1 0 0 0-.93.63L8.32 11H5a3 3 0 0 0-3 3v14a3 3 0 0 0 3 3h18.17a3 3 0 0 0 2.12-.88l3.83-3.83a3 3 0 0 0 .88-2.12V14a3 3 0 0 0-3-3zM4 28V14a1 1 0 0 1 1-1h3v16H5a1 1 0 0 1-1-1zm24-3.83a1 1 0 0 1-.29.71l-3.83 3.83a1.05 1.05 0 0 1-.71.29H10V12.19l3.66-9.14a4.31 4.31 0 0 1 3 1.89 4.38 4.38 0 0 1 .44 4.12l-1 2.57A1 1 0 0 0 17 13h10a1 1 0 0 1 1 1z" data-name="thumb up android app aplication phone"/></svg>
+                    <span class="like-count">{{ .UpvoteCount }}</span></span>
+                  <span class="downvotes"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 32 32"><path d="m29.12 5.71-3.83-3.83A3 3 0 0 0 23.17 1H5a3 3 0 0 0-3 3v14a3 3 0 0 0 3 3h3.32l3.75 9.37A1 1 0 0 0 13 31a6.42 6.42 0 0 0 6-8.8l-.52-1.2H27a3 3 0 0 0 3-3V7.83a3 3 0 0 0-.88-2.12zM4 18V4a1 1 0 0 1 1-1h3v16H5a1 1 0 0 1-1-1zm24 0a1 1 0 0 1-1 1H17a1 1 0 0 0-.93 1.37l1 2.57a4.38 4.38 0 0 1-.44 4.12 4.31 4.31 0 0 1-3 1.89L10 19.81V3h13.17a1 1 0 0 1 .71.29l3.83 3.83a1 1 0 0 1 .29.71z" data-name="thumb down android app aplication phone"/></svg>
+                    <span class="dislike-count">{{ .DownvoteCount }}</span></span>
+                </span>
+                <span class="topic-date">{{ .UpdatedAt }}</span>
+              </div>
+            </div>
+          </div>
+          {{ end }}
+        {{ else }}
+          <div class="no-topics-message">
+            <p>No topics found matching your criteria.</p>
+          </div>
+        {{ end }}
+      </div>
+
+      <!-- Pagination -->
+      {{ if gt .Pagination.TotalPages 1 }}
+      <div class="pagination-container">
+        <div class="pagination">
+          <!-- Previous Button -->
+          {{ if .Pagination.HasPrev }}
+            <a href="?page={{ .Pagination.PrevPage }}&search={{ index .Filters "search" }}&order_by={{ index .Filters "order_by" }}&order={{ index .Filters "order" }}" 
+               class="pagination-btn prev-btn">
+              <span class="pagination-arrow previous-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8.009 8.009 0 0 1-8 8z"/><path d="M13.293 7.293 8.586 12l4.707 4.707 1.414-1.414L11.414 12l3.293-3.293-1.414-1.414z"/></svg></span> Previous
+            </a>
+          {{ else }}
+            <span class="pagination-btn prev-btn disabled"><span class="pagination-arrow previous-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8.009 8.009 0 0 1-8 8z"/><path d="M13.293 7.293 8.586 12l4.707 4.707 1.414-1.414L11.414 12l3.293-3.293-1.414-1.414z"/></svg></span> Previous</span>
+          {{ end }}
+
+          <!-- Page Number -->
+          <span class="page-number active">{{ .Pagination.Page }}</span>
+
+          <!-- Next Button -->
+          {{ if .Pagination.HasNext }}
+            <a href="?page={{ .Pagination.NextPage }}&search={{ index .Filters "search" }}&order_by={{ index .Filters "order_by" }}&order={{ index .Filters "order" }}" 
+               class="pagination-btn next-btn">
+              Next <span class="pagination-arrow next-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8.009 8.009 0 0 1-8 8z"/><path d="M9.293 8.707 12.586 12l-3.293 3.293 1.414 1.414L15.414 12l-4.707-4.707-1.414 1.414z"/></svg></span>
+            </a>
+          {{ else }}
+            <span class="pagination-btn next-btn disabled">Next <span class="pagination-arrow next-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8.009 8.009 0 0 1-8 8z"/><path d="M9.293 8.707 12.586 12l-3.293 3.293 1.414 1.414L15.414 12l-4.707-4.707-1.414 1.414z"/></svg></span></span>
+          {{ end }}
+        </div>
+
+        <!-- Pagination Info -->
+        <div class="pagination-info">
+          Page {{ .Pagination.Page }} of {{ .Pagination.TotalPages }} ({{ .Pagination.TotalItems }} topics total)
+        </div>
+      </div>
+      {{ end }}
+
+      {{ if not (gt .Pagination.TotalPages 1) }}
+      <div class="out-of-topics">
+        <p>{{ if .Topics }}You've seen all the topics.{{ else }}No topics available.{{ end }}</p>
+      </div>
+      {{ end }}
+    </div>
+  </div>
+</div>
+{{ end }}

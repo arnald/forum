@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/arnald/forum/internal/domain/comment"
 )
@@ -166,6 +167,21 @@ func (r *Repo) GetCommentByID(ctx context.Context, commentID int) (*comment.Comm
 		return nil, fmt.Errorf("failed to query comment: %w", err)
 	}
 
+	// Format Dates
+	if comment.CreatedAt != "" {
+		t, parseErr := time.Parse(time.RFC3339, comment.CreatedAt)
+		if parseErr == nil {
+			comment.CreatedAt = t.Format("02/01/2006")
+		}
+	}
+
+	if comment.UpdatedAt != "" {
+		t, parseErr := time.Parse(time.RFC3339, comment.UpdatedAt)
+		if parseErr == nil {
+			comment.UpdatedAt = t.Format("02/01/2006")
+		}
+	}
+
 	return comment, nil
 }
 
@@ -204,6 +220,21 @@ func (r *Repo) GetCommentsByTopicID(ctx context.Context, topicID int) ([]comment
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan row: %w", err)
+		}
+
+		// Format Dates
+		if c.CreatedAt != "" {
+			t, parseErr := time.Parse(time.RFC3339, c.CreatedAt)
+			if parseErr == nil {
+				c.CreatedAt = t.Format("02/01/2006")
+			}
+		}
+
+		if c.UpdatedAt != "" {
+			t, parseErr := time.Parse(time.RFC3339, c.UpdatedAt)
+			if parseErr == nil {
+				c.UpdatedAt = t.Format("02/01/2006")
+			}
 		}
 
 		comments = append(comments, c)
@@ -296,6 +327,21 @@ func (r *Repo) GetCommentsWithVotes(ctx context.Context, topicID int, userID *st
 		err = rows.Scan(scanFields...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan comment: %w", err)
+		}
+
+		// Format Dates
+		if commentResult.CreatedAt != "" {
+			t, parseErr := time.Parse(time.RFC3339, commentResult.CreatedAt)
+			if parseErr == nil {
+				commentResult.CreatedAt = t.Format("02/01/2006")
+			}
+		}
+
+		if commentResult.UpdatedAt != "" {
+			t, parseErr := time.Parse(time.RFC3339, commentResult.UpdatedAt)
+			if parseErr == nil {
+				commentResult.UpdatedAt = t.Format("02/01/2006")
+			}
 		}
 
 		if userID != nil && userVote.Valid {
