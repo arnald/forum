@@ -97,9 +97,10 @@ async function castVote(targetId, targetType, reactionType, buttonElement) {
 }
 
 async function updateVoteUI(targetId, targetType, clickedButton) {
+  const paramName = targetType === "comment" ? "comment_id" : "topic_id";
   // Get current counts from the backend
   const countsResponse = await fetch(
-    `/api/vote/counts?${targetType}Id=${targetId}`,
+    `/api/vote/counts?${paramName}=${targetId}`,
     {
       method: "GET",
       credentials: "include",
