@@ -93,18 +93,19 @@
     </div>
 
     <!-- Post Actions (only show if user is the owner) -->
-    {{ if and .User (eq .User.ID .Topic.UserID) }}
     <div class="post-actions">
       <div class="author-choices">
         <button class="action-btn btn-edit" data-type="topic">
           Edit Topic
         </button>
-        <button class="action-btn btn-delete" data-type="topic">
-          Delete Topic
-        </button>
+        <form method="POST" action="/topics/delete" class="inline-form">
+          <input type="hidden" name="topic_id" value="{{ .Topic.ID }}" />
+          <button type="submit" class="action-btn btn-delete">
+            Delete Topic
+          </button>
+        </form>
       </div>
     </div>
-    {{ end }}
 
     <!-- Edit Topic Form (hidden by default) -->
     <div class="edit-form edit-topic-form" style="display: none">
@@ -113,18 +114,21 @@
         <button type="button" class="close-edit-form">✖</button>
       </div>
       <form
+        method="POST"
+        action="/topics/edit"
         enctype="multipart/form-data"
         class="topic-edit-form"
         data-topic-id="{{ .Topic.ID }}"
         novalidate
       >
+        <input type="hidden" name="topic_id" value="{{ .Topic.ID }}" />
         <div class="comment-form-field">
           <input
             class="input topic-title-input"
             name="title"
             type="text"
             placeholder="Topic title..."
-            value="{{ .Topic.Title }}"
+            value="Change Topic Title..."
             required
           />
         </div>
@@ -136,7 +140,7 @@
             placeholder="Edit your topic content..."
             required
           >
-{{ .Topic.Content }}</textarea
+           {{ .Topic.Content }}</textarea
           >
         </div>
         <div class="comment-form-field">
@@ -179,7 +183,6 @@
     </div>
 
     <!-- Add Comment Button (only show if user is logged in) -->
-    {{ if .User }}
     <div class="post-actions">
       <button class="action-btn btn-comment">Add a Comment</button>
     </div>
@@ -190,7 +193,7 @@
         <h3>Create Comment</h3>
         <button type="button" class="close-comment-form">✖</button>
       </div>
-      <form class="comment-form">
+      <form method="POST" action="/comments/create" class="comment-form">
         <input type="hidden" name="topic_id" value="{{ .Topic.ID }}" />
         <div class="comment-form-field">
           <textarea
@@ -205,7 +208,6 @@
         <button class="post-comment" type="submit">Post Comment</button>
       </form>
     </div>
-    {{ end }}
 
     <!-- Comments Section -->
     {{ if .Topic.Comments }}
@@ -277,7 +279,6 @@
             </div>
 
             <!-- Comment Actions (only show if user is the owner) -->
-            {{ if and $.User (eq $.User.ID .UserID) }}
             <div class="comment-actions">
               <button
                 class="action-btn btn-edit"
@@ -286,26 +287,29 @@
               >
                 Edit
               </button>
-              <button
-                class="action-btn btn-delete"
-                data-type="comment"
-                data-comment-id="{{ .ID }}"
-              >
-                Delete
-              </button>
+              <form method="POST" action="/comments/delete" class="inline-form">
+                <input type="hidden" name="comment_id" value="{{ .ID }}" />
+                <button type="submit" class="action-btn btn-delete">
+                  Delete
+                </button>
+              </form>
             </div>
-            {{ end }}
           </div>
         </div>
 
         <!-- Edit Comment Form (hidden by default) -->
-        {{ if and $.User (eq $.User.ID .UserID) }}
         <div class="edit-form edit-comment-form" style="display: none">
           <div class="comment-form-header">
             <h3>Edit Comment</h3>
             <button type="button" class="close-edit-form">✖</button>
           </div>
-          <form class="comment-edit-form" data-comment-id="{{ .ID }}">
+          <form
+            method="POST"
+            action="/comments/edit"
+            class="comment-edit-form"
+            data-comment-id="{{ .ID }}"
+          >
+            <input type="hidden" name="comment_id" value="{{ .ID }}" />
             <div class="comment-form-field">
               <textarea
                 class="input comment-textarea"
@@ -320,7 +324,6 @@
             <button class="post-comment" type="submit">Save Changes</button>
           </form>
         </div>
-        {{ end }}
       </div>
       {{ end }}
     </div>
