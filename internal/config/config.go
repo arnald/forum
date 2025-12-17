@@ -12,17 +12,20 @@ import (
 )
 
 const (
-	readTimeout         = 5
-	writeTimeout        = 10
-	idleTimeout         = 15
-	configParts         = 2
-	defaultExpiry       = 86400
-	cleanupInternal     = 3600
-	maxSessionsPerUser  = 5
-	sessionIDLenght     = 32
-	userRegisterTimeout = 15
-	refreshTokenExpiry  = 30
-	userLoginTimeout    = 15
+	readTimeout                     = 5
+	writeTimeout                    = 10
+	idleTimeout                     = 15
+	configParts                     = 2
+	defaultExpiry                   = 86400
+	cleanupInternal                 = 3600
+	maxSessionsPerUser              = 5
+	sessionIDLenght                 = 32
+	userRegisterTimeout             = 15
+	refreshTokenExpiry              = 30
+	userLoginTimeout                = 15
+	defaultRateLimitCleanupSeconds  = 60
+	defaultRateLimitWindowSeconds   = 60
+	defaultRateLimitRequestCapacity = 100
 )
 
 var (
@@ -42,6 +45,14 @@ type ServerConfig struct {
 	ReadTimeout    time.Duration
 	WriteTimeout   time.Duration
 	IdleTimeout    time.Duration
+	RateLimit      RateLimitConfig
+}
+
+type RateLimitConfig struct {
+	Enabled       bool
+	RequestsLimit int
+	WindowSeconds int64
+	Cleanup       time.Duration
 }
 
 type OAuthConfig struct {
@@ -164,6 +175,12 @@ func LoadConfig() (*ServerConfig, error) {
 				TokenURL:            helpers.GetEnv("GOOGLE_TOKEN_URL", envMap, ""),
 			},
 			FrontendCallbackURL: helpers.GetEnv("FRONTEND_CALLBACK_URL", envMap, ""),
+		},
+		RateLimit: RateLimitConfig{
+			Enabled:       helpers.GetEnvBool("RATE_LIMIT_ENABLED", envMap, true),
+			RequestsLimit: helpers.GetEnvInt("RATE_LIMIT_REQUESTS", envMap, defaultRateLimitRequestCapacity),
+			WindowSeconds: int64(helpers.GetEnvInt("RATE_LIMIT_WINDOW_SECONDS", envMap, defaultRateLimitWindowSeconds)),
+			Cleanup:       helpers.GetEnvDuration("RATE_LIMIT_CLEANUP_SECONDS", envMap, defaultRateLimitCleanupSeconds),
 		},
 	}
 
