@@ -119,18 +119,44 @@
         enctype="multipart/form-data"
         class="topic-edit-form"
         data-topic-id="{{ .Topic.ID }}"
-        novalidate
       >
         <input type="hidden" name="topic_id" value="{{ .Topic.ID }}" />
+        <div class="comment-form-field">
+          <label for="category">Category:</label>
+          <select
+            name="category_id"
+            id="category"
+            class="filter-select"
+            required
+          >
+            {{ range .Categories }}
+            <option
+              value="{{ .ID }}"
+              {{
+              if
+              eq
+              $.Topic.CategoryID
+              .ID
+              }}selected{{
+              end
+              }}
+            >
+              {{ .Name }}
+            </option>
+            {{ end }}
+          </select>
+          <div class="field-error" id="error-topic-category"></div>
+        </div>
         <div class="comment-form-field">
           <input
             class="input topic-title-input"
             name="title"
             type="text"
             placeholder="Topic title..."
-            value="Change Topic Title..."
+            value="{{ .Topic.Title }}"
             required
           />
+          <div class="field-error" id="error-topic-title"></div>
         </div>
         <div class="comment-form-field">
           <textarea
@@ -142,40 +168,18 @@
           >
            {{ .Topic.Content }}</textarea
           >
+          <div class="field-error" id="error-topic-content"></div>
         </div>
         <div class="comment-form-field">
-          <div class="upload-box" id="topicUploadBox">
+          <label class="upload-box" id="topicUploadBox">
             <input
               class="input"
               id="topicImageUpload"
-              name="topic-image-upload"
+              name="image_path"
               type="file"
               accept="image/jpeg,image/png,image/gif"
-              hidden
             />
-            <div class="upload-placeholder">
-              <img
-                src="/static/images/icons/upload-icon.png"
-                alt="Upload Icon"
-                class="upload-icon"
-              />
-              <p class="upload-text">Upload New Image (Optional)</p>
-            </div>
-            {{ if .Topic.ImagePath }}
-            <img
-              id="topicImagePreview"
-              class="upload-preview"
-              src="{{ .Topic.ImagePath }}"
-              style="display: block"
-            />
-            {{ else }}
-            <img
-              id="topicImagePreview"
-              class="upload-preview"
-              style="display: none"
-            />
-            {{ end }}
-          </div>
+          </label>
           <div class="field-error" id="error-topic-image"></div>
         </div>
         <button class="post-comment" type="submit">Save Changes</button>
@@ -203,7 +207,7 @@
             placeholder="Write your comment..."
             required
           ></textarea>
-          <div class="field-error" id="error-comment"></div>
+          <div class="field-error" id="error-comment-content"></div>
         </div>
         <button class="post-comment" type="submit">Post Comment</button>
       </form>
@@ -320,6 +324,7 @@
               >
                 {{ .Content }}</textarea
               >
+              <div class="field-error" id="error-edit-comment-{{ .ID }}"></div>
             </div>
             <button class="post-comment" type="submit">Save Changes</button>
           </form>

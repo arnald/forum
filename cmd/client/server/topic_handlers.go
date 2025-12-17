@@ -40,8 +40,9 @@ type topicPageRequest struct {
 }
 
 type topicPageData struct {
-	User  *domain.LoggedInUser `json:"user"`
-	Topic domain.Topic         `json:"topic"`
+	User       *domain.LoggedInUser `json:"user"`
+	Topic      domain.Topic         `json:"topic"`
+	Categories []domain.Category    `json:"categories"`
 }
 
 // TopicPage handles GET requests to /topic/{id}.
@@ -64,52 +65,90 @@ func (cs *ClientServer) TopicPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	requestID := &topicPageRequest{
+	ctx, cancel := context.WithTimeout(r.Context(), requestTimeout)
+	defer cancel()
+
+	topicReq := &topicPageRequest{
 		TopicID: topicIDStr,
 	}
 
-	backendURL, err := createURLWithParams(backendGetTopicByID, requestID)
+	topicURL, err := createURLWithParams(backendGetTopicByID, topicReq)
 	if err != nil {
+		log.Printf("Error creating topic URL: %v", err)
 		http.Error(w, "Error creating URL params", http.StatusInternalServerError)
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), requestTimeout)
-	defer cancel()
-
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet, backendURL, nil)
+	topicHTTPReq, err := http.NewRequestWithContext(ctx, http.MethodGet, topicURL, nil)
 	if err != nil {
+		log.Printf("Error creating topic request: %v", err)
 		http.Error(w, "Error creating request", http.StatusInternalServerError)
 		return
 	}
 
-	backendResp, err := cs.HTTPClient.Do(httpReq)
+	topicResp, err := cs.HTTPClient.Do(topicHTTPReq)
 	if err != nil {
+		log.Printf("Error fetching topic: %v", err)
 		http.Error(w, "Error with the response", http.StatusInternalServerError)
 		return
 	}
-	defer backendResp.Body.Close()
+	defer topicResp.Body.Close()
 
-	if backendResp.StatusCode == http.StatusNotFound {
+	if topicResp.StatusCode == http.StatusNotFound {
 		templates.NotFoundHandler(w, r, "Topic not found", http.StatusNotFound)
 		return
 	}
 
-	if backendResp.StatusCode != http.StatusOK {
-		log.Printf("Backend returned status: %d", backendResp.StatusCode)
+	if topicResp.StatusCode != http.StatusOK {
+		log.Printf("Backend returned status: %d", topicResp.StatusCode)
 		templates.NotFoundHandler(w, r, "Error loading topic", http.StatusInternalServerError)
 		return
 	}
 
 	var topicData topicPageResponse
-	err = helpers.DecodeBackendResponse(backendResp, &topicData)
+	err = helpers.DecodeBackendResponse(topicResp, &topicData)
 	if err != nil {
+		log.Printf("Error decoding topic response: %v", err)
 		http.Error(w, "Error with decoding response into data struct", http.StatusInternalServerError)
 		return
 	}
-	// log.Printf("Topic Data %v", topicData)
 
-	// For topic related data in template
+	// Fetch categories for the edit form
+	categoriesHTTPReq, err := http.NewRequestWithContext(ctx, http.MethodGet, backendGetCategoriesDomain, nil)
+	if err != nil {
+		log.Printf("Error creating categories request: %v", err)
+		http.Error(w, "Error creating categories request", http.StatusInternalServerError)
+		return
+	}
+
+	categoriesResp, err := cs.HTTPClient.Do(categoriesHTTPReq)
+	if err != nil {
+		log.Printf("Error fetching categories: %v", err)
+		http.Error(w, "Error fetching categories", http.StatusInternalServerError)
+		return
+	}
+	defer categoriesResp.Body.Close()
+
+	var categoriesData struct {
+		Categories []domain.Category `json:"categories"`
+	}
+
+	if categoriesResp.StatusCode == http.StatusOK {
+		err = helpers.DecodeBackendResponse(categoriesResp, &categoriesData)
+		if err != nil {
+			log.Printf("Error decoding categories response: %v", err)
+			// Continue without categories - edit form won't work but page will still load
+			categoriesData.Categories = []domain.Category{}
+		}
+	} else {
+		log.Printf("Failed to fetch categories, status: %d", categoriesResp.StatusCode)
+		categoriesData.Categories = []domain.Category{}
+	}
+
+	for i := range categoriesData.Categories {
+		categoriesData.Categories[i].Color = helpers.NormalizeColor(categoriesData.Categories[i].Color)
+	}
+
 	topic := domain.Topic{
 		ID:            topicData.TopicID,
 		CategoryID:    topicData.CategoryID,
@@ -129,9 +168,10 @@ func (cs *ClientServer) TopicPage(w http.ResponseWriter, r *http.Request) {
 		Comments:      topicData.Comments,
 	}
 
-	pageData := &topicPageData{
-		User:  middleware.GetUserFromContext(r.Context()),
-		Topic: topic,
+	pageData := topicPageData{
+		User:       middleware.GetUserFromContext(r.Context()),
+		Topic:      topic,
+		Categories: categoriesData.Categories,
 	}
 
 	tmpl, err := template.ParseFiles(
