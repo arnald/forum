@@ -130,7 +130,7 @@ if (topicEditForm) {
     if (imageInput && imageInput.files.length > 0) {
       const file = imageInput.files[0];
       const allowedTypes = ["image/jpeg", "image/png", "image/gif"];
-      const maxSize = 2 * 1024 * 1024; // 2MB
+      const maxSize = 20 * 1024 * 1024; // 20MB
 
       if (!allowedTypes.includes(file.type)) {
         showError(
@@ -139,7 +139,7 @@ if (topicEditForm) {
         );
         hasError = true;
       } else if (file.size > maxSize) {
-        showError("error-topic-image", "Image must be smaller than 2MB");
+        showError("error-topic-image", "Image must be smaller than 20MB");
         hasError = true;
       }
     }
