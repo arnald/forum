@@ -26,7 +26,7 @@ const (
 	backendUpdateTopic     = backendAPIBase + "/topics/update"
 	backendDeleteTopic     = backendAPIBase + "/topics/delete"
 	// Comment endpoints
-	backendCreateComment = backendAPIBase + "/comments/create"z
+	backendCreateComment = backendAPIBase + "/comments/create"
 	backendUpdateComment = backendAPIBase + "/comments/update"
 	backendDeleteComment = backendAPIBase + "/comments/delete"
 	// Vote endpoints
