@@ -21,18 +21,44 @@ func (r *Repo) CastVote(ctx context.Context, userID string, target vote.Target, 
 	var args []interface{}
 
 	if target.CommentID != nil {
+		// Check if vote exists with same reaction type
+		var existingReaction sql.NullInt32
+		checkQuery := `SELECT reaction_type FROM votes WHERE user_id = ? AND comment_id = ? AND topic_id IS NULL`
+		err := r.DB.QueryRowContext(ctx, checkQuery, userID, *target.CommentID).Scan(&existingReaction)
+
+		if err == nil && existingReaction.Valid && int(existingReaction.Int32) == reactionType {
+			// Same vote - delete it (toggle off)
+			deleteQuery := `DELETE FROM votes WHERE user_id = ? AND comment_id = ? AND topic_id IS NULL`
+			_, err := r.DB.ExecContext(ctx, deleteQuery, userID, *target.CommentID)
+			return err
+		}
+
+		// Different vote or no vote - insert/update
 		query = `
-		INSERT INTO votes (user_id, topic_id, comment_id, reaction_type) 
-		VALUES (?, NULL, ?, ?) 
-		ON CONFLICT (user_id, comment_id) DO UPDATE SET 
+		INSERT INTO votes (user_id, topic_id, comment_id, reaction_type)
+		VALUES (?, NULL, ?, ?)
+		ON CONFLICT (user_id, comment_id) DO UPDATE SET
 			reaction_type = EXCLUDED.reaction_type,
 			created_at = CURRENT_TIMESTAMP`
 		args = []interface{}{userID, *target.CommentID, reactionType}
 	} else {
+		// Check if vote exists with same reaction type
+		var existingReaction sql.NullInt32
+		checkQuery := `SELECT reaction_type FROM votes WHERE user_id = ? AND topic_id = ? AND comment_id IS NULL`
+		err := r.DB.QueryRowContext(ctx, checkQuery, userID, *target.TopicID).Scan(&existingReaction)
+
+		if err == nil && existingReaction.Valid && int(existingReaction.Int32) == reactionType {
+			// Same vote - delete it (toggle off)
+			deleteQuery := `DELETE FROM votes WHERE user_id = ? AND topic_id = ? AND comment_id IS NULL`
+			_, err := r.DB.ExecContext(ctx, deleteQuery, userID, *target.TopicID)
+			return err
+		}
+
+		// Different vote or no vote - insert/update
 		query = `
-		INSERT INTO votes (user_id, topic_id, comment_id, reaction_type) 
-		VALUES (?, ?, NULL, ?) 
-		ON CONFLICT (user_id, topic_id) DO UPDATE SET 
+		INSERT INTO votes (user_id, topic_id, comment_id, reaction_type)
+		VALUES (?, ?, NULL, ?)
+		ON CONFLICT (user_id, topic_id) DO UPDATE SET
 			reaction_type = EXCLUDED.reaction_type,
 			created_at = CURRENT_TIMESTAMP`
 		args = []interface{}{userID, target.TopicID, reactionType}

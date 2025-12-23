@@ -297,7 +297,7 @@
                 Edit
               </button>
               <form method="POST" action="/comments/delete" class="inline-form">
-                <input type="hidden" name="topic_id" value="{{ .Topic.ID }}" />
+                <input type="hidden" name="topic_id" value="{{ $.Topic.ID }}" />
                 <input type="hidden" name="comment_id" value="{{ .ID }}" />
                 <button type="submit" class="action-btn btn-delete">
                   Delete
@@ -319,7 +319,7 @@
             class="comment-edit-form"
             data-comment-id="{{ .ID }}"
           >
-            <input type="hidden" name="topic_id" value="{{ .Topic.ID }}" />
+            <input type="hidden" name="topic_id" value="{{ $.Topic.ID }}" />
             <input type="hidden" name="comment_id" value="{{ .ID }}" />
             <div class="comment-form-field">
               <textarea
