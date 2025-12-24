@@ -223,14 +223,22 @@ func (r Repo) GetTopicByID(ctx context.Context, topicID int, userID *string) (*t
 	if topicResult.CreatedAt != "" {
 		t, parseErr := time.Parse(time.RFC3339, topicResult.CreatedAt)
 		if parseErr == nil {
+<<<<<<< HEAD
 			topicResult.CreatedAt = t.Format("02/01/2006")
+=======
+			topicResult.CreatedAt = t.Format("Jan 2006")
+>>>>>>> 4b79722 (fix lint issues)
 		}
 	}
 
 	if topicResult.UpdatedAt != "" {
 		t, parseErr := time.Parse(time.RFC3339, topicResult.UpdatedAt)
 		if parseErr == nil {
+<<<<<<< HEAD
 			topicResult.UpdatedAt = t.Format("02/01/2006")
+=======
+			topicResult.UpdatedAt = t.Format("Jan 2006")
+>>>>>>> 4b79722 (fix lint issues)
 		}
 	}
 
@@ -386,14 +394,22 @@ func (r Repo) GetAllTopics(ctx context.Context, page, size, categoryID int, orde
 		if topic.CreatedAt != "" {
 			t, parseErr := time.Parse(time.RFC3339, topic.CreatedAt)
 			if parseErr == nil {
+<<<<<<< HEAD
 				topic.CreatedAt = t.Format("02/01/2006")
+=======
+				topic.CreatedAt = t.Format("Jan 2006")
+>>>>>>> 4b79722 (fix lint issues)
 			}
 		}
 
 		if topic.UpdatedAt != "" {
 			t, parseErr := time.Parse(time.RFC3339, topic.UpdatedAt)
 			if parseErr == nil {
+<<<<<<< HEAD
 				topic.UpdatedAt = t.Format("02/01/2006")
+=======
+				topic.UpdatedAt = t.Format("Jan 2006")
+>>>>>>> 4b79722 (fix lint issues)
 			}
 		}
 

@@ -33,6 +33,7 @@ type Logo struct {
 }
 
 type Topic struct {
+<<<<<<< HEAD
 	UserVote      *int      `json:"userVote,omitempty"`
 	UserID        string    `json:"userId"`
 	Content       string    `json:"content"`
@@ -63,4 +64,21 @@ type Comment struct {
 	UpvoteCount   int    `json:"upvoteCount"`
 	DownvoteCount int    `json:"downvoteCount"`
 	VoteScore     int    `json:"voteScore"`
+=======
+	UserVote      *int   `json:"userVote,omitempty"`
+	CreatedAt     string `json:"createdAt"`
+	UserID        string `json:"userId"`
+	Content       string `json:"content"`
+	ImagePath     string `json:"imagePath"`
+	Title         string `json:"title"`
+	CategoryColor string `json:"categoryColor"`
+	UpdatedAt     string `json:"updatedAt"`
+	OwnerUsername string `json:"ownerUsername"`
+	CategoryName  string `json:"categoryName"`
+	CategoryID    int    `json:"categoryId"`
+	VoteScore     int    `json:"voteScore"`
+	DownvoteCount int    `json:"downvoteCount"`
+	UpvoteCount   int    `json:"upvoteCount"`
+	ID            int    `json:"id"`
+>>>>>>> 4b79722 (fix lint issues)
 }
