@@ -386,22 +386,14 @@ func (r Repo) GetAllTopics(ctx context.Context, page, size, categoryID int, orde
 		if topic.CreatedAt != "" {
 			t, parseErr := time.Parse(time.RFC3339, topic.CreatedAt)
 			if parseErr == nil {
-<<<<<<< HEAD
 				topic.CreatedAt = t.Format("02/01/2006")
-=======
-				topic.CreatedAt = t.Format("Jan 2006")
->>>>>>> 4b79722 (fix lint issues)
 			}
 		}
 
 		if topic.UpdatedAt != "" {
 			t, parseErr := time.Parse(time.RFC3339, topic.UpdatedAt)
 			if parseErr == nil {
-<<<<<<< HEAD
 				topic.UpdatedAt = t.Format("02/01/2006")
-=======
-				topic.UpdatedAt = t.Format("Jan 2006")
->>>>>>> 4b79722 (fix lint issues)
 			}
 		}
 
