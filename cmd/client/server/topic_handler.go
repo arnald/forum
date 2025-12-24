@@ -41,8 +41,8 @@ type topicPageRequest struct {
 
 type topicPageData struct {
 	User       *domain.LoggedInUser `json:"user"`
-	Topic      domain.Topic         `json:"topic"`
 	Categories []domain.Category    `json:"categories"`
+	Topic      domain.Topic         `json:"topic"`
 }
 
 // TopicPage handles GET requests to /topic/{id}.

@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"io"
 	"log"
 	"net/http"
@@ -10,28 +11,24 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/google/uuid"
+
 	"github.com/arnald/forum/cmd/client/helpers"
 	"github.com/arnald/forum/cmd/client/helpers/templates"
-	"github.com/google/uuid"
 )
 
 const (
 	maxUploadSize = 20 << 20 // 20 MB
 	uploadDir     = "frontend/static/images/uploads"
+	uploadDirPerm = 0o750
 )
 
-var allowedImageTypes = map[string]bool{
-	"image/jpeg": true,
-	"image/png":  true,
-	"image/gif":  true,
-}
-
 type updateTopicRequest struct {
-	TopicID    int    `json:"topicId"`
-	CategoryID int    `json:"categoryId"`
 	Title      string `json:"title"`
 	Content    string `json:"content"`
 	ImagePath  string `json:"imagePath"`
+	TopicID    int    `json:"topicId"`
+	CategoryID int    `json:"categoryId"`
 }
 
 // UpdateTopicPost handles POST requests to /topics/edit.
@@ -46,6 +43,12 @@ func (cs *ClientServer) UpdateTopicPost(w http.ResponseWriter, r *http.Request) 
 		log.Printf("Error parsing form: %v", err)
 		http.Error(w, "Error parsing form. File may be too large (max 20MB)", http.StatusBadRequest)
 		return
+	}
+
+	allowedImageTypes := map[string]bool{
+		"image/jpeg": true,
+		"image/png":  true,
+		"image/gif":  true,
 	}
 
 	topicIDStr := r.FormValue("topic_id")
@@ -72,8 +75,16 @@ func (cs *ClientServer) UpdateTopicPost(w http.ResponseWriter, r *http.Request) 
 	imagePath := currentImagePath
 
 	file, header, err := r.FormFile("image_path")
-	if err == nil {
-		// New image uploaded
+	switch {
+	case errors.Is(err, http.ErrMissingFile):
+		// No new image uploaded; keep current image
+
+	case err != nil:
+		log.Printf("Error reading uploaded file: %v", err)
+		http.Error(w, "Error processing uploaded file", http.StatusBadRequest)
+		return
+
+	default:
 		defer file.Close()
 
 		contentType := header.Header.Get("Content-Type")
@@ -92,7 +103,7 @@ func (cs *ClientServer) UpdateTopicPost(w http.ResponseWriter, r *http.Request) 
 		ext := filepath.Ext(header.Filename)
 		uniqueFilename := uuid.New().String() + ext
 
-		err = os.MkdirAll(uploadDir, 0755)
+		err = os.MkdirAll(uploadDir, uploadDirPerm)
 		if err != nil {
 			log.Printf("Failed to create upload directory: %v", err)
 			http.Error(w, "Failed to save image", http.StatusInternalServerError)
@@ -100,7 +111,16 @@ func (cs *ClientServer) UpdateTopicPost(w http.ResponseWriter, r *http.Request) 
 		}
 
 		destPath := filepath.Join(uploadDir, uniqueFilename)
-		destFile, err := os.Create(destPath)
+		destPath = filepath.Clean(destPath)
+
+		if !strings.HasPrefix(destPath, filepath.Clean(uploadDir)+string(os.PathSeparator)) {
+			log.Printf("Invalid file path: %s", destPath)
+			http.Error(w, "Invalid file path", http.StatusBadRequest)
+			return
+		}
+
+		var destFile *os.File
+		destFile, err = os.Create(destPath)
 		if err != nil {
 			log.Printf("Failed to create destination file: %v", err)
 			http.Error(w, "Failed to save image", http.StatusInternalServerError)
@@ -115,24 +135,19 @@ func (cs *ClientServer) UpdateTopicPost(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		// Update image path to the new file (relative path)
 		imagePath = "/static/images/uploads/" + uniqueFilename
 
-		// Optional: Delete old image if it exists and is different from the new one
-		if currentImagePath != "" && currentImagePath != imagePath {
-			if strings.HasPrefix(currentImagePath, "/static/images/uploads/") {
-				oldFilename := strings.TrimPrefix(currentImagePath, "/static/images/uploads/")
-				oldFilePath := filepath.Join(uploadDir, oldFilename)
-				// Attempt to delete old file (ignore errors)
+		if currentImagePath != "" && currentImagePath != imagePath &&
+			strings.HasPrefix(currentImagePath, "/static/images/uploads/") {
+			oldFilename := strings.TrimPrefix(currentImagePath, "/static/images/uploads/")
+			oldFilePath := filepath.Join(uploadDir, oldFilename)
+			oldFilePath = filepath.Clean(oldFilePath)
+
+			if strings.HasPrefix(oldFilePath, filepath.Clean(uploadDir)+string(os.PathSeparator)) {
 				_ = os.Remove(oldFilePath)
 			}
 		}
-	} else if err != http.ErrMissingFile {
-		log.Printf("Error reading uploaded file: %v", err)
-		http.Error(w, "Error processing uploaded file", http.StatusBadRequest)
-		return
 	}
-	// If err == http.ErrMissingFile, no new image was uploaded, use currentImagePath
 
 	updateRequest := &updateTopicRequest{
 		TopicID:    topicID,
@@ -252,7 +267,6 @@ func (cs *ClientServer) DeleteTopicPost(w http.ResponseWriter, r *http.Request) 
 	// Delete image file locally
 	if topicResp.ImagePath != "" &&
 		strings.HasPrefix(topicResp.ImagePath, "/static/images/uploads/") {
-
 		filename := strings.TrimPrefix(topicResp.ImagePath, "/static/images/uploads/")
 		filePath := filepath.Join(uploadDir, filename)
 

@@ -60,10 +60,13 @@ func (cs *ClientServer) proxyVoteRequest(w http.ResponseWriter, r *http.Request,
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(backendResp.StatusCode)
-	w.Write(respBody)
+	_, err = w.Write(respBody)
+	if err != nil {
+		log.Printf("Failed to write response: %v", err)
+	}
 }
 
-// CastVote proxies the vote casting request to the backend
+// CastVote proxies the vote casting request to the backend.
 func (cs *ClientServer) CastVote(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -73,7 +76,7 @@ func (cs *ClientServer) CastVote(w http.ResponseWriter, r *http.Request) {
 	cs.proxyVoteRequest(w, r, backendCastVote, http.MethodPost)
 }
 
-// DeleteVote proxies the vote deletion request to the backend
+// DeleteVote proxies the vote deletion request to the backend.
 func (cs *ClientServer) DeleteVote(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete && r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -83,7 +86,7 @@ func (cs *ClientServer) DeleteVote(w http.ResponseWriter, r *http.Request) {
 	cs.proxyVoteRequest(w, r, backendDeleteVote, http.MethodDelete)
 }
 
-// GetVoteCounts gets the current vote counts for a topic or comment
+// GetVoteCounts gets the current vote counts for a topic or comment.
 func (cs *ClientServer) GetVoteCounts(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -141,9 +144,12 @@ func (cs *ClientServer) GetVoteCounts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(struct {
+	err = json.NewEncoder(w).Encode(struct {
 		Data voteCountsResponse `json:"data"`
 	}{
 		Data: counts,
 	})
+	if err != nil {
+		log.Printf("Failed to encode response: %v", err)
+	}
 }

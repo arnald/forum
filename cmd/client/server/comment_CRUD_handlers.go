@@ -11,13 +11,13 @@ import (
 )
 
 type createCommentRequest struct {
-	TopicID int    `json:"topicId"`
 	Content string `json:"content"`
+	TopicID int    `json:"topicId"`
 }
 
 type updateCommentRequest struct {
-	ID      int    `json:"id"`
 	Content string `json:"content"`
+	ID      int    `json:"id"`
 }
 
 // CreateCommentPost handles POST requests to /comments/create.

@@ -9,27 +9,27 @@ const (
 )
 
 const (
-	// User endpoints
+	// User endpoints.
 	backendRegisterURL      = backendAPIBase + "/register"
 	backendLoginEmailURL    = backendAPIBase + "/login/email"
 	backendLoginUsernameURL = backendAPIBase + "/login/username"
 	backendLogoutURL        = backendAPIBase + "/logout"
-	// OAuth endpoints
+	// OAuth endpoints.
 	backendGithubRegister  = backendAPIBase + "/auth/github/login"
 	backendGooglebRegister = backendAPIBase + "/auth/google/login"
-	// Category endpoints
+	// Category endpoints.
 	backendGetCategoriesDomain = backendAPIBase + "/categories/all"
-	// Topic endpoints
+	// Topic endpoints.
 	backendGetTopicsDomain = backendAPIBase + "/topics/all"
 	backendGetTopicByID    = backendAPIBase + "/topic"
 	backendCreateTopic     = backendAPIBase + "/topics/create"
 	backendUpdateTopic     = backendAPIBase + "/topics/update"
 	backendDeleteTopic     = backendAPIBase + "/topics/delete"
-	// Comment endpoints
+	// Comment endpoints.
 	backendCreateComment = backendAPIBase + "/comments/create"
 	backendUpdateComment = backendAPIBase + "/comments/update"
 	backendDeleteComment = backendAPIBase + "/comments/delete"
-	// Vote endpoints
+	// Vote endpoints.
 	backendCastVote      = backendAPIBase + "/vote/cast"
 	backendDeleteVote    = backendAPIBase + "/vote/delete"
 	backendGetVoteCounts = backendAPIBase + "/vote/counts"
