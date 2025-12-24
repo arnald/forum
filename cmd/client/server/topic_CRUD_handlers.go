@@ -145,7 +145,7 @@ func (cs *ClientServer) UpdateTopicPost(w http.ResponseWriter, r *http.Request) 
 	ctx, cancel := context.WithTimeout(r.Context(), requestTimeout)
 	defer cancel()
 
-	resp, err := cs.newRequest(ctx, http.MethodPut, backendUpdateTopic, updateRequest)
+	resp, err := cs.newRequestWithCookies(ctx, http.MethodPut, backendUpdateTopic, updateRequest, r)
 	if err != nil {
 		log.Printf("Backend request failed: %v", err)
 		templates.NotFoundHandler(w, r, "Failed to update topic", http.StatusInternalServerError)
@@ -197,6 +197,10 @@ func (cs *ClientServer) DeleteTopicPost(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	for _, cookie := range r.Cookies() {
+		getReq.AddCookie(cookie)
+	}
+
 	getResp, err := cs.HTTPClient.Do(getReq)
 	if err != nil {
 		http.Error(w, "Failed to fetch topic", http.StatusInternalServerError)
@@ -225,6 +229,10 @@ func (cs *ClientServer) DeleteTopicPost(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		http.Error(w, "Failed to create delete request", http.StatusInternalServerError)
 		return
+	}
+
+	for _, cookie := range r.Cookies() {
+		delReq.AddCookie(cookie)
 	}
 
 	delResp, err := cs.HTTPClient.Do(delReq)

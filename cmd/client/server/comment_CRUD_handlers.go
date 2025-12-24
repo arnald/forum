@@ -58,7 +58,7 @@ func (cs *ClientServer) CreateCommentPost(w http.ResponseWriter, r *http.Request
 	ctx, cancel := context.WithTimeout(r.Context(), requestTimeout)
 	defer cancel()
 
-	resp, err := cs.newRequest(ctx, http.MethodPost, backendCreateComment, createRequest)
+	resp, err := cs.newRequestWithCookies(ctx, http.MethodPost, backendCreateComment, createRequest, r)
 	if err != nil {
 		log.Printf("Backend request failed: %v", err)
 		templates.NotFoundHandler(w, r, "Failed to create comment", http.StatusInternalServerError)
@@ -115,7 +115,7 @@ func (cs *ClientServer) UpdateCommentPost(w http.ResponseWriter, r *http.Request
 	ctx, cancel := context.WithTimeout(r.Context(), requestTimeout)
 	defer cancel()
 
-	resp, err := cs.newRequest(ctx, http.MethodPut, backendUpdateComment, updateRequest)
+	resp, err := cs.newRequestWithCookies(ctx, http.MethodPut, backendUpdateComment, updateRequest, r)
 	if err != nil {
 		log.Printf("Backend request failed: %v", err)
 		templates.NotFoundHandler(w, r, "Failed to update comment", http.StatusInternalServerError)
@@ -172,6 +172,10 @@ func (cs *ClientServer) DeleteCommentPost(w http.ResponseWriter, r *http.Request
 		log.Printf("Error creating request: %v", err)
 		http.Error(w, "Error creating request", http.StatusInternalServerError)
 		return
+	}
+
+	for _, cookie := range r.Cookies() {
+		httpReq.AddCookie(cookie)
 	}
 
 	resp, err := cs.HTTPClient.Do(httpReq)

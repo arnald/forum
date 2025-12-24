@@ -160,3 +160,29 @@ func (cs *ClientServer) newRequest(ctx context.Context, method string, url strin
 
 	return resp, nil
 }
+
+// Makes a backend request and includes cookies from the original request, necessary for authenticated endpoints.
+func (cs *ClientServer) newRequestWithCookies(ctx context.Context, method string, url string, req any, originalReq *http.Request) (*http.Response, error) {
+	reqBody, err := json.Marshal(req)
+	if err != nil {
+		return nil, backendError("Failed to marshal request: " + err.Error())
+	}
+
+	httpReq, err := http.NewRequestWithContext(ctx, method, url, bytes.NewBuffer(reqBody))
+	if err != nil {
+		return nil, backendError("Failed to create request: " + err.Error())
+	}
+
+	httpReq.Header.Set("Content-Type", "application/json")
+
+	for _, cookie := range originalReq.Cookies() {
+		httpReq.AddCookie(cookie)
+	}
+
+	resp, err := cs.HTTPClient.Do(httpReq)
+	if err != nil {
+		return nil, backendError("Backend request failed: " + err.Error())
+	}
+
+	return resp, nil
+}
