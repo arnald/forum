@@ -17,11 +17,8 @@ const (
 	backendGooglebRegister     = backendAPIBase + "/auth/google/login"
 	backendGetCategoriesDomain = backendAPIBase + "/categories/all"
 	backendGetTopicsDomain     = backendAPIBase + "/topics/all"
-<<<<<<< HEAD
 	backendGetTopicByID        = backendAPIBase + "/topic"
 	backendCastVote            = backendAPIBase + "/vote/cast"
 	backendDeleteVote          = backendAPIBase + "/vote/delete"
 	backendGetVoteCounts       = backendAPIBase + "/vote/counts"
-=======
->>>>>>> 75225d6 (resolved some confilcts with main branch)
 )
