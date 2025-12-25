@@ -13,6 +13,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/arnald/forum/cmd/client/domain"
 	"github.com/arnald/forum/cmd/client/helpers"
 	"github.com/arnald/forum/cmd/client/helpers/templates"
 )
@@ -31,8 +32,62 @@ type updateTopicRequest struct {
 	CategoryID int    `json:"categoryId"`
 }
 
+type createPostData struct {
+	Categories []domain.Category
+}
+
 // CreateTopicPage handles GET requests to /topics/create - shows the form.
-func (cs *ClientServer) CreateTopicPage(w http.ResponseWriter, r *http.Request) {}
+func (cs *ClientServer) CreateTopicPage(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), requestTimeout)
+	defer cancel()
+
+	categoriesHTTPReq, err := http.NewRequestWithContext(ctx, http.MethodGet, backendGetCategoriesDomain, nil)
+	if err != nil {
+		log.Printf("Error creating categories request: %v", err)
+		templates.NotFoundHandler(w, r, "Error creating categories request", http.StatusInternalServerError)
+		return
+	}
+
+	for _, cookie := range r.Cookies() {
+		categoriesHTTPReq.AddCookie(cookie)
+	}
+
+	categoriesResp, err := cs.HTTPClient.Do(categoriesHTTPReq)
+	if err != nil {
+		log.Printf("Error fetching categories: %v", err)
+		templates.NotFoundHandler(w, r, "Error fetching categories", http.StatusInternalServerError)
+		return
+	}
+	defer categoriesResp.Body.Close()
+
+	if categoriesResp.StatusCode != http.StatusOK {
+		log.Printf("Failed to fetch categories, status: %d", categoriesResp.StatusCode)
+		templates.NotFoundHandler(w, r, "Failed to load categories", http.StatusInternalServerError)
+		return
+	}
+
+	var categoriesData struct {
+		Categories []domain.Category `json:"categories"`
+	}
+
+	err = helpers.DecodeBackendResponse(categoriesResp, &categoriesData)
+	if err != nil {
+		log.Printf("Error decoding categories response: %v", err)
+		templates.NotFoundHandler(w, r, "Error loading categories", http.StatusInternalServerError)
+		return
+	}
+
+	// Normalize colors
+	for i := range categoriesData.Categories {
+		categoriesData.Categories[i].Color = helpers.NormalizeColor(categoriesData.Categories[i].Color)
+	}
+
+	data := createPostData{
+		Categories: categoriesData.Categories,
+	}
+
+	templates.RenderTemplate(w, "create_post", data)
+}
 
 // CreateTopicPost handles POST requests to /topics/create.
 func (cs *ClientServer) CreateTopicPost(w http.ResponseWriter, r *http.Request) {}
