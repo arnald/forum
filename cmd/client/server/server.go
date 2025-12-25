@@ -68,6 +68,16 @@ func (cs *ClientServer) SetupRoutes() {
 	cs.Router.HandleFunc("/topic/", applyMiddleware(cs.TopicPage, authMiddleware))
 
 	// Topic CRUD routes
+	cs.Router.HandleFunc("/topics/create", applyMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			cs.CreateTopicPage(w, r)
+		case http.MethodPost:
+			cs.CreateTopicPost(w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	}, middleware.RequireAuth, authMiddleware))
 	cs.Router.HandleFunc("/topics/edit", applyMiddleware(cs.UpdateTopicPost, middleware.RequireAuth, authMiddleware))
 	cs.Router.HandleFunc("/topics/delete", applyMiddleware(cs.DeleteTopicPost, middleware.RequireAuth, authMiddleware))
 

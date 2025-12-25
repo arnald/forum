@@ -31,6 +31,12 @@ type updateTopicRequest struct {
 	CategoryID int    `json:"categoryId"`
 }
 
+// CreateTopicPage handles GET requests to /topics/create - shows the form.
+func (cs *ClientServer) CreateTopicPage(w http.ResponseWriter, r *http.Request) {}
+
+// CreateTopicPost handles POST requests to /topics/create.
+func (cs *ClientServer) CreateTopicPost(w http.ResponseWriter, r *http.Request) {}
+
 // UpdateTopicPost handles POST requests to /topics/edit.
 func (cs *ClientServer) UpdateTopicPost(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
