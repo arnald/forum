@@ -76,7 +76,10 @@
                       value="{{ .ID }}"
                     />
                     <span class="option-label">{{ .Name }}</span>
-                    <span class="option-color">{{ .Color }}</span>
+                    <span
+                      class="option-color"
+                      style="background-color: {{ .Color }}"
+                    ></span>
                   </label>
                 </li>
                 {{ end }}

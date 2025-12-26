@@ -181,6 +181,10 @@ textarea::placeholder {
 .option input[type="checkbox"] {
   cursor: pointer;
 }
+.option-color {
+  width: 12px;
+  height: 12px;
+}
 /* when open */
 .multi-select.open .options {
   display: block;
