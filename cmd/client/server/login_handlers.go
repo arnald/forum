@@ -47,11 +47,6 @@ type BackendLoginResponse struct {
 
 // LoginPage handles GET requests to /login.
 func (cs *ClientServer) LoginPage(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
 	// If there is a user redirect him to homepage
 	user := middleware.GetUserFromContext(r.Context())
 	if user != nil {
@@ -64,11 +59,6 @@ func (cs *ClientServer) LoginPage(w http.ResponseWriter, r *http.Request) {
 
 // LoginPost handles POST requests to /login.
 func (cs *ClientServer) LoginPost(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, "Invalid form data", http.StatusBadRequest)

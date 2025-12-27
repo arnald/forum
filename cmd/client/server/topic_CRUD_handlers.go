@@ -24,6 +24,13 @@ const (
 	uploadDirPerm = 0o750
 )
 
+type createTopicRequest struct {
+	Title       string `json:"title"`
+	Content     string `json:"content"`
+	ImagePath   string `json:"imagePath"`
+	CategoryIDs []int  `json:"categoryIds"`
+}
+
 type updateTopicRequest struct {
 	Title      string `json:"title"`
 	Content    string `json:"content"`
@@ -90,7 +97,151 @@ func (cs *ClientServer) CreateTopicPage(w http.ResponseWriter, r *http.Request) 
 }
 
 // CreateTopicPost handles POST requests to /topics/create.
-func (cs *ClientServer) CreateTopicPost(w http.ResponseWriter, r *http.Request) {}
+func (cs *ClientServer) CreateTopicPost(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	err := r.ParseMultipartForm(maxUploadSize)
+	if err != nil {
+		log.Printf("Error parsing form: %v", err)
+		http.Error(w, "Error parsing form. File may be too large (max 20MB)", http.StatusBadRequest)
+		return
+	}
+
+	allowedImageTypes := map[string]bool{
+		"image/jpeg": true,
+		"image/png":  true,
+		"image/gif":  true,
+	}
+
+	// Get form values
+	title := r.FormValue("title")
+	content := r.FormValue("content")
+	categoryIDsStr := r.Form["categories"] // This is a []string from multiple checkboxes
+
+	// Parse category IDs
+	categoryIDs := make([]int, 0)
+	for _, idStr := range categoryIDsStr {
+		categoryID, err := strconv.Atoi(idStr)
+		if err != nil {
+			log.Printf("Invalid category ID: %v", err)
+			http.Error(w, "Invalid category ID", http.StatusBadRequest)
+			return
+		}
+		categoryIDs = append(categoryIDs, categoryID)
+	}
+
+	if len(categoryIDs) == 0 {
+		log.Printf("No categories selected")
+		http.Error(w, "At least one category must be selected", http.StatusBadRequest)
+		return
+	}
+
+	// Handle optional image upload
+	imagePath := ""
+	file, header, err := r.FormFile("image_path")
+
+	switch {
+	case errors.Is(err, http.ErrMissingFile):
+		// No image uploaded - this is fine, image is optional
+
+	case err != nil:
+		log.Printf("Error reading uploaded file: %v", err)
+		http.Error(w, "Error processing uploaded file", http.StatusBadRequest)
+		return
+
+	default:
+		defer file.Close()
+
+		contentType := header.Header.Get("Content-Type")
+		if !allowedImageTypes[contentType] {
+			log.Printf("Invalid file type: %s", contentType)
+			http.Error(w, "Invalid file type. Only JPEG, PNG, and GIF are allowed", http.StatusBadRequest)
+			return
+		}
+
+		if header.Size > maxUploadSize {
+			log.Printf("File too large: %d bytes", header.Size)
+			http.Error(w, "File too large. Maximum size is 20MB", http.StatusBadRequest)
+			return
+		}
+
+		ext := filepath.Ext(header.Filename)
+		uniqueFilename := uuid.New().String() + ext
+
+		err = os.MkdirAll(uploadDir, uploadDirPerm)
+		if err != nil {
+			log.Printf("Failed to create upload directory: %v", err)
+			http.Error(w, "Failed to save image", http.StatusInternalServerError)
+			return
+		}
+
+		destPath := filepath.Join(uploadDir, uniqueFilename)
+		destPath = filepath.Clean(destPath)
+
+		if !strings.HasPrefix(destPath, filepath.Clean(uploadDir)+string(os.PathSeparator)) {
+			log.Printf("Invalid file path: %s", destPath)
+			http.Error(w, "Invalid file path", http.StatusBadRequest)
+			return
+		}
+
+		var destFile *os.File
+		destFile, err = os.Create(destPath)
+		if err != nil {
+			log.Printf("Failed to create destination file: %v", err)
+			http.Error(w, "Failed to save image", http.StatusInternalServerError)
+			return
+		}
+		defer destFile.Close()
+
+		_, err = io.Copy(destFile, file)
+		if err != nil {
+			log.Printf("Failed to save image: %v", err)
+			http.Error(w, "Failed to save image", http.StatusInternalServerError)
+			return
+		}
+
+		imagePath = "/static/images/uploads/" + uniqueFilename
+	}
+
+	createRequest := &createTopicRequest{
+		CategoryIDs: categoryIDs,
+		Title:       title,
+		Content:     content,
+		ImagePath:   imagePath,
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), requestTimeout)
+	defer cancel()
+
+	resp, err := cs.newRequestWithCookies(ctx, http.MethodPost, backendCreateTopic, createRequest, r)
+	if err != nil {
+		log.Printf("Backend request failed: %v", err)
+		// If image was uploaded, clean it up since topic creation failed
+		if imagePath != "" {
+			cleanupImage(imagePath)
+		}
+		templates.NotFoundHandler(w, r, "Failed to create topic", http.StatusInternalServerError)
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		body, _ := io.ReadAll(resp.Body)
+		log.Printf("Backend returned error: %s", string(body))
+		// If image was uploaded, clean it up since topic creation failed
+		if imagePath != "" {
+			cleanupImage(imagePath)
+		}
+		templates.NotFoundHandler(w, r, "Failed to create topic", resp.StatusCode)
+		return
+	}
+
+	// Success! Redirect to topics list
+	http.Redirect(w, r, "/topics", http.StatusSeeOther)
+}
 
 // UpdateTopicPost handles POST requests to /topics/edit.
 func (cs *ClientServer) UpdateTopicPost(w http.ResponseWriter, r *http.Request) {
@@ -338,4 +489,17 @@ func (cs *ClientServer) DeleteTopicPost(w http.ResponseWriter, r *http.Request) 
 	}
 
 	http.Redirect(w, r, "/topics", http.StatusSeeOther)
+}
+
+// Helper function to clean up uploaded image if topic creation fails
+func cleanupImage(imagePath string) {
+	if imagePath != "" && strings.HasPrefix(imagePath, "/static/images/uploads/") {
+		filename := strings.TrimPrefix(imagePath, "/static/images/uploads/")
+		filePath := filepath.Join(uploadDir, filename)
+		filePath = filepath.Clean(filePath)
+
+		if strings.HasPrefix(filePath, filepath.Clean(uploadDir)+string(os.PathSeparator)) {
+			_ = os.Remove(filePath)
+		}
+	}
 }

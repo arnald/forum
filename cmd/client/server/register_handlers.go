@@ -38,11 +38,6 @@ type BackendRegisterResponse struct {
 
 // RegisterPage handles GET requests to /register.
 func (cs *ClientServer) RegisterPage(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
 	user := middleware.GetUserFromContext(r.Context())
 	if user != nil {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
@@ -54,11 +49,6 @@ func (cs *ClientServer) RegisterPage(w http.ResponseWriter, r *http.Request) {
 
 // RegisterPost handles POST requests to /register.
 func (cs *ClientServer) RegisterPost(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, "Invalid form data", http.StatusBadRequest)
