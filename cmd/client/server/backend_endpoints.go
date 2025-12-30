@@ -18,4 +18,7 @@ const (
 	backendGetCategoriesDomain = backendAPIBase + "/categories/all"
 	backendGetTopicsDomain     = backendAPIBase + "/topics/all"
 	backendGetTopicByID        = backendAPIBase + "/topic"
+	backendCastVote            = backendAPIBase + "/vote/cast"
+	backendDeleteVote          = backendAPIBase + "/vote/delete"
+	backendGetVoteCounts       = backendAPIBase + "/vote/counts"
 )
