@@ -93,19 +93,18 @@
     </div>
 
     <!-- Post Actions (only show if user is the owner) -->
+    {{ if and .User (eq .User.ID .Topic.UserID) }}
     <div class="post-actions">
       <div class="author-choices">
         <button class="action-btn btn-edit" data-type="topic">
           Edit Topic
         </button>
-        <form method="POST" action="/topics/delete" class="inline-form">
-          <input type="hidden" name="topic_id" value="{{ .Topic.ID }}" />
-          <button type="submit" class="action-btn btn-delete">
-            Delete Topic
-          </button>
-        </form>
+        <button class="action-btn btn-delete" data-type="topic">
+          Delete Topic
+        </button>
       </div>
     </div>
+    {{ end }}
 
     <!-- Edit Topic Form (hidden by default) -->
     <div class="edit-form edit-topic-form" style="display: none">
@@ -192,6 +191,7 @@
     </div>
 
     <!-- Add Comment Button (only show if user is logged in) -->
+    {{ if .User }}
     <div class="post-actions">
       <button class="action-btn btn-comment">Add a Comment</button>
     </div>
@@ -217,6 +217,7 @@
         <button class="post-comment" type="submit">Post Comment</button>
       </form>
     </div>
+    {{ end }}
 
     <!-- Comments Section -->
     {{ if .Topic.Comments }}
@@ -288,6 +289,7 @@
             </div>
 
             <!-- Comment Actions (only show if user is the owner) -->
+            {{ if and $.User (eq $.User.ID .UserID) }}
             <div class="comment-actions">
               <button
                 class="action-btn btn-edit"
@@ -304,10 +306,12 @@
                 </button>
               </form>
             </div>
+            {{ end }}
           </div>
         </div>
 
         <!-- Edit Comment Form (hidden by default) -->
+        {{ if and $.User (eq $.User.ID .UserID) }}
         <div class="edit-form edit-comment-form" style="display: none">
           <div class="comment-form-header">
             <h3>Edit Comment</h3>
@@ -336,6 +340,7 @@
             <button class="post-comment" type="submit">Save Changes</button>
           </form>
         </div>
+        {{ end }}
       </div>
       {{ end }}
     </div>

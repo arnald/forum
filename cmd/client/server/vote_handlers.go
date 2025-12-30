@@ -151,5 +151,7 @@ func (cs *ClientServer) GetVoteCounts(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		log.Printf("Failed to encode response: %v", err)
+		http.Error(w, "Error encoding response", http.StatusInternalServerError)
+		return
 	}
 }
