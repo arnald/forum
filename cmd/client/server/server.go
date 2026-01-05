@@ -123,6 +123,8 @@ func (cs *ClientServer) SetupRoutes() {
 	cs.Router.HandleFunc("/auth/callback", applyMiddleware(cs.Callback, authMiddleware))
 
 	// Protected Routes (require authentication).
+	// Activity page
+	cs.Router.HandleFunc("/activity", applyMiddleware(cs.ActivityPage, middleware.RequireAuth, authMiddleware))
 	// Logout route - clears cookies
 	cs.Router.HandleFunc("/logout", applyMiddleware(cs.Logout, middleware.RequireAuth, authMiddleware))
 }
