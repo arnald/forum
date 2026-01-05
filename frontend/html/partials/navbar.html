@@ -19,13 +19,15 @@
             <span class="welcome-user">Welcome,</span>
             <span class="welcome-user-name">{{.User.Username}}</span>
           </div>
-          <span class="user-avatar">
-            {{if .User.AvatarURL}}
-            <img src="{{.User.AvatarURL}}" alt="User Avatar" />
-            {{else}}
-            <img src="/static/images/user-avatar.png" alt="User Avatar" />
-            {{end}}
-          </span>
+          <a href="/activity" class="user-avatar-link">
+            <span class="user-avatar">
+              {{if .User.AvatarURL}}
+              <img src="{{.User.AvatarURL}}" alt="User Avatar" />
+              {{else}}
+              <img src="/static/images/user-avatar.png" alt="User Avatar" />
+              {{end}}
+            </span>
+          </a>
         </div>
         <ul class="nav-links">
           <li class="nav-icon">
