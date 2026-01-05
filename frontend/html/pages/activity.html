@@ -1,0 +1,133 @@
+{{ define "content" }}
+<h1 class="forum-title">My Activity</h1>
+<div class="main-container">
+  <div class="activity-container">
+    <!-- Created Posts Section -->
+    {{ if .CreatedTopics }}
+    <div class="activity-section">
+      <h3 class="activity-section-title">Posts You Created</h3>
+      {{ range .CreatedTopics }}
+      <div class="activity-row">
+        <div class="activity-content">
+          <p class="activity-text">
+            You created:
+            <a href="/topic/{{ .ID }}" class="activity-link">{{ .Title }}</a>
+          </p>
+          <span class="activity-date">{{ .CreatedAt }}</span>
+        </div>
+      </div>
+      {{ end }}
+    </div>
+    {{ end }}
+
+    <!-- Liked Topics Section -->
+    {{ if .LikedTopics }}
+    <div class="activity-section">
+      <h3 class="activity-section-title">Topics You Liked</h3>
+      {{ range .LikedTopics }}
+      <div class="activity-row">
+        <div class="activity-content">
+          <p class="activity-text">
+            You liked:
+            <a href="/topic/{{ .ID }}" class="activity-link">{{ .Title }}</a>
+          </p>
+          <span class="activity-date">{{ .CreatedAt }}</span>
+        </div>
+      </div>
+      {{ end }}
+    </div>
+    {{ end }}
+
+    <!-- Disliked Topics Section -->
+    {{ if .DislikedTopics }}
+    <div class="activity-section">
+      <h3 class="activity-section-title">Topics You Disliked</h3>
+      {{ range .DislikedTopics }}
+      <div class="activity-row">
+        <div class="activity-content">
+          <p class="activity-text">
+            You disliked:
+            <a href="/topic/{{ .ID }}" class="activity-link">{{ .Title }}</a>
+          </p>
+          <span class="activity-date">{{ .CreatedAt }}</span>
+        </div>
+      </div>
+      {{ end }}
+    </div>
+    {{ end }}
+
+    <!-- Liked Comments Section -->
+    {{ if .LikedComments }}
+    <div class="activity-section">
+      <h3 class="activity-section-title">Comments You Liked</h3>
+      {{ range .LikedComments }}
+      <div class="activity-row">
+        <div class="activity-content">
+          <p class="activity-text">
+            You liked a comment in:
+            <a href="/topic/{{ .TopicID }}" class="activity-link"
+              >{{ .TopicTitle }}</a
+            >
+          </p>
+          <span class="activity-date">{{ .CreatedAt }}</span>
+        </div>
+      </div>
+      {{ end }}
+    </div>
+    {{ end }}
+
+    <!-- Disliked Comments Section -->
+    {{ if .DislikedComments }}
+    <div class="activity-section">
+      <h3 class="activity-section-title">Comments You Disliked</h3>
+      {{ range .DislikedComments }}
+      <div class="activity-row">
+        <div class="activity-content">
+          <p class="activity-text">
+            You disliked a comment in:
+            <a href="/topic/{{ .TopicID }}" class="activity-link"
+              >{{ .TopicTitle }}</a
+            >
+          </p>
+          <span class="activity-date">{{ .CreatedAt }}</span>
+        </div>
+      </div>
+      {{ end }}
+    </div>
+    {{ end }}
+
+    <!-- Comments Section -->
+    {{ if .UserComments }}
+    <div class="activity-section">
+      <h3 class="activity-section-title">Your Comments</h3>
+      {{ range .UserComments }}
+      <div class="activity-row activity-row-comment">
+        <div class="activity-content">
+          <p class="activity-text">
+            You commented in:
+            <a href="/topic/{{ .TopicID }}" class="activity-link"
+              >{{ .TopicTitle }}</a
+            >
+          </p>
+          <div class="activity-comment-preview">
+            <p class="comment-preview-text">"{{ .Content }}"</p>
+          </div>
+          <span class="activity-date">{{ .CreatedAt }}</span>
+        </div>
+      </div>
+      {{ end }}
+    </div>
+    {{ end }}
+
+    <!-- Empty State -->
+    {{ if and (not .CreatedTopics) (not .LikedTopics) (not .DislikedTopics) (not
+    .LikedComments) (not .DislikedComments) (not .UserComments) }}
+    <div class="activity-empty">
+      <p class="activity-empty-text">
+        No activity yet. Start by creating a post or commenting!
+      </p>
+    </div>
+    {{ end }}
+  </div>
+</div>
+{{ end }}
