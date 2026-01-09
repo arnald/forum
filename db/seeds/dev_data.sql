@@ -22,6 +22,12 @@ INSERT OR IGNORE INTO topics (user_id, category_id, title, content, image_path) 
 ('000dec3a-51af-4e7c-ae0c-21436a0a2395', 2, 'Feedback on New Features', 'What do you think about the new features?', '/static/images/sample.jpg'),
 ('f1433622-9c10-44e5-94b1-1f6a148c9131', 3, 'Forum Guidelines', 'Please read the forum guidelines before posting.', '/static/images/sample.jpg');
 
+-- Topics/Categories Junction
+INSERT OR IGNORE INTO topic_categories (topic_id, category_id) VALUES
+(1,1),
+(1,2),
+(2,2),
+(3,3);
 
 -- Comments
 INSERT OR IGNORE INTO comments (user_id, topic_id, content) VALUES
