@@ -20,7 +20,7 @@ const (
 	cleanupInternal     = 3600
 	maxSessionsPerUser  = 5
 	sessionIDLenght     = 32
-	userRegisterTimeout = 15
+	userRegisterTimeout = 10000
 	refreshTokenExpiry  = 30
 	userLoginTimeout    = 15
 )

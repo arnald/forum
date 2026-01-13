@@ -2,18 +2,39 @@
 <div class="main-container">
   <div class="topic-container">
     <div class="topic-header">
-      <a
-        href="/topics?category={{ .Topic.CategoryID }}"
-        class="topic-category-link"
-      >
-        <div class="topic-category">
-          <span
-            class="topic-category-color"
-            style="background-color: {{ .Topic.CategoryColor }}"
-          ></span>
-          <span class="topic-category-name">{{ .Topic.CategoryName }}</span>
-        </div>
-      </a>
+      <div class="topic-categories">
+        {{ if .Topic.CategoryColors }}
+          {{ $categoryNames := .Topic.CategoryNames }}
+          {{ range $index, $color := .Topic.CategoryColors }}
+            <a
+              href="/topics?category={{ index $.Topic.CategoryIDs $index }}"
+              class="topic-category-link"
+            >
+              <div class="topic-category">
+                <span
+                  class="topic-category-color"
+                  style="background-color: {{ $color }}"
+                ></span>
+                <span class="topic-category-name">{{ index $categoryNames $index }}</span>
+              </div>
+            </a>
+          {{ end }}
+        {{ else }}
+          <!-- Fallback to single category -->
+          <a
+            href="/topics?category={{ .Topic.CategoryID }}"
+            class="topic-category-link"
+          >
+            <div class="topic-category">
+              <span
+                class="topic-category-color"
+                style="background-color: {{ .Topic.CategoryColor }}"
+              ></span>
+              <span class="topic-category-name">{{ .Topic.CategoryName }}</span>
+            </div>
+          </a>
+        {{ end }}
+      </div>
     </div>
 
     <div class="topic-content">

@@ -83,10 +83,23 @@
           <div class="topic-row">
             <div class="topic-content-wrapper">
               <div class="topic-text">
+                <!-- Multiple categories -->
                 <div class="color-category">
-                  <span class="category-color" style="background-color: {{ .CategoryColor }}"></span>
-                  <span class="category-name">{{ .CategoryName }}</span>
+                  {{ if .CategoryColors }}
+                    {{ $categoryNames := .CategoryNames }}
+                    {{ range $index, $color := .CategoryColors }}
+                      <div class="category-color" style="background-color: {{ $color }}">
+                        <span class="category-name">{{ index $categoryNames $index }}</span>
+                      </div>
+                    {{ end }}
+                  {{ else }}
+                    <!-- Fallback to single category for backward compatibility -->
+                    <div class="category-color" style="background-color: {{ .CategoryColor }}">
+                      <span class="category-name">{{ .CategoryName }}</span>
+                    </div>
+                  {{ end }}
                 </div>
+                
                 <div class="topic-title">
                   <a href="/topic/{{ .ID }}">{{ .Title }}</a>
                   <p class="topic-preview">{{ truncate .Content 100 }}</p>
@@ -98,9 +111,12 @@
                 <span class="topic-score">
                   <span class="upvotes">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 32 32"><path d="M27 11h-8.52L19 9.8A6.42 6.42 0 0 0 13 1a1 1 0 0 0-.93.63L8.32 11H5a3 3 0 0 0-3 3v14a3 3 0 0 0 3 3h18.17a3 3 0 0 0 2.12-.88l3.83-3.83a3 3 0 0 0 .88-2.12V14a3 3 0 0 0-3-3zM4 28V14a1 1 0 0 1 1-1h3v16H5a1 1 0 0 1-1-1zm24-3.83a1 1 0 0 1-.29.71l-3.83 3.83a1.05 1.05 0 0 1-.71.29H10V12.19l3.66-9.14a4.31 4.31 0 0 1 3 1.89 4.38 4.38 0 0 1 .44 4.12l-1 2.57A1 1 0 0 0 17 13h10a1 1 0 0 1 1 1z" data-name="thumb up android app aplication phone"/></svg>
-                    <span class="like-count">{{ .UpvoteCount }}</span></span>
-                  <span class="downvotes"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 32 32"><path d="m29.12 5.71-3.83-3.83A3 3 0 0 0 23.17 1H5a3 3 0 0 0-3 3v14a3 3 0 0 0 3 3h3.32l3.75 9.37A1 1 0 0 0 13 31a6.42 6.42 0 0 0 6-8.8l-.52-1.2H27a3 3 0 0 0 3-3V7.83a3 3 0 0 0-.88-2.12zM4 18V4a1 1 0 0 1 1-1h3v16H5a1 1 0 0 1-1-1zm24 0a1 1 0 0 1-1 1H17a1 1 0 0 0-.93 1.37l1 2.57a4.38 4.38 0 0 1-.44 4.12 4.31 4.31 0 0 1-3 1.89L10 19.81V3h13.17a1 1 0 0 1 .71.29l3.83 3.83a1 1 0 0 1 .29.71z" data-name="thumb down android app aplication phone"/></svg>
-                    <span class="dislike-count">{{ .DownvoteCount }}</span></span>
+                    <span class="like-count">{{ .UpvoteCount }}</span>
+                  </span>
+                  <span class="downvotes">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 32 32"><path d="m29.12 5.71-3.83-3.83A3 3 0 0 0 23.17 1H5a3 3 0 0 0-3 3v14a3 3 0 0 0 3 3h3.32l3.75 9.37A1 1 0 0 0 13 31a6.42 6.42 0 0 0 6-8.8l-.52-1.2H27a3 3 0 0 0 3-3V7.83a3 3 0 0 0-.88-2.12zM4 18V4a1 1 0 0 1 1-1h3v16H5a1 1 0 0 1-1-1zm24 0a1 1 0 0 1-1 1H17a1 1 0 0 0-.93 1.37l1 2.57a4.38 4.38 0 0 1-.44 4.12 4.31 4.31 0 0 1-3 1.89L10 19.81V3h13.17a1 1 0 0 1 .71.29l3.83 3.83a1 1 0 0 1 .29.71z" data-name="thumb down android app aplication phone"/></svg>
+                    <span class="dislike-count">{{ .DownvoteCount }}</span>
+                  </span>
                 </span>
                 <span class="topic-date">{{ .UpdatedAt }}</span>
               </div>

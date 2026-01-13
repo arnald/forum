@@ -17,22 +17,25 @@ import (
 const minURLPathLength = 2
 
 type topicPageResponse struct {
-	UserVote      *int             `json:"userVote"`
-	ImagePath     string           `json:"imagePath"`
-	OwnerUsername string           `json:"ownerUsername"`
-	Content       string           `json:"content"`
-	CategoryColor string           `json:"categoryColor"`
-	UserID        string           `json:"userId"`
-	CreatedAt     string           `json:"createdAt"`
-	Title         string           `json:"title"`
-	CategoryName  string           `json:"categoryName"`
-	UpdatedAt     string           `json:"updatedAt"`
-	Comments      []domain.Comment `json:"comments"`
-	Upvotes       int              `json:"upvotes"`
-	CategoryID    int              `json:"categoryId"`
-	Downvotes     int              `json:"downvotes"`
-	Score         int              `json:"score"`
-	TopicID       int              `json:"topicId"`
+	UserVote       *int             `json:"userVote"`
+	ImagePath      string           `json:"imagePath"`
+	OwnerUsername  string           `json:"ownerUsername"`
+	Content        string           `json:"content"`
+	CategoryColor  string           `json:"categoryColor"`
+	UserID         string           `json:"userId"`
+	CreatedAt      string           `json:"createdAt"`
+	Title          string           `json:"title"`
+	CategoryName   string           `json:"categoryName"`
+	CategoryNames  []string         `json:"categoryNames"`
+	CategoryColors []string         `json:"categoryColors"`
+	UpdatedAt      string           `json:"updatedAt"`
+	Comments       []domain.Comment `json:"comments"`
+	Upvotes        int              `json:"upvotes"`
+	CategoryID     int              `json:"categoryId"`
+	CategoryIDs    []int            `json:"categoryIds"`
+	Downvotes      int              `json:"downvotes"`
+	Score          int              `json:"score"`
+	TopicID        int              `json:"topicId"`
 }
 
 type topicPageRequest struct {
@@ -149,23 +152,31 @@ func (cs *ClientServer) TopicPage(w http.ResponseWriter, r *http.Request) {
 		categoriesData.Categories[i].Color = helpers.NormalizeColor(categoriesData.Categories[i].Color)
 	}
 
+	normalizedColors := make([]string, len(topicData.CategoryColors))
+	for i, color := range topicData.CategoryColors {
+		normalizedColors[i] = helpers.NormalizeColor(color)
+	}
+
 	topic := domain.Topic{
-		ID:            topicData.TopicID,
-		CategoryID:    topicData.CategoryID,
-		Title:         topicData.Title,
-		Content:       topicData.Content,
-		ImagePath:     topicData.ImagePath,
-		UserID:        topicData.UserID,
-		CreatedAt:     topicData.CreatedAt,
-		UpdatedAt:     topicData.UpdatedAt,
-		UpvoteCount:   topicData.Upvotes,
-		DownvoteCount: topicData.Downvotes,
-		VoteScore:     topicData.Score,
-		UserVote:      topicData.UserVote,
-		OwnerUsername: topicData.OwnerUsername,
-		CategoryName:  topicData.CategoryName,
-		CategoryColor: helpers.NormalizeColor(topicData.CategoryColor),
-		Comments:      topicData.Comments,
+		ID:             topicData.TopicID,
+		CategoryID:     topicData.CategoryID,
+		CategoryIDs:    topicData.CategoryIDs,
+		Title:          topicData.Title,
+		Content:        topicData.Content,
+		ImagePath:      topicData.ImagePath,
+		UserID:         topicData.UserID,
+		CreatedAt:      topicData.CreatedAt,
+		UpdatedAt:      topicData.UpdatedAt,
+		UpvoteCount:    topicData.Upvotes,
+		DownvoteCount:  topicData.Downvotes,
+		VoteScore:      topicData.Score,
+		UserVote:       topicData.UserVote,
+		OwnerUsername:  topicData.OwnerUsername,
+		CategoryName:   topicData.CategoryName,
+		CategoryColor:  helpers.NormalizeColor(topicData.CategoryColor),
+		Comments:       topicData.Comments,
+		CategoryNames:  topicData.CategoryNames,
+		CategoryColors: topicData.CategoryColors,
 	}
 
 	pageData := topicPageData{

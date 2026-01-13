@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/arnald/forum/internal/domain/comment"
@@ -22,23 +24,40 @@ func NewRepo(db *sql.DB) *Repo {
 }
 
 func (r Repo) CreateTopic(ctx context.Context, topic *topic.Topic) error {
-	query := `
-	INSERT INTO topics (user_id, title, content, image_path, category_id)
-	VALUES (?, ?, ?, ?, ?)`
+	tx, err := r.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer func() {
+		if err != nil {
+			rollbackErr := tx.Rollback()
+			if rollbackErr != nil {
+				err = fmt.Errorf("transaction rollback failed: %w (original error: %w)", rollbackErr, err)
+			}
+			return
+		}
+		err = tx.Commit()
+		if err != nil {
+			err = fmt.Errorf("transaction commit failed: %w", err)
+		}
+	}()
 
-	stmt, err := r.DB.PrepareContext(ctx, query)
+	query := `
+	INSERT INTO topics (user_id, title, content, image_path)
+	VALUES (?, ?, ?, ?)`
+
+	stmt, err := tx.PrepareContext(ctx, query)
 	if err != nil {
 		return fmt.Errorf("prepare failed: %w", err)
 	}
 	defer stmt.Close()
 
-	_, err = stmt.ExecContext(
+	result, err := stmt.ExecContext(
 		ctx,
 		topic.UserID,
 		topic.Title,
 		topic.Content,
 		topic.ImagePath,
-		topic.CategoryID,
 	)
 	if err != nil {
 		switch {
@@ -46,6 +65,27 @@ func (r Repo) CreateTopic(ctx context.Context, topic *topic.Topic) error {
 			return fmt.Errorf("user with ID %s not found: %w", topic.UserID, ErrUserNotFound)
 		default:
 			return fmt.Errorf("failed to create topic: %w", err)
+		}
+	}
+
+	topicID, err := result.LastInsertId()
+	if err != nil {
+		return fmt.Errorf("failed to get last insert id: %w", err)
+	}
+
+	categoryQuery := `
+	INSERT INTO topic_categories (topic_id, category_id)
+	VALUES (?, ?)`
+	categoryStmt, err := tx.PrepareContext(ctx, categoryQuery)
+	if err != nil {
+		return fmt.Errorf("failed to prepare category insert: %w", err)
+	}
+	defer categoryStmt.Close()
+
+	for _, categoryID := range topic.CategoryIDs {
+		_, err = categoryStmt.ExecContext(ctx, topicID, categoryID)
+		if err != nil {
+			return fmt.Errorf("failed to insert category %d for topic: %w", categoryID, err)
 		}
 	}
 
@@ -137,10 +177,11 @@ func (r Repo) DeleteTopic(ctx context.Context, userID string, topicID int) error
 func (r Repo) GetTopicByID(ctx context.Context, topicID int, userID *string) (*topic.Topic, error) {
 	query := `
 	SELECT
-		t.id, t.user_id, t.title, t.content, t.image_path, t.category_id, t.created_at, t.updated_at,
+		t.id, t.user_id, t.title, t.content, t.image_path, t.created_at, t.updated_at,
 		u.username,
-		c.name as category_name,
-		c.color as category_color,
+		GROUP_CONCAT(DISTINCT c.id) as category_ids,
+		GROUP_CONCAT(DISTINCT c.name) as category_names,
+		GROUP_CONCAT(DISTINCT c.color) as category_colors,
 		COALESCE(vote_counts.upvotes, 0) as upvote_count,
 		COALESCE(vote_counts.downvotes, 0) as downvote_count,
 		COALESCE(vote_counts.score, 0) as vote_score`
@@ -153,7 +194,8 @@ func (r Repo) GetTopicByID(ctx context.Context, topicID int, userID *string) (*t
 	query += `
 	FROM topics t
 	LEFT JOIN users u ON t.user_id = u.id
-	LEFT JOIN categories c ON t.category_id = c.id
+	LEFT JOIN topic_categories tc ON t.id = tc.topic_id
+	LEFT JOIN categories c ON tc.category_id = c.id
 	LEFT JOIN (
 		SELECT
 			topic_id,
@@ -173,6 +215,11 @@ func (r Repo) GetTopicByID(ctx context.Context, topicID int, userID *string) (*t
 	}
 
 	query += ` WHERE t.id = ?`
+	query += ` GROUP BY t.id, t.user_id, t.title, t.content, t.image_path, t.created_at, t.updated_at, u.username, vote_counts.upvotes, vote_counts.downvotes, vote_counts.score`
+
+	if userID != nil {
+		query += `, user_vote.reaction_type`
+	}
 
 	args := make([]interface{}, 0)
 	if userID != nil {
@@ -183,6 +230,7 @@ func (r Repo) GetTopicByID(ctx context.Context, topicID int, userID *string) (*t
 
 	var topicResult topic.Topic
 	var userVote sql.NullInt32
+	var categoryIDs, categoryNames, categoryColors sql.NullString
 
 	scanFields := []interface{}{
 		&topicResult.ID,
@@ -190,12 +238,12 @@ func (r Repo) GetTopicByID(ctx context.Context, topicID int, userID *string) (*t
 		&topicResult.Title,
 		&topicResult.Content,
 		&topicResult.ImagePath,
-		&topicResult.CategoryID,
 		&topicResult.CreatedAt,
 		&topicResult.UpdatedAt,
 		&topicResult.OwnerUsername,
-		&topicResult.CategoryName,
-		&topicResult.CategoryColor,
+		&categoryIDs,
+		&categoryNames,
+		&categoryColors,
 		&topicResult.UpvoteCount,
 		&topicResult.DownvoteCount,
 		&topicResult.VoteScore,
@@ -217,6 +265,46 @@ func (r Repo) GetTopicByID(ctx context.Context, topicID int, userID *string) (*t
 			return nil, fmt.Errorf("topic with ID %d not found: %w", topicID, ErrTopicNotFound)
 		}
 		return nil, fmt.Errorf("failed to get topic: %w", err)
+	}
+
+	// Parse comma-separated category data
+	if categoryIDs.Valid && categoryIDs.String != "" {
+		ids := strings.Split(categoryIDs.String, ",")
+		topicResult.CategoryIDs = make([]int, 0, len(ids))
+		for _, idStr := range ids {
+			idStr = strings.TrimSpace(idStr)
+			if idStr != "" {
+				id, parseErr := strconv.Atoi(idStr)
+				if parseErr == nil {
+					topicResult.CategoryIDs = append(topicResult.CategoryIDs, id)
+				}
+			}
+		}
+
+		// Set first category as backward compatibility
+		if len(topicResult.CategoryIDs) > 0 {
+			topicResult.CategoryID = topicResult.CategoryIDs[0]
+		}
+
+		if categoryNames.Valid && categoryNames.String != "" {
+			topicResult.CategoryNames = strings.Split(categoryNames.String, ",")
+			for i := range topicResult.CategoryNames {
+				topicResult.CategoryNames[i] = strings.TrimSpace(topicResult.CategoryNames[i])
+			}
+			if len(topicResult.CategoryNames) > 0 {
+				topicResult.CategoryName = topicResult.CategoryNames[0]
+			}
+		}
+
+		if categoryColors.Valid && categoryColors.String != "" {
+			topicResult.CategoryColors = strings.Split(categoryColors.String, ",")
+			for i := range topicResult.CategoryColors {
+				topicResult.CategoryColors[i] = strings.TrimSpace(topicResult.CategoryColors[i])
+			}
+			if len(topicResult.CategoryColors) > 0 {
+				topicResult.CategoryColor = topicResult.CategoryColors[0]
+			}
+		}
 	}
 
 	// Format Dates
@@ -273,41 +361,41 @@ func (r Repo) GetTotalTopicsCount(ctx context.Context, filter string, categoryID
 func (r Repo) GetAllTopics(ctx context.Context, page, size, categoryID int, orderBy, order, filter string, userID *string) ([]topic.Topic, error) {
 	query := `
     SELECT 
-        t.id, t.user_id, t.title, t.content, t.image_path, t.category_id, t.created_at, t.updated_at,
+        t.id, t.user_id, t.title, t.content, t.image_path, t.created_at, t.updated_at,
         u.username,
-		c.name as category_name,
-		c.color as category_color,
-		COALESCE(vote_counts.upvotes, 0) as upvote_count,
-		COALESCE(vote_counts.downvotes, 0) as downvote_count,
-		COALESCE(vote_counts.score, 0) as vote_score
-		`
+        GROUP_CONCAT(DISTINCT c.id) as category_ids,
+        GROUP_CONCAT(DISTINCT c.name) as category_names,
+        GROUP_CONCAT(DISTINCT c.color) as category_colors,
+        COALESCE(vote_counts.upvotes, 0) as upvote_count,
+        COALESCE(vote_counts.downvotes, 0) as downvote_count,
+        COALESCE(vote_counts.score, 0) as vote_score`
 
 	if userID != nil {
-		query += `
-		user_votes.reaction_type as user_vote
-		`
+		query += `,
+        user_votes.reaction_type as user_vote`
 	}
 
 	query += `
-	FROM topics t
-	LEFT JOIN users u ON t.user_id = u.id
-	LEFT JOIN categories c ON t.category_id = c.id
-	LEFT JOIN (
-		SELECT
-			topic_id,
-			COUNT(CASE WHEN reaction_type = 1 THEN 1 END) as upvotes,
-			COUNT(CASE WHEN reaction_type = -1 THEN	1 END) as downvotes,
-			(COUNT(CASE WHEN reaction_type = 1 THEN 1 END) - COUNT(CASE WHEN reaction_type = -1 THEN 1 END)) as score
-			FROM votes
-			WHERE comment_id IS NULL
-			GROUP BY topic_id
-		) vote_counts ON t.id = vote_counts.topic_id`
+    FROM topics t
+    LEFT JOIN users u ON t.user_id = u.id
+    LEFT JOIN topic_categories tc ON t.id = tc.topic_id
+    LEFT JOIN categories c ON tc.category_id = c.id
+    LEFT JOIN (
+        SELECT
+            topic_id,
+            COUNT(CASE WHEN reaction_type = 1 THEN 1 END) as upvotes,
+            COUNT(CASE WHEN reaction_type = -1 THEN 1 END) as downvotes,
+            (COUNT(CASE WHEN reaction_type = 1 THEN 1 END) - COUNT(CASE WHEN reaction_type = -1 THEN 1 END)) as score
+            FROM votes
+            WHERE comment_id IS NULL
+            GROUP BY topic_id
+        ) vote_counts ON t.id = vote_counts.topic_id`
 
 	if userID != nil {
 		query += `
-		LEFT JOIN votes user_votes ON t.id = user_votes.topic_id
-			AND user_votes.user_id = ?
-			AND user_votes.comment_id IS NULL`
+        LEFT JOIN votes user_votes ON t.id = user_votes.topic_id
+            AND user_votes.user_id = ?
+            AND user_votes.comment_id IS NULL`
 	}
 
 	query += ` WHERE 1=1`
@@ -325,8 +413,15 @@ func (r Repo) GetAllTopics(ctx context.Context, page, size, categoryID int, orde
 	}
 
 	if categoryID > 0 {
-		query += " AND t.category_id = ?"
+		query += " AND tc.category_id = ?"
 		args = append(args, categoryID)
+	}
+
+	// GROUP BY is essential when using GROUP_CONCAT
+	query += " GROUP BY t.id, t.user_id, t.title, t.content, t.image_path, t.created_at, t.updated_at, u.username, vote_counts.upvotes, vote_counts.downvotes, vote_counts.score"
+
+	if userID != nil {
+		query += ", user_votes.reaction_type"
 	}
 
 	orderByClause := "t." + orderBy
@@ -355,6 +450,7 @@ func (r Repo) GetAllTopics(ctx context.Context, page, size, categoryID int, orde
 	for rows.Next() {
 		var topic topic.Topic
 		var userVote sql.NullInt32
+		var categoryIDs, categoryNames, categoryColors sql.NullString
 
 		scanFields := []interface{}{
 			&topic.ID,
@@ -362,12 +458,12 @@ func (r Repo) GetAllTopics(ctx context.Context, page, size, categoryID int, orde
 			&topic.Title,
 			&topic.Content,
 			&topic.ImagePath,
-			&topic.CategoryID,
 			&topic.CreatedAt,
 			&topic.UpdatedAt,
 			&topic.OwnerUsername,
-			&topic.CategoryName,
-			&topic.CategoryColor,
+			&categoryIDs,
+			&categoryNames,
+			&categoryColors,
 			&topic.UpvoteCount,
 			&topic.DownvoteCount,
 			&topic.VoteScore,
@@ -380,6 +476,37 @@ func (r Repo) GetAllTopics(ctx context.Context, page, size, categoryID int, orde
 		err = rows.Scan(scanFields...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan row: %w", err)
+		}
+
+		// Parse comma-separated category data
+		if categoryIDs.Valid && categoryIDs.String != "" {
+			ids := strings.Split(categoryIDs.String, ",")
+			topic.CategoryIDs = make([]int, 0, len(ids))
+			for _, idStr := range ids {
+				idStr = strings.TrimSpace(idStr)
+				if idStr != "" {
+					id, err := strconv.Atoi(idStr)
+					if err == nil {
+						topic.CategoryIDs = append(topic.CategoryIDs, id)
+					}
+				}
+			}
+
+			if categoryNames.Valid && categoryNames.String != "" {
+				topic.CategoryNames = strings.Split(categoryNames.String, ",")
+				// Trim spaces from names
+				for i := range topic.CategoryNames {
+					topic.CategoryNames[i] = strings.TrimSpace(topic.CategoryNames[i])
+				}
+			}
+
+			if categoryColors.Valid && categoryColors.String != "" {
+				topic.CategoryColors = strings.Split(categoryColors.String, ",")
+				// Trim spaces from colors
+				for i := range topic.CategoryColors {
+					topic.CategoryColors[i] = strings.TrimSpace(topic.CategoryColors[i])
+				}
+			}
 		}
 
 		// Format dates

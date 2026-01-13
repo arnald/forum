@@ -7,6 +7,21 @@
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}/cmd/client/main.go",
+            "cwd": "${workspaceFolder}"
         }
     ]
 }
+
+// {
+//     "version": "0.2.0",
+//     "configurations": [
+//         {
+//             "name": "Launch Server",
+//             "type": "go",
+//             "request": "launch",
+//             "mode": "auto",
+//             "program": "${workspaceFolder}/cmd/server/main.go",
+//         }
+//     ]
+// }
+
