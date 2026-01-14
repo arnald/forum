@@ -111,22 +111,22 @@ func (r Repo) UpdateTopic(ctx context.Context, topic *topic.Topic) error {
 		}
 	}()
 
+	// Update topic
 	query := `
 	UPDATE topics 
-	SET title = ?, content = ?, image_path = ?, category_id = ?, updated_at = CURRENT_TIMESTAMP
+	SET title = ?, content = ?, image_path = ?, updated_at = CURRENT_TIMESTAMP
 	WHERE id = ? AND user_id = ?`
 
-	stmt, err := tx.PrepareContext(ctx, query)
+	updateStmt, err := tx.PrepareContext(ctx, query)
 	if err != nil {
-		return fmt.Errorf("prepare failed: %w", err)
+		return fmt.Errorf("failed to prepare statement: %w", err)
 	}
-	defer stmt.Close()
+	defer updateStmt.Close()
 
-	result, err := stmt.ExecContext(ctx,
+	result, err := updateStmt.ExecContext(ctx,
 		topic.Title,
 		topic.Content,
 		topic.ImagePath,
-		topic.CategoryID,
 		topic.ID,
 		topic.UserID,
 	)
@@ -141,6 +141,65 @@ func (r Repo) UpdateTopic(ctx context.Context, topic *topic.Topic) error {
 
 	if rowsAffected == 0 {
 		return fmt.Errorf("topic with ID %d not found or user not authorized: %w", topic.ID, ErrTopicNotFound)
+	}
+
+	// Get existing categories
+	var existingCategoryIDs []int
+	rows, err := tx.QueryContext(ctx,
+		"SELECT category_id FROM topic_categories WHERE topic_id = ?",
+		topic.ID)
+	if err != nil {
+		return fmt.Errorf("failed to get existing categories: %w", err)
+	}
+
+	for rows.Next() {
+		var catID int
+		if err := rows.Scan(&catID); err != nil {
+			rows.Close()
+			return fmt.Errorf("failed to scan category: %w", err)
+		}
+		existingCategoryIDs = append(existingCategoryIDs, catID)
+	}
+	rows.Close()
+
+	// Determine categories to add and remove
+	existingMap := make(map[int]bool)
+	for _, id := range existingCategoryIDs {
+		existingMap[id] = true
+	}
+
+	newMap := make(map[int]bool)
+	for _, id := range topic.CategoryIDs {
+		newMap[id] = true
+	}
+
+	// Delete removed categories
+	for _, catID := range existingCategoryIDs {
+		if !newMap[catID] {
+			_, err = tx.ExecContext(ctx,
+				"DELETE FROM topic_categories WHERE topic_id = ? AND category_id = ?",
+				topic.ID, catID)
+			if err != nil {
+				return fmt.Errorf("failed to delete category %d: %w", catID, err)
+			}
+		}
+	}
+
+	// Insert new categories
+	insertStmt, err := tx.PrepareContext(ctx,
+		"INSERT INTO topic_categories (topic_id, category_id) VALUES (?, ?)")
+	if err != nil {
+		return fmt.Errorf("failed to prepare insert statement: %w", err)
+	}
+	defer insertStmt.Close()
+
+	for _, catID := range topic.CategoryIDs {
+		if !existingMap[catID] {
+			_, err := insertStmt.ExecContext(ctx, topic.ID, catID)
+			if err != nil {
+				return fmt.Errorf("failed to insert category %d: %w", catID, err)
+			}
+		}
 	}
 
 	return nil

@@ -8,12 +8,12 @@ import (
 )
 
 type UpdateTopicRequest struct {
-	User       *user.User
-	Title      string `json:"title"`
-	Content    string `json:"content"`
-	ImagePath  string `json:"imagePath"`
-	TopicID    int    `json:"topicId"`
-	CategoryID int    `json:"categoryId"`
+	User        *user.User
+	Title       string `json:"title"`
+	Content     string `json:"content"`
+	ImagePath   string `json:"imagePath"`
+	TopicID     int    `json:"topicId"`
+	CategoryIDs []int  `json:"categoryIds"`
 }
 
 type UpdateTopicRequestHandler interface {
@@ -32,12 +32,12 @@ func NewUpdateTopicHandler(repo topic.Repository) UpdateTopicRequestHandler {
 
 func (h *updateTopicRequestHandler) Handle(ctx context.Context, req UpdateTopicRequest) (*topic.Topic, error) {
 	topic := &topic.Topic{
-		UserID:     req.User.ID,
-		CategoryID: req.CategoryID,
-		ID:         req.TopicID,
-		Title:      req.Title,
-		Content:    req.Content,
-		ImagePath:  req.ImagePath,
+		UserID:      req.User.ID,
+		CategoryIDs: req.CategoryIDs,
+		ID:          req.TopicID,
+		Title:       req.Title,
+		Content:     req.Content,
+		ImagePath:   req.ImagePath,
 	}
 
 	err := h.repo.UpdateTopic(ctx, topic)
