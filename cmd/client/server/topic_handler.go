@@ -148,9 +148,9 @@ func (cs *ClientServer) TopicPage(w http.ResponseWriter, r *http.Request) {
 		categoriesData.Categories = []domain.Category{}
 	}
 
-	for i := range categoriesData.Categories {
-		categoriesData.Categories[i].Color = helpers.NormalizeColor(categoriesData.Categories[i].Color)
-	}
+	// for i := range categoriesData.Categories {
+	// 	categoriesData.Categories[i].Color = helpers.NormalizeColor(categoriesData.Categories[i].Color)
+	// }
 
 	normalizedColors := make([]string, len(topicData.CategoryColors))
 	for i, color := range topicData.CategoryColors {
@@ -176,7 +176,7 @@ func (cs *ClientServer) TopicPage(w http.ResponseWriter, r *http.Request) {
 		CategoryColor:  helpers.NormalizeColor(topicData.CategoryColor),
 		Comments:       topicData.Comments,
 		CategoryNames:  topicData.CategoryNames,
-		CategoryColors: topicData.CategoryColors,
+		CategoryColors: normalizedColors,
 	}
 
 	pageData := topicPageData{

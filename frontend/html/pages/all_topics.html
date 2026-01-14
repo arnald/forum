@@ -88,9 +88,10 @@
                   {{ if .CategoryColors }}
                     {{ $categoryNames := .CategoryNames }}
                     {{ range $index, $color := .CategoryColors }}
-                      <div class="category-color" style="background-color: {{ $color }}">
-                        <span class="category-name">{{ index $categoryNames $index }}</span>
-                      </div>
+                    <div class="category-badge">
+                      <span class="category-color" style="background-color: {{ $color }}"></span>
+                      <span class="category-name">{{ index $categoryNames $index }}</span>
+                    </div>
                     {{ end }}
                   {{ else }}
                     <!-- Fallback to single category for backward compatibility -->
