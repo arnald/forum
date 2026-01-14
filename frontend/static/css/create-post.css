@@ -1,0 +1,283 @@
+/* ----- Create Post Page ----- */
+.create-post-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.form {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.form-wrapper {
+  max-width: 500px;
+  width: 100%;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  background-color: var(--white-background-light);
+  /* Limit the container for not overflowing */
+  max-height: 90vh;
+  overflow-y: auto;
+  /* make scrollbar thiner */
+  scrollbar-width: thin;
+}
+.post-title {
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+  /* color: var(--primary-color); */
+}
+/* Fields */
+.field {
+  margin-bottom: 0.5rem;
+}
+.label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 0.3rem;
+  margin-left: 0.2rem;
+}
+.input {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  border: 1px solid var(--grey-color-light);
+  background: #f9f9f9;
+  font-family: inherit;
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+  transition: all 0.3s;
+}
+.input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  background: #fff;
+}
+.textarea {
+  resize: vertical;
+  min-height: 90px;
+  font-family: inherit;
+}
+.input::placeholder,
+textarea::placeholder {
+  color: var(--grey-color-dark);
+}
+/* Buttons */
+.actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+.btn {
+  flex: 1;
+  border: none;
+  font-size: 1rem;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.btn-reset {
+  background-color: var(--grey-color-light);
+  color: var(--dark-background);
+}
+.btn-reset:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+.btn-submit {
+  background-color: rgb(24, 165, 106);
+  color: var(--white-background);
+  transition: all 0.3s;
+}
+.btn-submit:hover {
+  background-color: var(--primary-color-light);
+}
+.field-error {
+  color: #e63946;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  margin-left: 0.25rem;
+}
+/* Multi-select control */
+.multi-select {
+  position: relative;
+  user-select: none;
+}
+.multi-selected {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--grey-color-light);
+  background: #f9f9f9;
+  min-height: 40px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.multi-select:focus .multi-selected,
+.multi-select.open .multi-selected {
+  border-color: var(--primary-color);
+  background: #fff;
+}
+.multi-selected .placeholder {
+  margin-left: 0.25rem;
+  color: var(--grey-color-dark);
+}
+.chips {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+/* chip */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 30px;
+  background-color: var(--primary-color);
+  color: var(--white-background-light);
+  font-size: 0.9rem;
+}
+.chip button {
+  font-size: 1rem;
+}
+/* options dropdown */
+.options {
+  display: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  z-index: 10;
+  margin-top: 0.3rem;
+  background-color: var(--white-background-light);
+  border: 1px solid var(--grey-color-light);
+  border-radius: 8px;
+  padding: 0.5rem;
+  max-height: 220px;
+  overflow: auto;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+.options .option {
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+.options .option:hover {
+  background-color: #f0f0f0;
+}
+.option label {
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+  cursor: pointer;
+}
+.option input[type="checkbox"] {
+  cursor: pointer;
+}
+.option-color {
+  width: 12px;
+  height: 12px;
+}
+/* when open */
+.multi-select.open .options {
+  display: block;
+}
+/* chevron style */
+.chev {
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  transform: rotate(-90deg);
+  margin-left: auto;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.multi-select.open .chev {
+  transform: rotate(0);
+}
+/* File Upload */
+.upload-box {
+  width: 100%;
+  border: 2px dashed var(--grey-color-light);
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  background: #f9f9f9;
+}
+.upload-box:hover {
+  border-color: var(--primary-color);
+  background: #fff;
+}
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  pointer-events: none; /* clicks go to parent */
+}
+.upload-icon {
+  width: 28px;
+  height: 28px;
+  opacity: 0.6;
+}
+.upload-text {
+  font-size: 0.9rem;
+  color: var(--grey-color);
+  font-weight: 500;
+}
+.upload-subtext {
+  font-size: 0.85rem;
+  color: var(--grey-color-light);
+  margin: 0;
+}
+.file-name {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+/* Home Link */
+.home-link-container {
+  display: flex;
+  justify-content: center;
+  margin: 1rem 0;
+}
+.home-link {
+  padding: 0.75rem 1.5rem;
+  background-color: var(--secondary-color-light);
+  color: var(--white-background-light);
+  text-decoration: none;
+  border-radius: 8px;
+  transition: all 0.3s;
+  font-weight: 500;
+}
+.home-link:hover {
+  background-color: var(--secondary-color);
+  transform: translateY(-2px);
+}
+/* Responsive */
+@media (max-width: 768px) {
+  .form-wrapper {
+    padding: 1.5rem;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+  }
+
+  .chips {
+    font-size: 0.85rem;
+  }
+}

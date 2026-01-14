@@ -67,6 +67,25 @@ func (cs *ClientServer) SetupRoutes() {
 	// Topic detail page
 	cs.Router.HandleFunc("/topic/", applyMiddleware(cs.TopicPage, authMiddleware))
 
+	// Topic CRUD routes
+	cs.Router.HandleFunc("/topics/create", applyMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			cs.CreateTopicPage(w, r)
+		case http.MethodPost:
+			cs.CreateTopicPost(w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	}, middleware.RequireAuth, authMiddleware))
+	cs.Router.HandleFunc("/topics/edit", applyMiddleware(cs.UpdateTopicPost, middleware.RequireAuth, authMiddleware))
+	cs.Router.HandleFunc("/topics/delete", applyMiddleware(cs.DeleteTopicPost, middleware.RequireAuth, authMiddleware))
+
+	// Comment CRUD routes
+	cs.Router.HandleFunc("/comments/create", applyMiddleware(cs.CreateCommentPost, middleware.RequireAuth, authMiddleware))
+	cs.Router.HandleFunc("/comments/edit", applyMiddleware(cs.UpdateCommentPost, middleware.RequireAuth, authMiddleware))
+	cs.Router.HandleFunc("/comments/delete", applyMiddleware(cs.DeleteCommentPost, middleware.RequireAuth, authMiddleware))
+
 	// Vote API routes (these are API endpoints, not pages)
 	cs.Router.HandleFunc("/api/vote/cast", applyMiddleware(cs.CastVote, middleware.RequireAuth, authMiddleware))
 	cs.Router.HandleFunc("/api/vote/counts", applyMiddleware(cs.GetVoteCounts, authMiddleware))
@@ -147,6 +166,32 @@ func (cs *ClientServer) newRequest(ctx context.Context, method string, url strin
 	resp, err := cs.HTTPClient.Do(httpReq)
 	if err != nil {
 		return nil, backendError("Registration request failed: " + err.Error())
+	}
+
+	return resp, nil
+}
+
+// Makes a backend request and includes cookies from the original request, necessary for authenticated endpoints.
+func (cs *ClientServer) newRequestWithCookies(ctx context.Context, method string, url string, req any, originalReq *http.Request) (*http.Response, error) {
+	reqBody, err := json.Marshal(req)
+	if err != nil {
+		return nil, backendError("Failed to marshal request: " + err.Error())
+	}
+
+	httpReq, err := http.NewRequestWithContext(ctx, method, url, bytes.NewBuffer(reqBody))
+	if err != nil {
+		return nil, backendError("Failed to create request: " + err.Error())
+	}
+
+	httpReq.Header.Set("Content-Type", "application/json")
+
+	for _, cookie := range originalReq.Cookies() {
+		httpReq.AddCookie(cookie)
+	}
+
+	resp, err := cs.HTTPClient.Do(httpReq)
+	if err != nil {
+		return nil, backendError("Backend request failed: " + err.Error())
 	}
 
 	return resp, nil

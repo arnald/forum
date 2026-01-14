@@ -51,12 +51,21 @@ CREATE TABLE IF NOT EXISTS categories (
 CREATE TABLE IF NOT EXISTS topics (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    category_id INTEGER NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
     content TEXT NOT NULL,
     image_path TEXT DEFAULT '',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Topic/Category junction
+CREATE TABLE IF NOT EXISTS topic_categories (
+    topic_id INTEGER NOT NULL,
+    category_id INTEGER NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (topic_id, category_id),
+    FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE CASCADE,
+    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
 );
 
 -- Comments
@@ -95,6 +104,9 @@ CREATE TABLE IF NOT EXISTS notifications (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+--Topic/category junction table indexes
+CREATE INDEX IF NOT EXISTS idx_topic_categories_topic_id ON topic_categories(topic_id);
+CREATE INDEX IF NOT EXISTS idx_topic_categories_category_id ON topic_categories(category_id);
 -- Users table indexes
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
@@ -108,14 +120,13 @@ CREATE INDEX IF NOT EXISTS idx_categories_created_by ON categories(created_by);
 
 -- Topics table indexes
 CREATE INDEX IF NOT EXISTS idx_topics_user ON topics(user_id);
-CREATE INDEX IF NOT EXISTS idx_topics_category ON topics(category_id);
 CREATE INDEX IF NOT EXISTS idx_topics_created ON topics(created_at DESC);
 
 -- Comments table indexes
 CREATE INDEX IF NOT EXISTS idx_comments_topic ON comments(topic_id);
 CREATE INDEX IF NOT EXISTS idx_comments_user ON comments(user_id);
 
--- Votes table indexes (CRITICAL for performance)
+-- Votes table indexes
 -- Prevent duplicate votes
 CREATE UNIQUE INDEX IF NOT EXISTS idx_topic_votes 
 ON votes(user_id, topic_id) WHERE comment_id IS NULL;
