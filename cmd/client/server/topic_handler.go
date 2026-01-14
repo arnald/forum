@@ -17,22 +17,22 @@ import (
 const minURLPathLength = 2
 
 type topicPageResponse struct {
-	UserVote      *int             `json:"userVote"`
-	ImagePath     string           `json:"imagePath"`
-	OwnerUsername string           `json:"ownerUsername"`
-	Content       string           `json:"content"`
-	CategoryColor string           `json:"categoryColor"`
-	UserID        string           `json:"userId"`
-	CreatedAt     string           `json:"createdAt"`
-	Title         string           `json:"title"`
-	CategoryName  string           `json:"categoryName"`
-	UpdatedAt     string           `json:"updatedAt"`
-	Comments      []domain.Comment `json:"comments"`
-	Upvotes       int              `json:"upvotes"`
-	CategoryID    int              `json:"categoryId"`
-	Downvotes     int              `json:"downvotes"`
-	Score         int              `json:"score"`
-	TopicID       int              `json:"topicId"`
+	UserVote       *int             `json:"userVote"`
+	ImagePath      string           `json:"imagePath"`
+	OwnerUsername  string           `json:"ownerUsername"`
+	Content        string           `json:"content"`
+	UserID         string           `json:"userId"`
+	CreatedAt      string           `json:"createdAt"`
+	Title          string           `json:"title"`
+	UpdatedAt      string           `json:"updatedAt"`
+	CategoryColors []string         `json:"categoryColors"`
+	CategoryNames  []string         `json:"categoryNames"`
+	Comments       []domain.Comment `json:"comments"`
+	CategoryIDs    []int            `json:"categoryIds"`
+	Upvotes        int              `json:"upvotes"`
+	Downvotes      int              `json:"downvotes"`
+	Score          int              `json:"score"`
+	TopicID        int              `json:"topicId"`
 }
 
 type topicPageRequest struct {
@@ -145,27 +145,28 @@ func (cs *ClientServer) TopicPage(w http.ResponseWriter, r *http.Request) {
 		categoriesData.Categories = []domain.Category{}
 	}
 
-	for i := range categoriesData.Categories {
-		categoriesData.Categories[i].Color = helpers.NormalizeColor(categoriesData.Categories[i].Color)
+	normalizedColors := make([]string, len(topicData.CategoryColors))
+	for i, color := range topicData.CategoryColors {
+		normalizedColors[i] = helpers.NormalizeColor(color)
 	}
 
 	topic := domain.Topic{
-		ID:            topicData.TopicID,
-		CategoryID:    topicData.CategoryID,
-		Title:         topicData.Title,
-		Content:       topicData.Content,
-		ImagePath:     topicData.ImagePath,
-		UserID:        topicData.UserID,
-		CreatedAt:     topicData.CreatedAt,
-		UpdatedAt:     topicData.UpdatedAt,
-		UpvoteCount:   topicData.Upvotes,
-		DownvoteCount: topicData.Downvotes,
-		VoteScore:     topicData.Score,
-		UserVote:      topicData.UserVote,
-		OwnerUsername: topicData.OwnerUsername,
-		CategoryName:  topicData.CategoryName,
-		CategoryColor: helpers.NormalizeColor(topicData.CategoryColor),
-		Comments:      topicData.Comments,
+		ID:             topicData.TopicID,
+		CategoryIDs:    topicData.CategoryIDs,
+		Title:          topicData.Title,
+		Content:        topicData.Content,
+		ImagePath:      topicData.ImagePath,
+		UserID:         topicData.UserID,
+		CreatedAt:      topicData.CreatedAt,
+		UpdatedAt:      topicData.UpdatedAt,
+		UpvoteCount:    topicData.Upvotes,
+		DownvoteCount:  topicData.Downvotes,
+		VoteScore:      topicData.Score,
+		UserVote:       topicData.UserVote,
+		OwnerUsername:  topicData.OwnerUsername,
+		Comments:       topicData.Comments,
+		CategoryNames:  topicData.CategoryNames,
+		CategoryColors: normalizedColors,
 	}
 
 	pageData := topicPageData{
@@ -174,12 +175,16 @@ func (cs *ClientServer) TopicPage(w http.ResponseWriter, r *http.Request) {
 		Categories: categoriesData.Categories,
 	}
 
-	tmpl, err := template.ParseFiles(
-		"frontend/html/layouts/base.html",
-		"frontend/html/pages/topic.html",
-		"frontend/html/partials/navbar.html",
-		"frontend/html/partials/footer.html",
-	)
+	tmpl, err := template.New("base").
+		Funcs(template.FuncMap{
+			"hasID": hasID,
+		}).
+		ParseFiles(
+			"frontend/html/layouts/base.html",
+			"frontend/html/pages/topic.html",
+			"frontend/html/partials/navbar.html",
+			"frontend/html/partials/footer.html",
+		)
 	if err != nil {
 		log.Printf("Error parsing templates: %v", err)
 		templates.NotFoundHandler(w, r, "Failed to load page", http.StatusInternalServerError)
@@ -191,4 +196,13 @@ func (cs *ClientServer) TopicPage(w http.ResponseWriter, r *http.Request) {
 		log.Println("Error executing template:", err)
 		http.Error(w, "Failed to render page", http.StatusInternalServerError)
 	}
+}
+
+func hasID(ids []int, id int) bool {
+	for _, v := range ids {
+		if v == id {
+			return true
+		}
+	}
+	return false
 }

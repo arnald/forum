@@ -77,17 +77,26 @@
 .color-category {
   display: flex;
   align-items: center;
-  column-gap: 0.5rem;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
+
+.category-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 .category-color {
-  /* display: inline-block; */
+  display: inline-block;
   width: 10px;
   height: 10px;
   flex-shrink: 0;
 }
+
 .category-name {
   font-size: 1.05rem;
-  margin-bottom: -2px;
+  white-space: nowrap;
 }
 .topic-title a {
   font-size: 1.2rem;

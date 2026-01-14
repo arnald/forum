@@ -3,6 +3,11 @@
 .topic-header {
   margin: 2rem 0;
 }
+.topic-categories {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
 .post-title {
   font-family: "Poppins", Impact, Haettenschweiler, "Arial Narrow Bold",
     sans-serif;

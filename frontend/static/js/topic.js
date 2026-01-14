@@ -94,17 +94,18 @@ if (topicEditForm) {
     clearAllErrors();
     let hasError = false;
 
-    const categorySelect = this.querySelector('select[name="category_id"]');
+    const selectedCategories = this.querySelectorAll(
+      'input[name="categories"]:checked'
+    );
     const titleInput = this.querySelector('input[name="title"]');
     const contentInput = this.querySelector('textarea[name="content"]');
     const imageInput = this.querySelector('input[name="image_path"]');
 
-    const category = categorySelect?.value;
     const title = titleInput?.value.trim();
     const content = contentInput?.value.trim();
 
-    if (!category) {
-      showError("error-topic-category", "Category is required");
+    if (selectedCategories.length === 0) {
+      showError("error-topic-categories", "At least one category is required");
       hasError = true;
     }
 
@@ -151,8 +152,12 @@ if (topicEditForm) {
 
   // Clear errors on user input
   topicEditForm
-    .querySelector('select[name="category_id"]')
-    ?.addEventListener("change", () => clearError("error-topic-category"));
+    .querySelectorAll('input[name="categories"]')
+    .forEach((checkbox) =>
+      checkbox.addEventListener("change", () =>
+        clearError("error-topic-categories")
+      )
+    );
 
   topicEditForm
     .querySelector('input[name="title"]')

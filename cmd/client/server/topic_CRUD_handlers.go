@@ -32,11 +32,11 @@ type createTopicRequest struct {
 }
 
 type updateTopicRequest struct {
-	Title      string `json:"title"`
-	Content    string `json:"content"`
-	ImagePath  string `json:"imagePath"`
-	TopicID    int    `json:"topicId"`
-	CategoryID int    `json:"categoryId"`
+	Title       string `json:"title"`
+	Content     string `json:"content"`
+	ImagePath   string `json:"imagePath"`
+	CategoryIDs []int  `json:"categoryIds"`
+	TopicID     int    `json:"topicId"`
 }
 
 type createPostData struct {
@@ -124,9 +124,9 @@ func (cs *ClientServer) CreateTopicPost(w http.ResponseWriter, r *http.Request) 
 	// Parse category IDs
 	categoryIDs := make([]int, 0)
 	for _, idStr := range categoryIDsStr {
-		categoryID, err := strconv.Atoi(idStr)
-		if err != nil {
-			log.Printf("Invalid category ID: %v", err)
+		categoryID, parseErr := strconv.Atoi(idStr)
+		if parseErr != nil {
+			log.Printf("Invalid category ID: %v", parseErr)
 			http.Error(w, "Invalid category ID", http.StatusBadRequest)
 			return
 		}
@@ -264,7 +264,7 @@ func (cs *ClientServer) UpdateTopicPost(w http.ResponseWriter, r *http.Request) 
 	}
 
 	topicIDStr := r.FormValue("topic_id")
-	categoryIDStr := r.FormValue("category_id")
+	categoryIDsStr := r.Form["categories"]
 	title := r.FormValue("title")
 	content := r.FormValue("content")
 	currentImagePath := r.FormValue("current_image_path")
@@ -276,10 +276,19 @@ func (cs *ClientServer) UpdateTopicPost(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	categoryID, err := strconv.Atoi(categoryIDStr)
-	if err != nil {
-		log.Printf("Invalid category ID: %v", err)
-		http.Error(w, "Invalid category ID", http.StatusBadRequest)
+	categoryIDs := make([]int, 0)
+	for _, idStr := range categoryIDsStr {
+		id, parseErr := strconv.Atoi(idStr)
+		if parseErr != nil {
+			log.Printf("Invalid category ID: %v", parseErr)
+			http.Error(w, "Invalid category ID", http.StatusBadRequest)
+			return
+		}
+		categoryIDs = append(categoryIDs, id)
+	}
+
+	if len(categoryIDs) == 0 {
+		http.Error(w, "At least one category must be selected", http.StatusBadRequest)
 		return
 	}
 
@@ -362,11 +371,11 @@ func (cs *ClientServer) UpdateTopicPost(w http.ResponseWriter, r *http.Request) 
 	}
 
 	updateRequest := &updateTopicRequest{
-		TopicID:    topicID,
-		CategoryID: categoryID,
-		Title:      title,
-		Content:    content,
-		ImagePath:  imagePath,
+		TopicID:     topicID,
+		CategoryIDs: categoryIDs,
+		Title:       title,
+		Content:     content,
+		ImagePath:   imagePath,
 	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), requestTimeout)
@@ -491,7 +500,7 @@ func (cs *ClientServer) DeleteTopicPost(w http.ResponseWriter, r *http.Request) 
 	http.Redirect(w, r, "/topics", http.StatusSeeOther)
 }
 
-// Helper function to clean up uploaded image if topic creation fails
+// Helper function to clean up uploaded image if topic creation fails.
 func cleanupImage(imagePath string) {
 	if imagePath != "" && strings.HasPrefix(imagePath, "/static/images/uploads/") {
 		filename := strings.TrimPrefix(imagePath, "/static/images/uploads/")
