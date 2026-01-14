@@ -413,7 +413,7 @@ func (r Repo) GetAllTopics(ctx context.Context, page, size, categoryID int, orde
 	}
 
 	if categoryID > 0 {
-		query += " AND tc.category_id = ?"
+		query += " AND t.id IN (SELECT topic_id FROM topic_categories WHERE category_id = ?)"
 		args = append(args, categoryID)
 	}
 
