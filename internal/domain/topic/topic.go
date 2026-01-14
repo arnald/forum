@@ -11,14 +11,11 @@ type Topic struct {
 	CreatedAt      string
 	UserID         string
 	OwnerUsername  string
-	CategoryName   string
-	CategoryColor  string
 	CategoryNames  []string
 	CategoryColors []string
 	Comments       []comment.Comment
-	ID             int
-	CategoryID     int
 	CategoryIDs    []int
+	ID             int
 	UpvoteCount    int
 	DownvoteCount  int
 	VoteScore      int

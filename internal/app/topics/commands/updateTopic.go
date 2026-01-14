@@ -12,8 +12,8 @@ type UpdateTopicRequest struct {
 	Title       string `json:"title"`
 	Content     string `json:"content"`
 	ImagePath   string `json:"imagePath"`
-	TopicID     int    `json:"topicId"`
 	CategoryIDs []int  `json:"categoryIds"`
+	TopicID     int    `json:"topicId"`
 }
 
 type UpdateTopicRequestHandler interface {

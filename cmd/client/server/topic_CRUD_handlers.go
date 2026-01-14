@@ -35,8 +35,8 @@ type updateTopicRequest struct {
 	Title       string `json:"title"`
 	Content     string `json:"content"`
 	ImagePath   string `json:"imagePath"`
-	TopicID     int    `json:"topicId"`
 	CategoryIDs []int  `json:"categoryIds"`
+	TopicID     int    `json:"topicId"`
 }
 
 type createPostData struct {
@@ -500,7 +500,7 @@ func (cs *ClientServer) DeleteTopicPost(w http.ResponseWriter, r *http.Request) 
 	http.Redirect(w, r, "/topics", http.StatusSeeOther)
 }
 
-// Helper function to clean up uploaded image if topic creation fails
+// Helper function to clean up uploaded image if topic creation fails.
 func cleanupImage(imagePath string) {
 	if imagePath != "" && strings.HasPrefix(imagePath, "/static/images/uploads/") {
 		filename := strings.TrimPrefix(imagePath, "/static/images/uploads/")

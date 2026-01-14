@@ -17,10 +17,10 @@ INSERT OR IGNORE INTO categories (name, description, created_by, color, slug, im
 ('Share your Knowledge', 'Ask questions, show off your Sketch skills, or simply browse around.', 'f1433622-9c10-44e5-94b1-1f6a148c9131', 'B24DFF', 'share-your-knowledge', 'static/images/categories/share_your_knowledge.png');
 
 -- Topics
-INSERT OR IGNORE INTO topics (user_id, category_id, title, content, image_path) VALUES
-('df16d238-e4dd-4645-9101-54aed9c0fbf4', 1, 'Welcome to the Forum', 'This is a sample topic created for testing purposes.', '/static/images/sample.jpg'),
-('000dec3a-51af-4e7c-ae0c-21436a0a2395', 2, 'Feedback on New Features', 'What do you think about the new features?', '/static/images/sample.jpg'),
-('f1433622-9c10-44e5-94b1-1f6a148c9131', 3, 'Forum Guidelines', 'Please read the forum guidelines before posting.', '/static/images/sample.jpg');
+INSERT OR IGNORE INTO topics (user_id, title, content, image_path) VALUES
+('df16d238-e4dd-4645-9101-54aed9c0fbf4', 'Welcome to the Forum', 'This is a sample topic created for testing purposes.', '/static/images/sample.jpg'),
+('000dec3a-51af-4e7c-ae0c-21436a0a2395', 'Feedback on New Features', 'What do you think about the new features?', '/static/images/sample.jpg'),
+('f1433622-9c10-44e5-94b1-1f6a148c9131', 'Forum Guidelines', 'Please read the forum guidelines before posting.', '/static/images/sample.jpg');
 
 -- Topics/Categories Junction
 INSERT OR IGNORE INTO topic_categories (topic_id, category_id) VALUES

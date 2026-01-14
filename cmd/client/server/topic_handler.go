@@ -21,18 +21,15 @@ type topicPageResponse struct {
 	ImagePath      string           `json:"imagePath"`
 	OwnerUsername  string           `json:"ownerUsername"`
 	Content        string           `json:"content"`
-	CategoryColor  string           `json:"categoryColor"`
 	UserID         string           `json:"userId"`
 	CreatedAt      string           `json:"createdAt"`
 	Title          string           `json:"title"`
-	CategoryName   string           `json:"categoryName"`
-	CategoryNames  []string         `json:"categoryNames"`
-	CategoryColors []string         `json:"categoryColors"`
 	UpdatedAt      string           `json:"updatedAt"`
+	CategoryColors []string         `json:"categoryColors"`
+	CategoryNames  []string         `json:"categoryNames"`
 	Comments       []domain.Comment `json:"comments"`
-	Upvotes        int              `json:"upvotes"`
-	CategoryID     int              `json:"categoryId"`
 	CategoryIDs    []int            `json:"categoryIds"`
+	Upvotes        int              `json:"upvotes"`
 	Downvotes      int              `json:"downvotes"`
 	Score          int              `json:"score"`
 	TopicID        int              `json:"topicId"`
@@ -148,10 +145,6 @@ func (cs *ClientServer) TopicPage(w http.ResponseWriter, r *http.Request) {
 		categoriesData.Categories = []domain.Category{}
 	}
 
-	// for i := range categoriesData.Categories {
-	// 	categoriesData.Categories[i].Color = helpers.NormalizeColor(categoriesData.Categories[i].Color)
-	// }
-
 	normalizedColors := make([]string, len(topicData.CategoryColors))
 	for i, color := range topicData.CategoryColors {
 		normalizedColors[i] = helpers.NormalizeColor(color)
@@ -159,7 +152,6 @@ func (cs *ClientServer) TopicPage(w http.ResponseWriter, r *http.Request) {
 
 	topic := domain.Topic{
 		ID:             topicData.TopicID,
-		CategoryID:     topicData.CategoryID,
 		CategoryIDs:    topicData.CategoryIDs,
 		Title:          topicData.Title,
 		Content:        topicData.Content,
@@ -172,8 +164,6 @@ func (cs *ClientServer) TopicPage(w http.ResponseWriter, r *http.Request) {
 		VoteScore:      topicData.Score,
 		UserVote:       topicData.UserVote,
 		OwnerUsername:  topicData.OwnerUsername,
-		CategoryName:   topicData.CategoryName,
-		CategoryColor:  helpers.NormalizeColor(topicData.CategoryColor),
 		Comments:       topicData.Comments,
 		CategoryNames:  topicData.CategoryNames,
 		CategoryColors: normalizedColors,

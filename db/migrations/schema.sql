@@ -51,7 +51,6 @@ CREATE TABLE IF NOT EXISTS categories (
 CREATE TABLE IF NOT EXISTS topics (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    category_id INTEGER REFERENCES categories(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
     content TEXT NOT NULL,
     image_path TEXT DEFAULT '',
@@ -121,7 +120,6 @@ CREATE INDEX IF NOT EXISTS idx_categories_created_by ON categories(created_by);
 
 -- Topics table indexes
 CREATE INDEX IF NOT EXISTS idx_topics_user ON topics(user_id);
-CREATE INDEX IF NOT EXISTS idx_topics_category ON topics(category_id);
 CREATE INDEX IF NOT EXISTS idx_topics_created ON topics(created_at DESC);
 
 -- Comments table indexes

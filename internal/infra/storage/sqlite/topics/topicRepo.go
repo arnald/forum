@@ -154,7 +154,8 @@ func (r Repo) UpdateTopic(ctx context.Context, topic *topic.Topic) error {
 
 	for rows.Next() {
 		var catID int
-		if err := rows.Scan(&catID); err != nil {
+		err := rows.Scan(&catID)
+		if err != nil {
 			rows.Close()
 			return fmt.Errorf("failed to scan category: %w", err)
 		}
@@ -340,18 +341,10 @@ func (r Repo) GetTopicByID(ctx context.Context, topicID int, userID *string) (*t
 			}
 		}
 
-		// Set first category as backward compatibility
-		if len(topicResult.CategoryIDs) > 0 {
-			topicResult.CategoryID = topicResult.CategoryIDs[0]
-		}
-
 		if categoryNames.Valid && categoryNames.String != "" {
 			topicResult.CategoryNames = strings.Split(categoryNames.String, ",")
 			for i := range topicResult.CategoryNames {
 				topicResult.CategoryNames[i] = strings.TrimSpace(topicResult.CategoryNames[i])
-			}
-			if len(topicResult.CategoryNames) > 0 {
-				topicResult.CategoryName = topicResult.CategoryNames[0]
 			}
 		}
 
@@ -359,9 +352,6 @@ func (r Repo) GetTopicByID(ctx context.Context, topicID int, userID *string) (*t
 			topicResult.CategoryColors = strings.Split(categoryColors.String, ",")
 			for i := range topicResult.CategoryColors {
 				topicResult.CategoryColors[i] = strings.TrimSpace(topicResult.CategoryColors[i])
-			}
-			if len(topicResult.CategoryColors) > 0 {
-				topicResult.CategoryColor = topicResult.CategoryColors[0]
 			}
 		}
 	}
@@ -391,12 +381,20 @@ func (r Repo) GetTopicByID(ctx context.Context, topicID int, userID *string) (*t
 
 func (r Repo) GetTotalTopicsCount(ctx context.Context, filter string, categoryID int) (int, error) {
 	countQuery := `
-    SELECT COUNT(*) 
-    FROM topics t
-    WHERE 1=1
-	`
+    SELECT COUNT(DISTINCT t.id) 
+    FROM topics t`
 
 	args := make([]interface{}, 0)
+
+	// Add junction table join only if filtering by category
+	if categoryID > 0 {
+		countQuery += `
+        LEFT JOIN topic_categories tc ON t.id = tc.topic_id`
+	}
+
+	countQuery += `
+    WHERE 1=1`
+
 	if filter != "" {
 		countQuery += " AND (t.title LIKE ? OR t.content LIKE ?)"
 		filterParam := "%" + filter + "%"
@@ -404,7 +402,7 @@ func (r Repo) GetTotalTopicsCount(ctx context.Context, filter string, categoryID
 	}
 
 	if categoryID > 0 {
-		countQuery += " AND t.category_id = ?"
+		countQuery += " AND tc.category_id = ?"
 		args = append(args, categoryID)
 	}
 

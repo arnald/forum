@@ -25,12 +25,9 @@ type ResponseModel struct {
 	CreatedAt      string            `json:"createdAt"`
 	UpdatedAt      string            `json:"updatedAt"`
 	Title          string            `json:"title"`
-	CategoryName   string            `json:"categoryName"`
-	CategoryColor  string            `json:"categoryColor"`
 	CategoryNames  []string          `json:"categoryNames"`
 	CategoryColors []string          `json:"categoryColors"`
 	Comments       []comment.Comment `json:"comments"`
-	CategoryID     int               `json:"categoryId"`
 	CategoryIDs    []int             `json:"categoryIds"`
 	Upvotes        int               `json:"upvotes"`
 	Downvotes      int               `json:"downvotes"`
@@ -114,10 +111,7 @@ func (h *Handler) GetTopic(w http.ResponseWriter, r *http.Request) {
 
 	response := ResponseModel{
 		TopicID:        topic.ID,
-		CategoryID:     topic.CategoryID,
 		CategoryIDs:    topic.CategoryIDs,
-		CategoryName:   topic.CategoryName,
-		CategoryColor:  topic.CategoryColor,
 		CategoryNames:  topic.CategoryNames,
 		CategoryColors: topic.CategoryColors,
 		Title:          topic.Title,
