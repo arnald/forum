@@ -2,18 +2,39 @@
 <div class="main-container">
   <div class="topic-container">
     <div class="topic-header">
-      <a
-        href="/topics?category={{ .Topic.CategoryID }}"
-        class="topic-category-link"
-      >
-        <div class="topic-category">
-          <span
-            class="topic-category-color"
-            style="background-color: {{ .Topic.CategoryColor }}"
-          ></span>
-          <span class="topic-category-name">{{ .Topic.CategoryName }}</span>
-        </div>
-      </a>
+      <div class="topic-categories">
+        {{ if .Topic.CategoryColors }} {{ $categoryNames := .Topic.CategoryNames
+        }} {{ range $index, $color := .Topic.CategoryColors }}
+        <a
+          href="/topics?category={{ index $.Topic.CategoryIDs $index }}"
+          class="topic-category-link"
+        >
+          <div class="topic-category">
+            <span
+              class="topic-category-color"
+              style="background-color: {{ $color }}"
+            ></span>
+            <span class="topic-category-name"
+              >{{ index $categoryNames $index }}</span
+            >
+          </div>
+        </a>
+        {{ end }} {{ else }}
+        <!-- Fallback to single category -->
+        <a
+          href="/topics?category={{ .Topic.CategoryID }}"
+          class="topic-category-link"
+        >
+          <div class="topic-category">
+            <span
+              class="topic-category-color"
+              style="background-color: {{ .Topic.CategoryColor }}"
+            ></span>
+            <span class="topic-category-name">{{ .Topic.CategoryName }}</span>
+          </div>
+        </a>
+        {{ end }}
+      </div>
     </div>
 
     <div class="topic-content">
@@ -28,14 +49,16 @@
               class="author-avatar"
             />
           </div>
-          <!-- <span class="post-author-name">{{ .Topic.OwnerUsername }}</span> -->
           <span class="post-author-name">{{ .Topic.OwnerUsername }}</span>
         </div>
         <span class="post-date">{{ .Topic.CreatedAt }}</span>
       </div>
 
       <!-- Topic Body -->
-      <div class="topic-body-container">
+      <div
+        class="topic-body-container"
+        data-user-vote="{{ if .Topic.UserVote }}{{ .Topic.UserVote }}{{ end }}"
+      >
         <div class="topic-body">
           <p class="post-text">{{ .Topic.Content }}</p>
 
@@ -54,7 +77,7 @@
         <!-- Post Reactions -->
         <div class="reactions">
           <div class="reaction-box">
-            <button class="btn like-btn">
+            <button class="btn like-btn" {{ if not .User }}disabled{{ end }}>
               <img
                 class="like-icon"
                 src="/static/images/icons/icon-like.png"
@@ -65,7 +88,7 @@
           </div>
 
           <div class="reaction-box">
-            <button class="btn dislike-btn">
+            <button class="btn dislike-btn" {{ if not .User }}disabled{{ end }}>
               <img
                 class="dislike-icon"
                 src="/static/images/icons/icon-dislike.png"
@@ -97,9 +120,12 @@
         <button class="action-btn btn-edit" data-type="topic">
           Edit Topic
         </button>
-        <button class="action-btn btn-delete" data-type="topic">
-          Delete Topic
-        </button>
+        <form action="/topics/delete" method="POST">
+          <input type="hidden" name="topic_id" value="{{.Topic.ID}}" />
+          <button type="submit" class="action-btn btn-delete">
+            Delete Topic
+          </button>
+        </form>
       </div>
     </div>
     {{ end }}
@@ -110,7 +136,50 @@
         <h3>Edit Topic</h3>
         <button type="button" class="close-edit-form">✖</button>
       </div>
-      <form class="topic-edit-form" data-topic-id="{{ .Topic.ID }}">
+      <form
+        method="POST"
+        action="/topics/edit"
+        enctype="multipart/form-data"
+        class="topic-edit-form"
+        data-topic-id="{{ .Topic.ID }}"
+      >
+        <input type="hidden" name="topic_id" value="{{ .Topic.ID }}" />
+        <input
+          type="hidden"
+          name="current_image_path"
+          value="{{ .Topic.ImagePath }}"
+        />
+        <div class="comment-form-field">
+          <label>Categories:</label>
+          <div class="categories-checkboxes">
+            {{ range .Categories }}
+            <div class="category-checkbox">
+              <input
+                type="checkbox"
+                name="categories"
+                value="{{ .ID }}"
+                id="category-{{ .ID }}"
+                {{
+                if
+                (hasID
+                $.Topic.CategoryIDs
+                .ID)
+                }}checked{{
+                end
+                }}
+              />
+              <label for="category-{{ .ID }}" class="category-label">
+                <span
+                  class="category-color"
+                  style="background-color: #{{ .Color }}"
+                ></span>
+                {{ .Name }}
+              </label>
+            </div>
+            {{ end }}
+          </div>
+          <div class="field-error" id="error-topic-categories"></div>
+        </div>
         <div class="comment-form-field">
           <input
             class="input topic-title-input"
@@ -120,6 +189,7 @@
             value="{{ .Topic.Title }}"
             required
           />
+          <div class="field-error" id="error-topic-title"></div>
         </div>
         <div class="comment-form-field">
           <textarea
@@ -129,8 +199,21 @@
             placeholder="Edit your topic content..."
             required
           >
-{{ .Topic.Content }}</textarea
+           {{ .Topic.Content }}</textarea
           >
+          <div class="field-error" id="error-topic-content"></div>
+        </div>
+        <div class="comment-form-field">
+          <label class="upload-box" id="topicUploadBox">
+            <input
+              class="input"
+              id="topicImageUpload"
+              name="image_path"
+              type="file"
+              accept="image/jpeg,image/png,image/gif"
+            />
+          </label>
+          <div class="field-error" id="error-topic-image"></div>
         </div>
         <button class="post-comment" type="submit">Save Changes</button>
       </form>
@@ -148,7 +231,8 @@
         <h3>Create Comment</h3>
         <button type="button" class="close-comment-form">✖</button>
       </div>
-      <form class="comment-form" data-topic-id="{{ .Topic.ID }}">
+      <form method="POST" action="/comments/create" class="comment-form">
+        <input type="hidden" name="topic_id" value="{{ .Topic.ID }}" />
         <div class="comment-form-field">
           <textarea
             class="input comment-textarea"
@@ -157,7 +241,7 @@
             placeholder="Write your comment..."
             required
           ></textarea>
-          <div class="field-error" id="error-comment"></div>
+          <div class="field-error" id="error-comment-content"></div>
         </div>
         <button class="post-comment" type="submit">Post Comment</button>
       </form>
@@ -168,7 +252,11 @@
     {{ if .Topic.Comments }}
     <div class="comments-section">
       {{ range .Topic.Comments }}
-      <div class="comment-content" data-comment-id="{{ .ID }}">
+      <div
+        class="comment-content"
+        data-comment-id="{{ .ID }}"
+        data-user-vote="{{ if .UserVote }}{{ .UserVote }}{{ end }}"
+      >
         <div class="comment-head">
           <div class="comment-meta">
             <div class="comment-img-box">
@@ -189,7 +277,16 @@
 
             <div class="reactions">
               <div class="reaction-box">
-                <button class="btn like-btn">
+                <button
+                  class="btn like-btn"
+                  {{
+                  if
+                  not
+                  $.User
+                  }}disabled{{
+                  end
+                  }}
+                >
                   <img
                     class="like-icon"
                     src="/static/images/icons/icon-like.png"
@@ -200,7 +297,16 @@
               </div>
 
               <div class="reaction-box">
-                <button class="btn dislike-btn">
+                <button
+                  class="btn dislike-btn"
+                  {{
+                  if
+                  not
+                  $.User
+                  }}disabled{{
+                  end
+                  }}
+                >
                   <img
                     class="dislike-icon"
                     src="/static/images/icons/icon-dislike.png"
@@ -221,13 +327,13 @@
               >
                 Edit
               </button>
-              <button
-                class="action-btn btn-delete"
-                data-type="comment"
-                data-comment-id="{{ .ID }}"
-              >
-                Delete
-              </button>
+              <form method="POST" action="/comments/delete" class="inline-form">
+                <input type="hidden" name="topic_id" value="{{ $.Topic.ID }}" />
+                <input type="hidden" name="comment_id" value="{{ .ID }}" />
+                <button type="submit" class="action-btn btn-delete">
+                  Delete
+                </button>
+              </form>
             </div>
             {{ end }}
           </div>
@@ -240,7 +346,14 @@
             <h3>Edit Comment</h3>
             <button type="button" class="close-edit-form">✖</button>
           </div>
-          <form class="comment-edit-form" data-comment-id="{{ .ID }}">
+          <form
+            method="POST"
+            action="/comments/edit"
+            class="comment-edit-form"
+            data-comment-id="{{ .ID }}"
+          >
+            <input type="hidden" name="topic_id" value="{{ $.Topic.ID }}" />
+            <input type="hidden" name="comment_id" value="{{ .ID }}" />
             <div class="comment-form-field">
               <textarea
                 class="input comment-textarea"
@@ -251,6 +364,7 @@
               >
                 {{ .Content }}</textarea
               >
+              <div class="field-error" id="error-edit-comment-{{ .ID }}"></div>
             </div>
             <button class="post-comment" type="submit">Save Changes</button>
           </form>

@@ -14,11 +14,11 @@ import (
 )
 
 type RequestModel struct {
-	Title      string `json:"title"`
-	Content    string `json:"content"`
-	ImagePath  string `json:"imagePath"`
-	CategoryID int    `json:"categoryId"`
-	TopicID    int    `json:"topicId"`
+	Title       string `json:"title"`
+	Content     string `json:"content"`
+	ImagePath   string `json:"imagePath"`
+	CategoryIDs []int  `json:"categoryIds"`
+	TopicID     int    `json:"topicId"`
 }
 
 type ResponseModel struct {
@@ -88,12 +88,12 @@ func (h *Handler) UpdateTopic(w http.ResponseWriter, r *http.Request) {
 	}
 
 	topic, err := h.UserServices.UserServices.Commands.UpdateTopic.Handle(ctx, topicCommands.UpdateTopicRequest{
-		CategoryID: topicToUpdate.CategoryID,
-		TopicID:    topicToUpdate.TopicID,
-		Title:      topicToUpdate.Title,
-		Content:    topicToUpdate.Content,
-		ImagePath:  topicToUpdate.ImagePath,
-		User:       user,
+		CategoryIDs: topicToUpdate.CategoryIDs,
+		TopicID:     topicToUpdate.TopicID,
+		Title:       topicToUpdate.Title,
+		Content:     topicToUpdate.Content,
+		ImagePath:   topicToUpdate.ImagePath,
+		User:        user,
 	})
 	if err != nil {
 		helpers.RespondWithError(w,

@@ -38,11 +38,10 @@ func newUpdateTopicTestCases() []updateTopicTestCase {
 					Email:    "testuser@example.com",
 					Password: "testpassword",
 				},
-				TopicID:    1,
-				CategoryID: 10,
-				Title:      "Updated Title",
-				Content:    "Updated Content",
-				ImagePath:  "",
+				TopicID:   1,
+				Title:     "Updated Title",
+				Content:   "Updated Content",
+				ImagePath: "",
 			},
 			setupMocks: func(repo *testhelpers.MockRepository) {
 				repo.UpdateTopicFunc = func(ctx context.Context, topic *topic.Topic) error {
@@ -50,12 +49,11 @@ func newUpdateTopicTestCases() []updateTopicTestCase {
 				}
 			},
 			wantTopic: &topic.Topic{
-				UserID:     "test-user-id",
-				CategoryID: 10,
-				ID:         1,
-				Title:      "Updated Title",
-				Content:    "Updated Content",
-				ImagePath:  "",
+				UserID:    "test-user-id",
+				ID:        1,
+				Title:     "Updated Title",
+				Content:   "Updated Content",
+				ImagePath: "",
 			},
 			wantError: nil,
 		},

@@ -180,7 +180,7 @@ func (server *Server) AddHTTPRoutes() {
 			server.middleware.Authorization.Required,
 		),
 	)
-	server.router.HandleFunc(apiContext+"/topic/delete",
+	server.router.HandleFunc(apiContext+"/topics/delete",
 		middlewareChain(
 			deletetopic.NewHandler(server.appServices, server.config, server.logger).DeleteTopic,
 			server.middleware.Authorization.Required,

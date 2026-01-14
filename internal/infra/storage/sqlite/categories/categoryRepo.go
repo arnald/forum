@@ -52,9 +52,9 @@ func (r *Repo) CreateCategory(ctx context.Context, category *category.Category) 
 
 func (r *Repo) GetAllCategories(ctx context.Context, page, size int, orderBy, order, filter string) ([]category.Category, error) {
 	query := `
-	SELECT c.id, c.name, c.description, c.slug, c.color, c.image_path, c.created_at, c.created_by, COUNT(t.id) as topic_count
+	SELECT c.id, c.name, c.description, c.slug, c.color, c.image_path, c.created_at, c.created_by, COUNT(DISTINCT tc.topic_id) as topic_count
 	FROM categories c
-	LEFT JOIN topics t ON c.id = t.category_id
+	LEFT JOIN topic_categories tc ON c.id = tc.category_id
 	WHERE 1=1
 	`
 	args := make([]interface{}, 0)
@@ -128,9 +128,13 @@ func (r *Repo) PopulateCategoriesWithTopics(ctx context.Context, categories []ca
 	}
 
 	var queryBuilder strings.Builder
-	queryBuilder.WriteString("SELECT id, title, category_id, created_at FROM topics WHERE category_id IN (")
+	queryBuilder.WriteString(`
+        SELECT t.id, t.title, tc.category_id, t.created_at 
+        FROM topics t
+        INNER JOIN topic_categories tc ON t.id = tc.topic_id
+        WHERE tc.category_id IN (`)
 	queryBuilder.WriteString(strings.Join(placeholders, ","))
-	queryBuilder.WriteString(") ORDER BY created_at DESC")
+	queryBuilder.WriteString(") ORDER BY t.created_at DESC")
 	query := queryBuilder.String()
 
 	stmt, err := r.DB.PrepareContext(ctx, query)

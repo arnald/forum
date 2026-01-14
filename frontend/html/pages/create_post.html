@@ -1,0 +1,161 @@
+{{ define "create_post" }}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Create Topic - Forum</title>
+    <!-- Icon -->
+    <link
+      rel="icon"
+      type="image/png"
+      href="/static/images/icons/logo-icon.png"
+    />
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="/static/css/base.css" />
+    <link rel="stylesheet" href="/static/css/create-post.css" />
+  </head>
+  <body>
+    <main class="create-post-container">
+      <form
+        class="form"
+        id="createPostForm"
+        method="post"
+        action="/topics/create"
+        enctype="multipart/form-data"
+      >
+        <div class="form-wrapper">
+          <h2 class="post-title">Create Topic</h2>
+
+          <!-- Multi-choice dropdown for categories -->
+          <div class="field">
+            <label class="label" for="category-select">Select categories</label>
+
+            <!-- Custom multi-select control -->
+            <div
+              class="multi-select"
+              id="categorySelect"
+              tabindex="0"
+              aria-haspopup="listbox"
+              aria-expanded="false"
+              aria-multiselectable="true"
+              aria-describedby="category-select"
+            >
+              <div class="multi-selected" id="multiSelected">
+                <span class="placeholder">Select one or more categories</span>
+                <div class="chips" id="chips"></div>
+                <button class="chev" type="button" aria-hidden="true">▾</button>
+              </div>
+
+              <ul
+                class="options"
+                id="multiOptions"
+                role="listbox"
+                aria-multiselectable="true"
+                tabindex="-1"
+              >
+                {{ range .Categories }}
+                <li class="option">
+                  <label>
+                    <input
+                      type="checkbox"
+                      name="categories"
+                      value="{{ .ID }}"
+                    />
+                    <span class="option-label">{{ .Name }}</span>
+                    <span
+                      class="option-color"
+                      style="background-color: {{ .Color }}"
+                    ></span>
+                  </label>
+                </li>
+                {{ end }}
+              </ul>
+            </div>
+
+            <div class="field-error" id="error-categories"></div>
+          </div>
+
+          <!-- Title -->
+          <div class="field">
+            <label class="label" for="title">Title</label>
+            <input
+              class="input"
+              id="title"
+              name="title"
+              type="text"
+              placeholder="Enter topic title..."
+              required
+            />
+            <div class="field-error" id="error-title"></div>
+          </div>
+
+          <!-- Content -->
+          <div class="field">
+            <label class="label" for="content">Content</label>
+            <textarea
+              class="input textarea"
+              id="content"
+              name="content"
+              rows="8"
+              placeholder="Write your topic content..."
+              required
+            ></textarea>
+            <div class="field-error" id="error-content"></div>
+          </div>
+
+          <!-- Image Upload (Optional) -->
+          <div class="field">
+            <label class="label" for="image-upload"
+              >Attach an image (optional)</label
+            >
+            <div class="upload-box" id="uploadBox">
+              <input
+                class="input"
+                id="image-upload"
+                name="image_path"
+                type="file"
+                accept="image/jpeg,image/png,image/gif"
+                hidden
+              />
+              <div class="upload-placeholder">
+                <img
+                  src="/static/images/icons/upload-icon.png"
+                  alt="Upload Icon"
+                  class="upload-icon"
+                />
+                <p class="upload-text">Click to upload image</p>
+                <p class="upload-subtext">JPEG, PNG, or GIF - Max 20MB</p>
+              </div>
+            </div>
+            <div class="field-error" id="error-image"></div>
+            <div id="file-name" class="file-name"></div>
+          </div>
+
+          <div class="actions">
+            <button type="reset" class="btn btn-reset">Reset Form</button>
+            <button type="submit" class="btn btn-submit">Create Topic</button>
+          </div>
+        </div>
+      </form>
+    </main>
+    <div class="home-link-container">
+      <a href="/" class="home-link">Go to Homepage</a>
+    </div>
+  </body>
+  <script src="/static/js/create-post.js"></script>
+</html>
+{{ end }}

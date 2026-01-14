@@ -88,9 +88,16 @@ func (cs *ClientServer) TopicsPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for i := range pageData.Topics {
-		pageData.Topics[i].CategoryColor = helpers.NormalizeColor(pageData.Topics[i].CategoryColor)
-	}
+		// Normalize all category colors in the slice
+		for j := range pageData.Topics[i].CategoryColors {
+			pageData.Topics[i].CategoryColors[j] = helpers.NormalizeColor(pageData.Topics[i].CategoryColors[j])
+		}
 
+		// // Also normalize the single CategoryColor for backward compatibility (if you're still using it)
+		// if pageData.Topics[i].CategoryColor != "" {
+		// 	pageData.Topics[i].CategoryColor = helpers.NormalizeColor(pageData.Topics[i].CategoryColor)
+		// }
+	}
 	pageData.User = middleware.GetUserFromContext(r.Context())
 
 	// Create template with custom functions
