@@ -124,9 +124,9 @@ func (cs *ClientServer) CreateTopicPost(w http.ResponseWriter, r *http.Request) 
 	// Parse category IDs
 	categoryIDs := make([]int, 0)
 	for _, idStr := range categoryIDsStr {
-		categoryID, err := strconv.Atoi(idStr)
-		if err != nil {
-			log.Printf("Invalid category ID: %v", err)
+		categoryID, parseErr := strconv.Atoi(idStr)
+		if parseErr != nil {
+			log.Printf("Invalid category ID: %v", parseErr)
 			http.Error(w, "Invalid category ID", http.StatusBadRequest)
 			return
 		}
@@ -278,9 +278,9 @@ func (cs *ClientServer) UpdateTopicPost(w http.ResponseWriter, r *http.Request) 
 
 	categoryIDs := make([]int, 0)
 	for _, idStr := range categoryIDsStr {
-		id, err := strconv.Atoi(idStr)
-		if err != nil {
-			log.Printf("Invalid category ID: %v", err)
+		id, parseErr := strconv.Atoi(idStr)
+		if parseErr != nil {
+			log.Printf("Invalid category ID: %v", parseErr)
 			http.Error(w, "Invalid category ID", http.StatusBadRequest)
 			return
 		}

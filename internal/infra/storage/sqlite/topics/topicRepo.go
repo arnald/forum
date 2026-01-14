@@ -111,7 +111,7 @@ func (r Repo) UpdateTopic(ctx context.Context, topic *topic.Topic) error {
 		}
 	}()
 
-	// Update topic
+	// Update topic fields
 	query := `
 	UPDATE topics 
 	SET title = ?, content = ?, image_path = ?, updated_at = CURRENT_TIMESTAMP
@@ -143,64 +143,9 @@ func (r Repo) UpdateTopic(ctx context.Context, topic *topic.Topic) error {
 		return fmt.Errorf("topic with ID %d not found or user not authorized: %w", topic.ID, ErrTopicNotFound)
 	}
 
-	// Get existing categories
-	var existingCategoryIDs []int
-	rows, err := tx.QueryContext(ctx,
-		"SELECT category_id FROM topic_categories WHERE topic_id = ?",
-		topic.ID)
+	err = r.syncTopicCategories(ctx, tx, topic.ID, topic.CategoryIDs)
 	if err != nil {
-		return fmt.Errorf("failed to get existing categories: %w", err)
-	}
-
-	for rows.Next() {
-		var catID int
-		err := rows.Scan(&catID)
-		if err != nil {
-			rows.Close()
-			return fmt.Errorf("failed to scan category: %w", err)
-		}
-		existingCategoryIDs = append(existingCategoryIDs, catID)
-	}
-	rows.Close()
-
-	// Determine categories to add and remove
-	existingMap := make(map[int]bool)
-	for _, id := range existingCategoryIDs {
-		existingMap[id] = true
-	}
-
-	newMap := make(map[int]bool)
-	for _, id := range topic.CategoryIDs {
-		newMap[id] = true
-	}
-
-	// Delete removed categories
-	for _, catID := range existingCategoryIDs {
-		if !newMap[catID] {
-			_, err = tx.ExecContext(ctx,
-				"DELETE FROM topic_categories WHERE topic_id = ? AND category_id = ?",
-				topic.ID, catID)
-			if err != nil {
-				return fmt.Errorf("failed to delete category %d: %w", catID, err)
-			}
-		}
-	}
-
-	// Insert new categories
-	insertStmt, err := tx.PrepareContext(ctx,
-		"INSERT INTO topic_categories (topic_id, category_id) VALUES (?, ?)")
-	if err != nil {
-		return fmt.Errorf("failed to prepare insert statement: %w", err)
-	}
-	defer insertStmt.Close()
-
-	for _, catID := range topic.CategoryIDs {
-		if !existingMap[catID] {
-			_, err := insertStmt.ExecContext(ctx, topic.ID, catID)
-			if err != nil {
-				return fmt.Errorf("failed to insert category %d: %w", catID, err)
-			}
-		}
+		return err
 	}
 
 	return nil
@@ -327,34 +272,7 @@ func (r Repo) GetTopicByID(ctx context.Context, topicID int, userID *string) (*t
 		return nil, fmt.Errorf("failed to get topic: %w", err)
 	}
 
-	// Parse comma-separated category data
-	if categoryIDs.Valid && categoryIDs.String != "" {
-		ids := strings.Split(categoryIDs.String, ",")
-		topicResult.CategoryIDs = make([]int, 0, len(ids))
-		for _, idStr := range ids {
-			idStr = strings.TrimSpace(idStr)
-			if idStr != "" {
-				id, parseErr := strconv.Atoi(idStr)
-				if parseErr == nil {
-					topicResult.CategoryIDs = append(topicResult.CategoryIDs, id)
-				}
-			}
-		}
-
-		if categoryNames.Valid && categoryNames.String != "" {
-			topicResult.CategoryNames = strings.Split(categoryNames.String, ",")
-			for i := range topicResult.CategoryNames {
-				topicResult.CategoryNames[i] = strings.TrimSpace(topicResult.CategoryNames[i])
-			}
-		}
-
-		if categoryColors.Valid && categoryColors.String != "" {
-			topicResult.CategoryColors = strings.Split(categoryColors.String, ",")
-			for i := range topicResult.CategoryColors {
-				topicResult.CategoryColors[i] = strings.TrimSpace(topicResult.CategoryColors[i])
-			}
-		}
-	}
+	parseCategoryData(&topicResult, categoryIDs, categoryNames, categoryColors)
 
 	// Format Dates
 	if topicResult.CreatedAt != "" {
@@ -535,36 +453,7 @@ func (r Repo) GetAllTopics(ctx context.Context, page, size, categoryID int, orde
 			return nil, fmt.Errorf("failed to scan row: %w", err)
 		}
 
-		// Parse comma-separated category data
-		if categoryIDs.Valid && categoryIDs.String != "" {
-			ids := strings.Split(categoryIDs.String, ",")
-			topic.CategoryIDs = make([]int, 0, len(ids))
-			for _, idStr := range ids {
-				idStr = strings.TrimSpace(idStr)
-				if idStr != "" {
-					id, err := strconv.Atoi(idStr)
-					if err == nil {
-						topic.CategoryIDs = append(topic.CategoryIDs, id)
-					}
-				}
-			}
-
-			if categoryNames.Valid && categoryNames.String != "" {
-				topic.CategoryNames = strings.Split(categoryNames.String, ",")
-				// Trim spaces from names
-				for i := range topic.CategoryNames {
-					topic.CategoryNames[i] = strings.TrimSpace(topic.CategoryNames[i])
-				}
-			}
-
-			if categoryColors.Valid && categoryColors.String != "" {
-				topic.CategoryColors = strings.Split(categoryColors.String, ",")
-				// Trim spaces from colors
-				for i := range topic.CategoryColors {
-					topic.CategoryColors[i] = strings.TrimSpace(topic.CategoryColors[i])
-				}
-			}
-		}
+		parseCategoryData(&topic, categoryIDs, categoryNames, categoryColors)
 
 		// Format dates
 		if topic.CreatedAt != "" {
@@ -596,4 +485,107 @@ func (r Repo) GetAllTopics(ctx context.Context, page, size, categoryID int, orde
 	}
 
 	return topics, nil
+}
+
+func parseCategoryData(t *topic.Topic, categoryIDs, categoryNames, categoryColors sql.NullString) {
+	if !categoryIDs.Valid || categoryIDs.String == "" {
+		return
+	}
+
+	ids := strings.Split(categoryIDs.String, ",")
+	t.CategoryIDs = make([]int, 0, len(ids))
+	for _, idStr := range ids {
+		idStr = strings.TrimSpace(idStr)
+		if idStr != "" {
+			id, parseErr := strconv.Atoi(idStr)
+			if parseErr == nil {
+				t.CategoryIDs = append(t.CategoryIDs, id)
+			}
+		}
+	}
+
+	if categoryNames.Valid && categoryNames.String != "" {
+		t.CategoryNames = strings.Split(categoryNames.String, ",")
+		for i := range t.CategoryNames {
+			t.CategoryNames[i] = strings.TrimSpace(t.CategoryNames[i])
+		}
+	}
+
+	if categoryColors.Valid && categoryColors.String != "" {
+		t.CategoryColors = strings.Split(categoryColors.String, ",")
+		for i := range t.CategoryColors {
+			t.CategoryColors[i] = strings.TrimSpace(t.CategoryColors[i])
+		}
+	}
+}
+
+// syncTopicCategories handles all category synchronization logic.
+func (r Repo) syncTopicCategories(ctx context.Context, tx *sql.Tx, topicID int, newCategoryIDs []int) error {
+	// Get existing categories
+	existingCategoryIDs := make([]int, 0)
+	rows, err := tx.QueryContext(ctx,
+		"SELECT category_id FROM topic_categories WHERE topic_id = ?",
+		topicID)
+	if err != nil {
+		return fmt.Errorf("failed to get existing categories: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var catID int
+		scanErr := rows.Scan(&catID)
+		if scanErr != nil {
+			return fmt.Errorf("failed to scan category: %w", scanErr)
+		}
+		existingCategoryIDs = append(existingCategoryIDs, catID)
+	}
+
+	rowsErr := rows.Err()
+	if rowsErr != nil {
+		return fmt.Errorf("error iterating categories: %w", rowsErr)
+	}
+
+	// Build maps for comparison
+	existingMap := make(map[int]bool)
+	for _, id := range existingCategoryIDs {
+		existingMap[id] = true
+	}
+
+	newMap := make(map[int]bool)
+	for _, id := range newCategoryIDs {
+		newMap[id] = true
+	}
+
+	// Delete removed categories
+	for _, catID := range existingCategoryIDs {
+		if !newMap[catID] {
+			_, err = tx.ExecContext(ctx,
+				"DELETE FROM topic_categories WHERE topic_id = ? AND category_id = ?",
+				topicID, catID)
+			if err != nil {
+				return fmt.Errorf("failed to delete category %d: %w", catID, err)
+			}
+		}
+	}
+
+	// Insert new categories
+	if len(newCategoryIDs) > 0 {
+		insertStmt, err := tx.PrepareContext(ctx,
+			"INSERT INTO topic_categories (topic_id, category_id) VALUES (?, ?)")
+		if err != nil {
+			return fmt.Errorf("failed to prepare insert statement: %w", err)
+		}
+		defer insertStmt.Close()
+
+		for _, catID := range newCategoryIDs {
+			if !existingMap[catID] {
+				_, err := insertStmt.ExecContext(ctx, topicID, catID)
+				if err != nil {
+					return fmt.Errorf("failed to insert category %d: %w", catID, err)
+				}
+			}
+		}
+	}
+
+	return nil
 }
