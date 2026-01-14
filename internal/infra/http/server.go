@@ -9,6 +9,7 @@ import (
 	"github.com/arnald/forum/internal/app"
 	"github.com/arnald/forum/internal/config"
 	"github.com/arnald/forum/internal/domain/session"
+	getuseractivity "github.com/arnald/forum/internal/infra/http/activity/getUserActivity"
 	createcategory "github.com/arnald/forum/internal/infra/http/category/createCategory"
 	deletecategory "github.com/arnald/forum/internal/infra/http/category/deleteCategory"
 	getallcategories "github.com/arnald/forum/internal/infra/http/category/getAllCategories"
@@ -273,6 +274,14 @@ func (server *Server) AddHTTPRoutes() {
 		middlewareChain(
 			getCounts.NewHandler(server.appServices, server.config, server.logger).GetCounts,
 			server.middleware.Authorization.Optional,
+		),
+	)
+
+	// Activity routes
+	server.router.HandleFunc(apiContext+"/user/activity",
+		middlewareChain(
+			getuseractivity.NewHandler(server.appServices, server.config, server.logger).GetUserActivity,
+			server.middleware.Authorization.Required,
 		),
 	)
 
