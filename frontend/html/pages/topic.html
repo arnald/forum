@@ -3,36 +3,36 @@
   <div class="topic-container">
     <div class="topic-header">
       <div class="topic-categories">
-        {{ if .Topic.CategoryColors }}
-          {{ $categoryNames := .Topic.CategoryNames }}
-          {{ range $index, $color := .Topic.CategoryColors }}
-            <a
-              href="/topics?category={{ index $.Topic.CategoryIDs $index }}"
-              class="topic-category-link"
+        {{ if .Topic.CategoryColors }} {{ $categoryNames := .Topic.CategoryNames
+        }} {{ range $index, $color := .Topic.CategoryColors }}
+        <a
+          href="/topics?category={{ index $.Topic.CategoryIDs $index }}"
+          class="topic-category-link"
+        >
+          <div class="topic-category">
+            <span
+              class="topic-category-color"
+              style="background-color: {{ $color }}"
+            ></span>
+            <span class="topic-category-name"
+              >{{ index $categoryNames $index }}</span
             >
-              <div class="topic-category">
-                <span
-                  class="topic-category-color"
-                  style="background-color: {{ $color }}"
-                ></span>
-                <span class="topic-category-name">{{ index $categoryNames $index }}</span>
-              </div>
-            </a>
-          {{ end }}
-        {{ else }}
-          <!-- Fallback to single category -->
-          <a
-            href="/topics?category={{ .Topic.CategoryID }}"
-            class="topic-category-link"
-          >
-            <div class="topic-category">
-              <span
-                class="topic-category-color"
-                style="background-color: {{ .Topic.CategoryColor }}"
-              ></span>
-              <span class="topic-category-name">{{ .Topic.CategoryName }}</span>
-            </div>
-          </a>
+          </div>
+        </a>
+        {{ end }} {{ else }}
+        <!-- Fallback to single category -->
+        <a
+          href="/topics?category={{ .Topic.CategoryID }}"
+          class="topic-category-link"
+        >
+          <div class="topic-category">
+            <span
+              class="topic-category-color"
+              style="background-color: {{ .Topic.CategoryColor }}"
+            ></span>
+            <span class="topic-category-name">{{ .Topic.CategoryName }}</span>
+          </div>
+        </a>
         {{ end }}
       </div>
     </div>
@@ -120,9 +120,12 @@
         <button class="action-btn btn-edit" data-type="topic">
           Edit Topic
         </button>
-        <button class="action-btn btn-delete" data-type="topic">
-          Delete Topic
-        </button>
+        <form action="/topics/delete" method="POST">
+          <input type="hidden" name="topic_id" value="{{.Topic.ID}}" />
+          <button type="submit" class="action-btn btn-delete">
+            Delete Topic
+          </button>
+        </form>
       </div>
     </div>
     {{ end }}
@@ -147,30 +150,35 @@
           value="{{ .Topic.ImagePath }}"
         />
         <div class="comment-form-field">
-          <label for="category">Category:</label>
-          <select
-            name="category_id"
-            id="category"
-            class="filter-select"
-            required
-          >
+          <label>Categories:</label>
+          <div class="categories-checkboxes">
             {{ range .Categories }}
-            <option
-              value="{{ .ID }}"
-              {{
-              if
-              eq
-              $.Topic.CategoryID
-              .ID
-              }}selected{{
-              end
-              }}
-            >
-              {{ .Name }}
-            </option>
+            <div class="category-checkbox">
+              <input
+                type="checkbox"
+                name="categories"
+                value="{{ .ID }}"
+                id="category-{{ .ID }}"
+                {{
+                if
+                (hasID
+                $.Topic.CategoryIDs
+                .ID)
+                }}checked{{
+                end
+                }}
+              />
+              <label for="category-{{ .ID }}" class="category-label">
+                <span
+                  class="category-color"
+                  style="background-color: #{{ .Color }}"
+                ></span>
+                {{ .Name }}
+              </label>
+            </div>
             {{ end }}
-          </select>
-          <div class="field-error" id="error-topic-category"></div>
+          </div>
+          <div class="field-error" id="error-topic-categories"></div>
         </div>
         <div class="comment-form-field">
           <input

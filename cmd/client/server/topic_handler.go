@@ -185,12 +185,16 @@ func (cs *ClientServer) TopicPage(w http.ResponseWriter, r *http.Request) {
 		Categories: categoriesData.Categories,
 	}
 
-	tmpl, err := template.ParseFiles(
-		"frontend/html/layouts/base.html",
-		"frontend/html/pages/topic.html",
-		"frontend/html/partials/navbar.html",
-		"frontend/html/partials/footer.html",
-	)
+	tmpl, err := template.New("base").
+		Funcs(template.FuncMap{
+			"hasID": hasID,
+		}).
+		ParseFiles(
+			"frontend/html/layouts/base.html",
+			"frontend/html/pages/topic.html",
+			"frontend/html/partials/navbar.html",
+			"frontend/html/partials/footer.html",
+		)
 	if err != nil {
 		log.Printf("Error parsing templates: %v", err)
 		templates.NotFoundHandler(w, r, "Failed to load page", http.StatusInternalServerError)
@@ -202,4 +206,13 @@ func (cs *ClientServer) TopicPage(w http.ResponseWriter, r *http.Request) {
 		log.Println("Error executing template:", err)
 		http.Error(w, "Failed to render page", http.StatusInternalServerError)
 	}
+}
+
+func hasID(ids []int, id int) bool {
+	for _, v := range ids {
+		if v == id {
+			return true
+		}
+	}
+	return false
 }
