@@ -1,0 +1,113 @@
+/*----- Activity Page -----*/
+.activity-container {
+  width: 100%;
+  background-color: var(--white-background-light);
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  padding: 2rem;
+}
+
+.activity-section {
+  margin-bottom: 3rem;
+}
+
+.activity-section:last-child {
+  margin-bottom: 0;
+}
+
+.activity-section-title {
+  font-size: 1.5rem;
+  color: var(--dark-background);
+  text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--grey-color-light);
+}
+
+.activity-row {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--grey-color-light);
+  transition: all 0.3s;
+}
+
+.activity-row:last-child {
+  border-bottom: none;
+}
+
+.activity-row:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+  transform: translateX(5px);
+}
+
+.activity-row-comment {
+  align-items: flex-start;
+}
+
+.activity-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.activity-text {
+  font-size: 1.1rem;
+  color: var(--grey-color-dark);
+  line-height: 1.5;
+}
+
+.activity-link {
+  color: var(--primary-color);
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s;
+}
+
+.activity-link:hover {
+  color: var(--primary-color-light);
+  text-decoration: underline;
+}
+
+.activity-date {
+  font-size: 0.9rem;
+  color: var(--grey-color);
+}
+
+.activity-comment-preview {
+  background-color: var(--white-background);
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 3px solid var(--secondary-color);
+  margin-top: 0.5rem;
+}
+
+.comment-preview-text {
+  font-size: 1rem;
+  color: var(--grey-color-dark);
+  font-style: italic;
+  line-height: 1.6;
+}
+
+.activity-empty {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.activity-empty-text {
+  font-size: 1.2rem;
+  color: var(--grey-color);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .activity-container {
+    padding: 1rem;
+  }
+
+  .activity-section-title {
+    font-size: 1.3rem;
+  }
+
+  .activity-text {
+    font-size: 1rem;
+  }
+}

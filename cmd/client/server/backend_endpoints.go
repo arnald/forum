@@ -33,4 +33,6 @@ const (
 	backendCastVote      = backendAPIBase + "/vote/cast"
 	backendDeleteVote    = backendAPIBase + "/vote/delete"
 	backendGetVoteCounts = backendAPIBase + "/vote/counts"
+	// Activity endpoints.
+	backedGetUserActivity = backendAPIBase + "/user/activity"
 )

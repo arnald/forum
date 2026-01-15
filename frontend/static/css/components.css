@@ -86,6 +86,17 @@
   font-size: 1.2rem;
 }
 
+.user-avatar-link {
+  /* display: flex; */
+  text-decoration: none;
+  transition: all 0.3s;
+}
+
+.user-avatar-link:hover .user-avatar {
+  transform: scale(1.1);
+  box-shadow: 0 0 10px rgba(6, 143, 86, 0.5);
+}
+
 .user-avatar {
   display: flex;
   width: 30px;
@@ -93,6 +104,8 @@
   background-color: var(--primary-color-light);
   border-radius: 50%;
   overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s;
 }
 .user-avatar img {
   object-fit: cover;
