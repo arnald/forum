@@ -97,7 +97,7 @@
     notificationList.innerHTML = notifications
       .map((n) => {
         const icon =
-          n.type === "like" ? "💚" : n.type === "mention" ? "@" : "💬";
+          n.type === "like" ? "💚" : n.type === "dislike" ? "🤮" : n.type === "mention" ? "@" : "💬";
         const timeAgo = formatTimeAgo(new Date(n.createdAt));
 
         return `
