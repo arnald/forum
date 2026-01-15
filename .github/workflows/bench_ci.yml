@@ -29,7 +29,7 @@ jobs:
         mkdir -p ${{ env.BENCH_DIR }}
 
     # https://github.com/actions/checkout
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       name: Checkout main
       with:
         ref: main
@@ -40,7 +40,7 @@ jobs:
         make ci-bench | tee ${{ env.BENCH_DIR }}/bench.main.txt
 
     # https://github.com/actions/checkout
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       name: Checkout pull request HEAD
 
     - name: Benchmark pull request head
