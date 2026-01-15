@@ -18,6 +18,7 @@ type ClientServer struct {
 	Config     *config.Client
 	Router     *http.ServeMux
 	HTTPClient *http.Client
+	SseClient  *http.Client
 }
 
 // NewClientServer creates and initializes a new ClientServer.
@@ -34,10 +35,15 @@ func NewClientServer(cfg *config.Client) (*ClientServer, error) {
 		Timeout: cfg.HTTPTimeouts.Read,
 	}
 
+	sseClient := &http.Client{
+		Timeout: 0,
+	}
+
 	return &ClientServer{
 		Config:     cfg,
 		Router:     http.NewServeMux(),
 		HTTPClient: httpClient,
+		SseClient:  sseClient,
 	}, nil
 }
 

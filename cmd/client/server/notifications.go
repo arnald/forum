@@ -35,7 +35,7 @@ func (cs *ClientServer) StreamNotifications(w http.ResponseWriter, r *http.Reque
 		backendReq.AddCookie(cookie)
 	}
 
-	resp, err := cs.HTTPClient.Do(backendReq)
+	resp, err := cs.SseClient.Do(backendReq)
 	if err != nil {
 		log.Printf("Backend request failed: %v", err)
 		http.Error(w, "Failed to connect to notifications", http.StatusInternalServerError)
@@ -60,8 +60,7 @@ func (cs *ClientServer) StreamNotifications(w http.ResponseWriter, r *http.Reque
 	for {
 		select {
 		case <-r.Context().Done():
-			// Client disconnected (browser refresh, tab close, etc.)
-			log.Println("Client disconnected from SSE stream")
+			// client disconected
 			return
 		default:
 			n, err := resp.Body.Read(buf)
