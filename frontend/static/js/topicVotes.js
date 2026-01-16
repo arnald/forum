@@ -38,7 +38,11 @@ function initializeVoteButtons() {
         disableVoteButtons(reactionsContainer, true);
 
         // If clicking the same button again, we're toggling off
-        await castVote(targetId, targetType, reactionType, this);
+        if (this.classList.contains("active")) {
+          await deleteVote(targetId, targetType);
+        } else {
+          await castVote(targetId, targetType, reactionType, this);
+        }
       } catch (error) {
         console.error("Error casting vote:", error);
         alert("Failed to cast vote. Please try again.");
@@ -94,6 +98,37 @@ async function castVote(targetId, targetType, reactionType, buttonElement) {
 
   // Update the UI with new counts
   await updateVoteUI(targetId, targetType, buttonElement);
+}
+
+async function deleteVote(targetId, targetType) {
+  const payload = {
+    commentId: null,
+    topicId: null,
+  };
+
+  if (targetType === "comment") {
+    payload.commentId = targetId;
+  } else {
+    payload.topicId = targetId;
+  }
+
+  const response = await fetch("/api/vote/delete", {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(payload),
+  });
+
+  if (response.status === 401) {
+    window.location.href = "/login";
+    return;
+  }
+
+  if (!response.ok) {
+    throw new Error("Failed to delete vote");
+  }
 }
 
 async function updateVoteUI(targetId, targetType, clickedButton) {
