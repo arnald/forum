@@ -168,11 +168,12 @@ func (h *Handler) sendVoteNotification(ctx context.Context, username, userID str
 	var message string
 	var title string
 	var notificationType notification.Type
-	if req.ReactionType == 1 {
+	switch req.ReactionType {
+	case 1:
 		message = fmt.Sprintf("%s liked your %s", username, contentType)
 		title = "New like!"
 		notificationType = notification.NotificationTypeLike
-	} else if req.ReactionType == -1 {
+	case -1:
 		message = fmt.Sprintf("%s disliked your %s", username, contentType)
 		title = "New dislike!"
 		notificationType = notification.NotificationTypeDislike

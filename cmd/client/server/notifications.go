@@ -11,6 +11,7 @@ import (
 )
 
 const (
+	bufferSize                 = 1024
 	backendNotificationsStream = "http://localhost:8080/api/v1/notifications/stream"
 	backendNotificationsList   = "http://localhost:8080/api/v1/notifications"
 	backendUnreadCount         = "http://localhost:8080/api/v1/notifications/unread-count"
@@ -18,7 +19,7 @@ const (
 	backendMarkAllAsRead       = "http://localhost:8080/api/v1/notifications/mark-all-read"
 )
 
-// StreamNotifications proxies SSE stream from backend to frontend
+// StreamNotifications proxies SSE stream from backend to frontend.
 func (cs *ClientServer) StreamNotifications(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
@@ -56,7 +57,7 @@ func (cs *ClientServer) StreamNotifications(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	buf := make([]byte, 1024)
+	buf := make([]byte, bufferSize)
 	for {
 		select {
 		case <-r.Context().Done():
@@ -65,7 +66,11 @@ func (cs *ClientServer) StreamNotifications(w http.ResponseWriter, r *http.Reque
 		default:
 			n, err := resp.Body.Read(buf)
 			if n > 0 {
-				w.Write(buf[:n])
+				_, writeErr := w.Write(buf[:n])
+				if writeErr != nil {
+					log.Printf("Write error: %v", writeErr)
+					return
+				}
 				flusher.Flush()
 			}
 			if err != nil {
@@ -79,7 +84,7 @@ func (cs *ClientServer) StreamNotifications(w http.ResponseWriter, r *http.Reque
 	}
 }
 
-// GetNotifications fetches notification list
+// GetNotifications fetches notification list.
 func (cs *ClientServer) GetNotifications(w http.ResponseWriter, r *http.Request) {
 	limit := r.URL.Query().Get("limit")
 	url := backendNotificationsList
@@ -120,10 +125,15 @@ func (cs *ClientServer) GetNotifications(w http.ResponseWriter, r *http.Request)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(notifications)
+	err = json.NewEncoder(w).Encode(notifications)
+	if err != nil {
+		log.Printf("Failed to encode response: %v", err)
+		http.Error(w, "Internal error", http.StatusInternalServerError)
+		return
+	}
 }
 
-// GetUnreadCount fetches unread notification count
+// GetUnreadCount fetches unread notification count.
 func (cs *ClientServer) GetUnreadCount(w http.ResponseWriter, r *http.Request) {
 	backendReq, err := http.NewRequestWithContext(r.Context(), http.MethodGet, backendUnreadCount, nil)
 	if err != nil {
@@ -158,10 +168,15 @@ func (cs *ClientServer) GetUnreadCount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(countResp)
+	err = json.NewEncoder(w).Encode(countResp)
+	if err != nil {
+		log.Printf("Failed to encode response: %v", err)
+		http.Error(w, "Internal error", http.StatusInternalServerError)
+		return
+	}
 }
 
-// MarkNotificationAsRead marks a single notification as read
+// MarkNotificationAsRead marks a single notification as read.
 func (cs *ClientServer) MarkNotificationAsRead(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -202,7 +217,7 @@ func (cs *ClientServer) MarkNotificationAsRead(w http.ResponseWriter, r *http.Re
 	w.WriteHeader(http.StatusOK)
 }
 
-// MarkAllNotificationsAsRead marks all notifications as read
+// MarkAllNotificationsAsRead marks all notifications as read.
 func (cs *ClientServer) MarkAllNotificationsAsRead(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

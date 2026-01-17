@@ -7,9 +7,9 @@ import (
 )
 
 type DeleteVoteRequest struct {
-	UserID    string
 	TopicID   *int
 	CommentID *int
+	UserID    string
 }
 
 type deleteVoteRequestHandler struct {

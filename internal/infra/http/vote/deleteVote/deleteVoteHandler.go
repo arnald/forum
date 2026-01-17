@@ -15,9 +15,9 @@ import (
 )
 
 type request struct {
-	UserID    string
-	TopicID   *int `json: "topicId`
-	CommentID *int `json: "commentId`
+	TopicID   *int   `json:"topicId,omitempty"`
+	CommentID *int   `json:"commentId,omitempty"`
+	UserID    string `json:"userId,omitempty"`
 }
 
 type Response struct {

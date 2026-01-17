@@ -11,7 +11,7 @@ const (
 )
 
 type Notification struct {
-	ID          int              `json:"id"`
+	CreatedAt   time.Time        `json:"createdAt"`
 	UserID      string           `json:"userId"`
 	ActorID     string           `json:"actorId"`
 	Type        NotificationType `json:"type"`
@@ -19,8 +19,8 @@ type Notification struct {
 	Message     string           `json:"message"`
 	RelatedType string           `json:"relatedType,omitempty"`
 	RelatedID   string           `json:"relatedId,omitempty"`
+	ID          int              `json:"id"`
 	IsRead      bool             `json:"isRead"`
-	CreatedAt   time.Time        `json:"createdAt"`
 }
 
 type UnreadCountResponse struct {

@@ -117,7 +117,7 @@ func (r *Repo) CastVote(ctx context.Context, userID string, target vote.Target, 
 
 func (r *Repo) DeleteVote(ctx context.Context, userID string, topicID *int, commentID *int) error {
 	if (topicID == nil && commentID == nil) || (topicID != nil && commentID != nil) {
-		return fmt.Errorf("exactly one of topicID or commentID must be provided")
+		return ErrInvalidVoteTarget
 	}
 
 	var builder strings.Builder
