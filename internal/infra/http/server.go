@@ -294,7 +294,7 @@ func (server *Server) AddHTTPRoutes() {
 		),
 	)
 
-	server.router.HandleFunc(apiContext+"/otifications/unread-count", // get
+	server.router.HandleFunc(apiContext+"/notifications/unread-count", // get
 		middlewareChain(
 			getunreadcount.NewHandler(server.notifications).GetUnread,
 			server.middleware.Authorization.Required,

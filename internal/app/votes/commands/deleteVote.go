@@ -7,8 +7,9 @@ import (
 )
 
 type DeleteVoteRequest struct {
-	UserID string
-	VoteID int
+	TopicID   *int
+	CommentID *int
+	UserID    string
 }
 
 type deleteVoteRequestHandler struct {
@@ -26,7 +27,7 @@ func NewDeleteVoteHandler(repo vote.Repository) DeleteVoteRequestHandler {
 }
 
 func (h *deleteVoteRequestHandler) Handle(ctx context.Context, req DeleteVoteRequest) error {
-	err := h.VoteRepo.DeleteVote(ctx, req.VoteID, req.UserID)
+	err := h.VoteRepo.DeleteVote(ctx, req.UserID, req.TopicID, req.CommentID)
 	if err != nil {
 		return err
 	}
