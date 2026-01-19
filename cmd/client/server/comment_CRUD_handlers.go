@@ -7,7 +7,9 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/arnald/forum/cmd/client/helpers"
 	"github.com/arnald/forum/cmd/client/helpers/templates"
+	"github.com/arnald/forum/cmd/client/middleware"
 )
 
 type createCommentRequest struct {
@@ -173,6 +175,13 @@ func (cs *ClientServer) DeleteCommentPost(w http.ResponseWriter, r *http.Request
 		http.Error(w, "Error creating request", http.StatusInternalServerError)
 		return
 	}
+
+	ip := middleware.GetIPFromContext(r)
+	if ip == "" {
+		http.Error(w, "Error no IP found in request", http.StatusInternalServerError)
+	}
+
+	helpers.SetIPHeaders(httpReq, ip)
 
 	for _, cookie := range r.Cookies() {
 		httpReq.AddCookie(cookie)

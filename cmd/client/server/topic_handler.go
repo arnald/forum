@@ -86,6 +86,13 @@ func (cs *ClientServer) TopicPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ip := middleware.GetIPFromContext(r)
+	if ip == "" {
+		http.Error(w, "Error no IP found in request", http.StatusInternalServerError)
+	}
+
+	helpers.SetIPHeaders(topicHTTPReq, ip)
+
 	for _, cookie := range r.Cookies() {
 		topicHTTPReq.AddCookie(cookie)
 	}
@@ -124,6 +131,13 @@ func (cs *ClientServer) TopicPage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error creating categories request", http.StatusInternalServerError)
 		return
 	}
+
+	ip = middleware.GetIPFromContext(r)
+	if ip == "" {
+		http.Error(w, "Error no IP found in request", http.StatusInternalServerError)
+	}
+
+	helpers.SetIPHeaders(categoriesHTTPReq, ip)
 
 	categoriesResp, err := cs.HTTPClient.Do(categoriesHTTPReq)
 	if err != nil {

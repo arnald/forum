@@ -9,6 +9,7 @@ import (
 	"net/http/cookiejar"
 
 	"github.com/arnald/forum/cmd/client/config"
+	"github.com/arnald/forum/cmd/client/helpers"
 	"github.com/arnald/forum/cmd/client/middleware"
 	"github.com/arnald/forum/internal/pkg/path"
 )
@@ -143,9 +144,11 @@ func (cs *ClientServer) SetupRoutes() {
 
 // ListenAndServe starts the HTTP server.
 func (cs *ClientServer) ListenAndServe() error {
+	handler := middleware.GetClientIPMiddleware(cs.Router)
+
 	server := &http.Server{
 		Addr:              ":" + cs.Config.Port,
-		Handler:           cs.Router,
+		Handler:           handler,
 		ReadHeaderTimeout: cs.Config.HTTPTimeouts.ReadHeader,
 		ReadTimeout:       cs.Config.HTTPTimeouts.Read,
 		WriteTimeout:      cs.Config.HTTPTimeouts.Write,
@@ -164,7 +167,7 @@ func applyMiddleware(handler http.HandlerFunc, middlewares ...func(http.HandlerF
 }
 
 // Standardized way to make requests to the backend server, used in handlers.
-func (cs *ClientServer) newRequest(ctx context.Context, method string, url string, req any) (*http.Response, error) {
+func (cs *ClientServer) newRequest(ctx context.Context, method string, url string, req any, ip string) (*http.Response, error) {
 	reqBody, err := json.Marshal(req)
 	if err != nil {
 		return nil, backendError("Failed to marshal request: " + err.Error())
@@ -176,6 +179,7 @@ func (cs *ClientServer) newRequest(ctx context.Context, method string, url strin
 	}
 
 	httpReq.Header.Set("Content-Type", "application/json")
+	helpers.SetIPHeaders(httpReq, ip)
 
 	resp, err := cs.HTTPClient.Do(httpReq)
 	if err != nil {
@@ -198,6 +202,13 @@ func (cs *ClientServer) newRequestWithCookies(ctx context.Context, method string
 	}
 
 	httpReq.Header.Set("Content-Type", "application/json")
+
+	ip := middleware.GetIPFromContext(originalReq)
+	if ip == "" {
+		return nil, backendError("No IP found in request")
+	}
+
+	helpers.SetIPHeaders(httpReq, ip)
 
 	for _, cookie := range originalReq.Cookies() {
 		httpReq.AddCookie(cookie)

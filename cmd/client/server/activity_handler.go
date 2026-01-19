@@ -28,6 +28,13 @@ func (cs *ClientServer) ActivityPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ip := middleware.GetIPFromContext(r)
+	if ip == "" {
+		http.Error(w, "Error no IP found in request", http.StatusInternalServerError)
+	}
+
+	helpers.SetIPHeaders(httpReq, ip)
+
 	httpReq.Header.Set("Content-Type", "application/json")
 
 	for _, cookie := range r.Cookies() {

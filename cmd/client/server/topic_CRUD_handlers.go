@@ -16,6 +16,7 @@ import (
 	"github.com/arnald/forum/cmd/client/domain"
 	"github.com/arnald/forum/cmd/client/helpers"
 	"github.com/arnald/forum/cmd/client/helpers/templates"
+	"github.com/arnald/forum/cmd/client/middleware"
 )
 
 const (
@@ -54,6 +55,13 @@ func (cs *ClientServer) CreateTopicPage(w http.ResponseWriter, r *http.Request) 
 		templates.NotFoundHandler(w, r, "Error creating categories request", http.StatusInternalServerError)
 		return
 	}
+
+	ip := middleware.GetIPFromContext(r)
+	if ip == "" {
+		http.Error(w, "Error no IP found in request", http.StatusInternalServerError)
+	}
+
+	helpers.SetIPHeaders(categoriesHTTPReq, ip)
 
 	for _, cookie := range r.Cookies() {
 		categoriesHTTPReq.AddCookie(cookie)
@@ -433,6 +441,13 @@ func (cs *ClientServer) DeleteTopicPost(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	ip := middleware.GetIPFromContext(r)
+	if ip == "" {
+		http.Error(w, "Error no IP found in request", http.StatusInternalServerError)
+	}
+
+	helpers.SetIPHeaders(getReq, ip)
+
 	for _, cookie := range r.Cookies() {
 		getReq.AddCookie(cookie)
 	}
@@ -466,6 +481,13 @@ func (cs *ClientServer) DeleteTopicPost(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "Failed to create delete request", http.StatusInternalServerError)
 		return
 	}
+
+	ip = middleware.GetIPFromContext(r)
+	if ip == "" {
+		http.Error(w, "Error no IP found in request", http.StatusInternalServerError)
+	}
+
+	helpers.SetIPHeaders(delReq, ip)
 
 	for _, cookie := range r.Cookies() {
 		delReq.AddCookie(cookie)

@@ -93,7 +93,13 @@ func (cs *ClientServer) handleEmailLogin(w http.ResponseWriter, r *http.Request,
 	ctx, cancel := context.WithTimeout(r.Context(), requestTimeout)
 	defer cancel()
 
-	backendResp, backendErr := cs.loginWithBackendEmail(ctx, email, password)
+	ip := middleware.GetIPFromContext(r)
+	if ip == "" {
+		http.Error(w, "Error no IP found in request", http.StatusInternalServerError)
+		return
+	}
+
+	backendResp, backendErr := cs.loginWithBackendEmail(ctx, email, password, ip)
 	if backendErr != nil {
 		// Backend validation/login failed
 		data.EmailError = ""
@@ -120,7 +126,12 @@ func (cs *ClientServer) handleUsernameLogin(w http.ResponseWriter, r *http.Reque
 	ctx, cancel := context.WithTimeout(r.Context(), requestTimeout)
 	defer cancel()
 
-	backendResp, backendErr := cs.loginWithBackendUsername(ctx, username, password)
+	ip := middleware.GetIPFromContext(r)
+	if ip == "" {
+		http.Error(w, "Error no IP found in request", http.StatusInternalServerError)
+	}
+
+	backendResp, backendErr := cs.loginWithBackendUsername(ctx, username, password, ip)
 	if backendErr != nil {
 		// Backend validation/login failed
 		data.UsernameError = ""
@@ -138,30 +149,32 @@ func (cs *ClientServer) handleUsernameLogin(w http.ResponseWriter, r *http.Reque
 }
 
 // loginWithBackendEmail sends login request to backend email endpoint.
-func (cs *ClientServer) loginWithBackendEmail(ctx context.Context, email string, password string) (*BackendLoginResponse, error) {
+func (cs *ClientServer) loginWithBackendEmail(ctx context.Context, email string, password string, ip string) (*BackendLoginResponse, error) {
 	req := BackendLoginRequest{
 		Email:    email,
 		Password: password,
 	}
-	return cs.sendLoginRequest(ctx, backendLoginEmailURL, req)
+	return cs.sendLoginRequest(ctx, backendLoginEmailURL, req, ip)
 }
 
 // loginWithBackendUsername sends login request to backend username endpoint.
-func (cs *ClientServer) loginWithBackendUsername(ctx context.Context, username string, password string) (*BackendLoginResponse, error) {
+func (cs *ClientServer) loginWithBackendUsername(ctx context.Context, username string, password string, ip string) (*BackendLoginResponse, error) {
 	req := BackendLoginRequest{
 		Username: username,
 		Password: password,
 	}
-	return cs.sendLoginRequest(ctx, backendLoginUsernameURL, req)
+
+	return cs.sendLoginRequest(ctx, backendLoginUsernameURL, req, ip)
 }
 
 // sendLoginRequest sends the login request to the backend API.
-func (cs *ClientServer) sendLoginRequest(ctx context.Context, backendURL string, req BackendLoginRequest) (*BackendLoginResponse, error) {
+func (cs *ClientServer) sendLoginRequest(ctx context.Context, backendURL string, req BackendLoginRequest, ip string) (*BackendLoginResponse, error) {
 	resp, err := cs.newRequest(
 		ctx,
 		http.MethodPost,
 		backendURL,
 		req,
+		ip,
 	)
 	if err != nil {
 		defer resp.Body.Close()

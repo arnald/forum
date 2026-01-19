@@ -8,6 +8,8 @@ import (
 	"net/http"
 
 	"github.com/arnald/forum/cmd/client/domain"
+	"github.com/arnald/forum/cmd/client/helpers"
+	"github.com/arnald/forum/cmd/client/middleware"
 )
 
 const (
@@ -32,6 +34,12 @@ func (cs *ClientServer) StreamNotifications(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	ip := middleware.GetIPFromContext(r)
+	if ip == "" {
+		http.Error(w, "Error no IP found in request", http.StatusInternalServerError)
+	}
+
+	helpers.SetIPHeaders(backendReq, ip)
 	for _, cookie := range r.Cookies() {
 		backendReq.AddCookie(cookie)
 	}
@@ -99,6 +107,13 @@ func (cs *ClientServer) GetNotifications(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	ip := middleware.GetIPFromContext(r)
+	if ip == "" {
+		http.Error(w, "Error no IP found in request", http.StatusInternalServerError)
+	}
+
+	helpers.SetIPHeaders(backendReq, ip)
+
 	for _, cookie := range r.Cookies() {
 		backendReq.AddCookie(cookie)
 	}
@@ -141,6 +156,13 @@ func (cs *ClientServer) GetUnreadCount(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal error", http.StatusInternalServerError)
 		return
 	}
+
+	ip := middleware.GetIPFromContext(r)
+	if ip == "" {
+		http.Error(w, "Error no IP found in request", http.StatusInternalServerError)
+	}
+
+	helpers.SetIPHeaders(backendReq, ip)
 
 	for _, cookie := range r.Cookies() {
 		backendReq.AddCookie(cookie)
@@ -197,6 +219,13 @@ func (cs *ClientServer) MarkNotificationAsRead(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	ip := middleware.GetIPFromContext(r)
+	if ip == "" {
+		http.Error(w, "Error no IP found in request", http.StatusInternalServerError)
+	}
+
+	helpers.SetIPHeaders(backendReq, ip)
+
 	for _, cookie := range r.Cookies() {
 		backendReq.AddCookie(cookie)
 	}
@@ -230,6 +259,13 @@ func (cs *ClientServer) MarkAllNotificationsAsRead(w http.ResponseWriter, r *htt
 		http.Error(w, "Internal error", http.StatusInternalServerError)
 		return
 	}
+
+	ip := middleware.GetIPFromContext(r)
+	if ip == "" {
+		http.Error(w, "Error no IP found in request", http.StatusInternalServerError)
+	}
+
+	helpers.SetIPHeaders(backendReq, ip)
 
 	for _, cookie := range r.Cookies() {
 		backendReq.AddCookie(cookie)

@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/arnald/forum/cmd/client/helpers"
+	"github.com/arnald/forum/cmd/client/middleware"
 )
 
 type voteCountsResponse struct {
@@ -35,6 +36,13 @@ func (cs *ClientServer) proxyVoteRequest(w http.ResponseWriter, r *http.Request,
 		http.Error(w, "Error creating request", http.StatusInternalServerError)
 		return
 	}
+
+	ip := middleware.GetIPFromContext(r)
+	if ip == "" {
+		http.Error(w, "Error no IP found in request", http.StatusInternalServerError)
+	}
+
+	helpers.SetIPHeaders(httpReq, ip)
 
 	httpReq.Header.Set("Content-Type", "application/json")
 
@@ -117,6 +125,13 @@ func (cs *ClientServer) GetVoteCounts(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error creating request", http.StatusInternalServerError)
 		return
 	}
+
+	ip := middleware.GetIPFromContext(r)
+	if ip == "" {
+		http.Error(w, "Error no IP found in request", http.StatusInternalServerError)
+	}
+
+	helpers.SetIPHeaders(httpReq, ip)
 
 	for _, cookie := range r.Cookies() {
 		httpReq.AddCookie(cookie)
