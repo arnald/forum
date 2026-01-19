@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/arnald/forum/internal/domain/vote"
 )
@@ -114,19 +115,26 @@ func (r *Repo) CastVote(ctx context.Context, userID string, target vote.Target, 
 // 	return nil
 // }
 
-func (r *Repo) DeleteVote(ctx context.Context, voteID int, userID string) error {
-	query := `
-	DELETE FROM votes
-	WHERE id = ? AND user_id = ?
-	`
-
-	stmt, err := r.DB.PrepareContext(ctx, query)
-	if err != nil {
-		return fmt.Errorf("failed to prepare statement: %w", err)
+func (r *Repo) DeleteVote(ctx context.Context, userID string, topicID *int, commentID *int) error {
+	if (topicID == nil && commentID == nil) || (topicID != nil && commentID != nil) {
+		return ErrInvalidVoteTarget
 	}
-	defer stmt.Close()
 
-	result, err := stmt.ExecContext(ctx, voteID, userID)
+	var builder strings.Builder
+	var args []interface{}
+
+	builder.WriteString("DELETE FROM votes WHERE user_id = ?")
+	args = append(args, userID)
+
+	if commentID != nil {
+		builder.WriteString(" AND comment_id = ? AND topic_id IS NULL")
+		args = append(args, *commentID)
+	} else {
+		builder.WriteString(" AND topic_id = ? AND comment_id IS NULL")
+		args = append(args, *topicID)
+	}
+
+	result, err := r.DB.ExecContext(ctx, builder.String(), args...)
 	if err != nil {
 		return fmt.Errorf("failed to delete vote: %w", err)
 	}

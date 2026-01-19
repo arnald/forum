@@ -10,6 +10,7 @@ import (
 	"github.com/arnald/forum/internal/app"
 	"github.com/arnald/forum/internal/config"
 	"github.com/arnald/forum/internal/domain/session"
+	getuseractivity "github.com/arnald/forum/internal/infra/http/activity/getUserActivity"
 	createcategory "github.com/arnald/forum/internal/infra/http/category/createCategory"
 	deletecategory "github.com/arnald/forum/internal/infra/http/category/deleteCategory"
 	getallcategories "github.com/arnald/forum/internal/infra/http/category/getAllCategories"
@@ -276,6 +277,14 @@ func (server *Server) AddHTTPRoutes() {
 		),
 	)
 
+	// Activity routes
+	server.router.HandleFunc(apiContext+"/user/activity",
+		middlewareChain(
+			getuseractivity.NewHandler(server.appServices, server.config, server.logger).GetUserActivity,
+			server.middleware.Authorization.Required,
+		),
+	)
+
 	// Notifications routes
 
 	server.router.HandleFunc(apiContext+"/notifications/stream", // get
@@ -285,7 +294,7 @@ func (server *Server) AddHTTPRoutes() {
 		),
 	)
 
-	server.router.HandleFunc(apiContext+"/otifications/unread-count", // get
+	server.router.HandleFunc(apiContext+"/notifications/unread-count", // get
 		middlewareChain(
 			getunreadcount.NewHandler(server.notifications).GetUnread,
 			server.middleware.Authorization.Required,

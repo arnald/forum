@@ -18,6 +18,7 @@ type ClientServer struct {
 	Config     *config.Client
 	Router     *http.ServeMux
 	HTTPClient *http.Client
+	SseClient  *http.Client
 }
 
 // NewClientServer creates and initializes a new ClientServer.
@@ -34,10 +35,15 @@ func NewClientServer(cfg *config.Client) (*ClientServer, error) {
 		Timeout: cfg.HTTPTimeouts.Read,
 	}
 
+	sseClient := &http.Client{
+		Timeout: 0,
+	}
+
 	return &ClientServer{
 		Config:     cfg,
 		Router:     http.NewServeMux(),
 		HTTPClient: httpClient,
+		SseClient:  sseClient,
 	}, nil
 }
 
@@ -123,6 +129,14 @@ func (cs *ClientServer) SetupRoutes() {
 	cs.Router.HandleFunc("/auth/callback", applyMiddleware(cs.Callback, authMiddleware))
 
 	// Protected Routes (require authentication).
+	// Activity page
+	cs.Router.HandleFunc("/activity", applyMiddleware(cs.ActivityPage, middleware.RequireAuth, authMiddleware))
+	// Notification routes
+	cs.Router.HandleFunc("/api/notifications/stream", applyMiddleware(cs.StreamNotifications, middleware.RequireAuth, authMiddleware))
+	cs.Router.HandleFunc("/api/notifications", applyMiddleware(cs.GetNotifications, middleware.RequireAuth, authMiddleware))
+	cs.Router.HandleFunc("/api/notifications/unread-count", applyMiddleware((cs.GetUnreadCount), middleware.RequireAuth, authMiddleware))
+	cs.Router.HandleFunc("/api/notifications/mark-read", applyMiddleware(cs.MarkNotificationAsRead, middleware.RequireAuth, authMiddleware))
+	cs.Router.HandleFunc("/api/notifications/mark-all-read", applyMiddleware(cs.MarkAllNotificationsAsRead, middleware.RequireAuth, authMiddleware))
 	// Logout route - clears cookies
 	cs.Router.HandleFunc("/logout", applyMiddleware(cs.Logout, middleware.RequireAuth, authMiddleware))
 }

@@ -165,13 +165,27 @@ func (h *Handler) sendVoteNotification(ctx context.Context, username, userID str
 		return
 	}
 
+	var message string
+	var title string
+	var notificationType notification.Type
+	switch req.ReactionType {
+	case 1:
+		message = fmt.Sprintf("%s liked your %s", username, contentType)
+		title = "New like!"
+		notificationType = notification.NotificationTypeLike
+	case -1:
+		message = fmt.Sprintf("%s disliked your %s", username, contentType)
+		title = "New dislike!"
+		notificationType = notification.NotificationTypeDislike
+	}
+
 	notification := &notification.Notification{
-		Type:        notification.NotificationTypeLike,
+		Type:        notificationType,
 		RelatedID:   contentID,
 		UserID:      ownerID,
 		ActorID:     userID,
-		Message:     fmt.Sprintf("%s liked your %s", username, contentType),
-		Title:       "New like!",
+		Message:     message,
+		Title:       title,
 		RelatedType: contentType,
 	}
 

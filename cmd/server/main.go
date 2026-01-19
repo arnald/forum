@@ -35,6 +35,7 @@ func main() {
 		infraProviders.Repositories.CommentRepo,
 		infraProviders.Repositories.VoteRepo,
 		infraProviders.Repositories.OauthRepo,
+		infraProviders.Repositories.ActivityRepo,
 	)
 	infraHTTPServer := infra.NewHTTPServer(cfg, db, logger, appServices)
 	infraHTTPServer.ListenAndServe()

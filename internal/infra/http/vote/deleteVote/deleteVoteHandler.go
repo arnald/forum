@@ -2,6 +2,8 @@ package deletevote
 
 import (
 	"context"
+	"encoding/json"
+	"io"
 	"net/http"
 
 	"github.com/arnald/forum/internal/app"
@@ -10,8 +12,13 @@ import (
 	"github.com/arnald/forum/internal/infra/logger"
 	"github.com/arnald/forum/internal/infra/middleware"
 	"github.com/arnald/forum/internal/pkg/helpers"
-	"github.com/arnald/forum/internal/pkg/validator"
 )
+
+type request struct {
+	TopicID   *int   `json:"topicId,omitempty"`
+	CommentID *int   `json:"commentId,omitempty"`
+	UserID    string `json:"userId,omitempty"`
+}
 
 type Response struct {
 	Message string
@@ -51,39 +58,24 @@ func (h *Handler) DeleteVote(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), h.Config.Timeouts.HandlerTimeouts.UserRegister)
 	defer cancel()
 
-	voteID, err := helpers.GetQueryInt(r, "id")
+	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		h.Logger.PrintError(err, nil)
-		helpers.RespondWithError(
-			w,
-			http.StatusBadRequest,
-			err.Error(),
-		)
+		helpers.RespondWithError(w, http.StatusInternalServerError, "Failed to read requst body")
 	}
 
-	val := validator.New()
+	voteToDelete := &request{}
 
-	valData := struct {
-		VoteID int
-	}{
-		VoteID: voteID,
-	}
-
-	validator.ValidateDeleteVote(val, valData)
-
-	if !val.Valid() {
-		h.Logger.PrintError(logger.ErrValidationFailed, val.Errors)
-		helpers.RespondWithError(
-			w,
-			http.StatusBadRequest,
-			val.ToStringErrors(),
-		)
-		return
+	err = json.Unmarshal(data, voteToDelete)
+	if err != nil {
+		h.Logger.PrintError(err, nil)
+		helpers.RespondWithError(w, http.StatusInternalServerError, "Failed to unmarshal request")
 	}
 
 	err = h.Services.UserServices.Commands.DeleteVote.Handle(ctx, votecommands.DeleteVoteRequest{
-		VoteID: voteID,
-		UserID: user.ID,
+		UserID:    user.ID,
+		TopicID:   voteToDelete.TopicID,
+		CommentID: voteToDelete.CommentID,
 	})
 	if err != nil {
 		h.Logger.PrintError(err, nil)

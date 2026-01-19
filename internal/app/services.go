@@ -1,6 +1,7 @@
 package app
 
 import (
+	activityQueries "github.com/arnald/forum/internal/app/activities/queries"
 	categoryCommands "github.com/arnald/forum/internal/app/categories/commands"
 	categoryQueries "github.com/arnald/forum/internal/app/categories/queries"
 	commentCommands "github.com/arnald/forum/internal/app/comments/commands"
@@ -12,6 +13,7 @@ import (
 	userQueries "github.com/arnald/forum/internal/app/user/queries"
 	votecommands "github.com/arnald/forum/internal/app/votes/commands"
 	voteQueries "github.com/arnald/forum/internal/app/votes/queries"
+	"github.com/arnald/forum/internal/domain/activity"
 	"github.com/arnald/forum/internal/domain/category"
 	"github.com/arnald/forum/internal/domain/comment"
 	"github.com/arnald/forum/internal/domain/oauth"
@@ -33,6 +35,7 @@ type Queries struct {
 	GetCategoryByID    categoryQueries.GetCategoryByIDHandler
 	GetAllCategories   categoryQueries.GetAllCategoriesRequestHandler
 	GetCounts          voteQueries.GetCountsRequestHandler
+	GetUserActivity    activityQueries.GetUserActivityHandler
 }
 
 type Commands struct {
@@ -59,7 +62,7 @@ type Services struct {
 	UserServices UserServices
 }
 
-func NewServices(userRepo user.Repository, categoryRepo category.Repository, topicRepo topic.Repository, commentRepo comment.Repository, voteRepo vote.Repository, oauthRepo oauth.Repository) Services {
+func NewServices(userRepo user.Repository, categoryRepo category.Repository, topicRepo topic.Repository, commentRepo comment.Repository, voteRepo vote.Repository, oauthRepo oauth.Repository, activityRepo activity.Repository) Services {
 	uuidProvider := uuid.NewProvider()
 	encryption := bcrypt.NewProvider()
 	return Services{
@@ -75,6 +78,7 @@ func NewServices(userRepo user.Repository, categoryRepo category.Repository, top
 				categoryQueries.NewGetCategoryByIDHandler(categoryRepo),
 				categoryQueries.NewGetAllCategoriesHandler(categoryRepo),
 				voteQueries.NewGetCountsRequestHandler(voteRepo),
+				activityQueries.NewGetUserActivityHandler(activityRepo),
 			},
 			Commands: Commands{
 				userCommands.NewUserRegisterHandler(userRepo, uuidProvider, encryption),

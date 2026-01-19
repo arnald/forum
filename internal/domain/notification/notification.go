@@ -8,6 +8,7 @@ const (
 	NotificationTypeReply   Type = "reply"
 	NotificationTypeMention Type = "mention"
 	NotificationTypeLike    Type = "like"
+	NotificationTypeDislike Type = "dislike"
 )
 
 type Notification struct {

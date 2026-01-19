@@ -86,6 +86,10 @@ func (cs *ClientServer) TopicPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	for _, cookie := range r.Cookies() {
+		topicHTTPReq.AddCookie(cookie)
+	}
+
 	topicResp, err := cs.HTTPClient.Do(topicHTTPReq)
 	if err != nil {
 		log.Printf("Error fetching topic: %v", err)

@@ -37,8 +37,15 @@ function initializeVoteButtons() {
         const reactionsContainer = this.closest(".reactions");
         disableVoteButtons(reactionsContainer, true);
 
+        // Store the active state before making the request
+        const isCurrentlyActive = this.classList.contains("active");
+        
         // If clicking the same button again, we're toggling off
-        await castVote(targetId, targetType, reactionType, this);
+        if (isCurrentlyActive) {
+          await deleteVote(targetId, targetType, this, isCurrentlyActive);
+        } else {
+          await castVote(targetId, targetType, reactionType, this, isCurrentlyActive);
+        }
       } catch (error) {
         console.error("Error casting vote:", error);
         alert("Failed to cast vote. Please try again.");
@@ -90,6 +97,40 @@ async function castVote(targetId, targetType, reactionType, buttonElement) {
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.message || "Failed to cast vote");
+  }
+
+  // Update the UI with new counts
+  await updateVoteUI(targetId, targetType, buttonElement);
+}
+
+async function deleteVote(targetId, targetType, buttonElement) {
+  const payload = {
+    commentId: null,
+    topicId: null,
+  };
+
+  if (targetType === "comment") {
+    payload.commentId = targetId;
+  } else {
+    payload.topicId = targetId;
+  }
+
+  const response = await fetch("/api/vote/delete", {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(payload),
+  });
+
+  if (response.status === 401) {
+    window.location.href = "/login";
+    return;
+  }
+
+  if (!response.ok) {
+    throw new Error("Failed to delete vote");
   }
 
   // Update the UI with new counts
@@ -160,13 +201,18 @@ function setInitialVoteStates() {
   // For topic vote
   const topicContainer = document.querySelector(".topic-body-container");
   if (topicContainer) {
-    const userVote = parseInt(topicContainer.dataset.userVote);
-    if (!isNaN(userVote)) {
-      const topicReactions = topicContainer.querySelector(".reactions");
-      if (userVote === 1) {
-        topicReactions.querySelector(".like-btn")?.classList.add("active");
-      } else if (userVote === -1) {
-        topicReactions.querySelector(".dislike-btn")?.classList.add("active");
+    const userVoteAttr = topicContainer.dataset.userVote;
+    
+    if (userVoteAttr && userVoteAttr !== "") {
+      const userVote = parseInt(userVoteAttr);
+      
+      if (!isNaN(userVote) && userVote !== 0) {
+        const topicReactions = topicContainer.querySelector(".reactions");
+        if (userVote === 1) {
+          topicReactions.querySelector(".like-btn")?.classList.add("active");
+        } else if (userVote === -1) {
+          topicReactions.querySelector(".dislike-btn")?.classList.add("active");
+        }
       }
     }
   }
@@ -174,13 +220,18 @@ function setInitialVoteStates() {
   // For comment votes
   const comments = document.querySelectorAll(".comment-content");
   comments.forEach((comment) => {
-    const userVote = parseInt(comment.dataset.userVote);
-    if (!isNaN(userVote)) {
-      const reactions = comment.querySelector(".reactions");
-      if (userVote === 1) {
-        reactions.querySelector(".like-btn")?.classList.add("active");
-      } else if (userVote === -1) {
-        reactions.querySelector(".dislike-btn")?.classList.add("active");
+    const userVoteAttr = comment.dataset.userVote;
+    
+    if (userVoteAttr && userVoteAttr !== "") {
+      const userVote = parseInt(userVoteAttr);
+      
+      if (!isNaN(userVote) && userVote !== 0) {
+        const reactions = comment.querySelector(".reactions");
+        if (userVote === 1) {
+          reactions.querySelector(".like-btn")?.classList.add("active");
+        } else if (userVote === -1) {
+          reactions.querySelector(".dislike-btn")?.classList.add("active");
+        }
       }
     }
   });
