@@ -1,4 +1,4 @@
-// Notification System
+// Notification System (SSE-based)
 (function () {
   let eventSource = null;
   let unreadCount = 0;
@@ -97,7 +97,13 @@
     notificationList.innerHTML = notifications
       .map((n) => {
         const icon =
-          n.type === "like" ? "💚" : n.type === "dislike" ? "🤮" : n.type === "mention" ? "@" : "💬";
+          n.type === "like"
+            ? "💚"
+            : n.type === "dislike"
+            ? "🤮"
+            : n.type === "mention"
+            ? "@"
+            : "💬";
         const timeAgo = formatTimeAgo(new Date(n.createdAt));
 
         return `
@@ -119,17 +125,30 @@
       .join("");
 
     // Add click handlers
-    notificationList.querySelectorAll("notification-item").forEach((item) => {
-      item.addEventListener("click", () => {
+    notificationList.querySelectorAll(".notification-item").forEach((item) => {
+      item.addEventListener("click", async (e) => {
         const id = item.dataset.id;
         const isRead = item.dataset.read === "true";
-        const relatedId = item.dataset.id;
+        const relatedId = item.dataset.relatedId;
         const relatedType = item.dataset.relatedType;
 
-        if (!isRead) markAsRead(id, item);
+        // Update UI immediately for better UX
+        if (!isRead) {
+          item.classList.remove("unread");
+          item.dataset.read = "true";
+          const dot = item.querySelector(".notification-unread-dot");
+          if (dot) dot.remove();
+          unreadCount = Math.max(0, unreadCount - 1);
+          updateBadge(unreadCount);
+
+          // Send request in background
+          await markAsRead(id);
+        }
 
         // Navigate to related content
-        if (relatedType === "topic") {
+        if (relatedType === "topic" && relatedId) {
+          window.location.href = `/topic/${relatedId}`;
+        } else if (relatedType === "comment" && relatedId) {
           window.location.href = `/topic/${relatedId}`;
         }
       });
@@ -137,21 +156,11 @@
   }
 
   // Mark as read
-  async function markAsRead(id, element) {
+  async function markAsRead(id) {
     try {
-      const response = await fetch(`/api/notifications/mark-read?id=${id}`, {
+      await fetch(`/api/notifications/mark-read?id=${id}`, {
         method: "POST",
       });
-
-      if (response.ok) {
-        element.classList.remove("unread");
-        element.dataset.read = "true";
-        const dot = document.querySelector(".notification-unread-dot");
-        if (dot) dot.remove();
-
-        unreadCount = Math.max(0, unreadCount - 1);
-        updateBadge(unreadCount);
-      }
     } catch (error) {
       console.error("Error marking as read:", error);
     }
@@ -160,26 +169,36 @@
   // Mark all as read
   async function markAllAsRead() {
     try {
+      // Update UI immediately for better UX
+      const unreadItems = document.querySelectorAll(
+        ".notification-item.unread"
+      );
+      unreadItems.forEach((item) => {
+        item.classList.remove("unread");
+        item.dataset.read = "true";
+        const dot = item.querySelector(".notification-unread-dot");
+        if (dot) dot.remove();
+      });
+      updateBadge(0);
+
+      // Send single request to backend
       const response = await fetch("/api/notifications/mark-all-read", {
         method: "POST",
       });
 
-      if (response.ok) {
-        document
-          .querySelectorAll(".notification-item.unread")
-          .forEach((item) => {
-            element.classList.remove("unread");
-            element.dataset.read = "true";
-            const dot = document.querySelector(".notification-unread-dot");
-            if (dot) dot.remove();
-          });
-        updateBadge(0);
+      if (!response.ok) {
+        console.error("Failed to mark all as read on server");
+        // Optionally reload to get correct state
+        loadNotifications();
       }
     } catch (error) {
       console.error("Error marking all as read:", error);
+      // Reload on error to get correct state
+      loadNotifications();
     }
   }
 
+  //---------- Helpers ----------//
   // Update badge
   function updateBadge(count) {
     unreadCount = count;
@@ -195,7 +214,7 @@
   function formatTimeAgo(date) {
     const seconds = Math.floor((new Date() - date) / 1000);
     if (seconds < 60) return "just now";
-    if (seconds < 3600) return `${Math.floor(seconds) / 60}m ago`;
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
     if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
     if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
     return date.toLocaleDateString();
@@ -211,10 +230,12 @@
   // Initialize
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
   }
 
   // Cleanup on unload
-  document.addEventListener("beforeunload", () => {
+  window.addEventListener("beforeunload", () => {
     if (eventSource) eventSource.close();
   });
 })();
