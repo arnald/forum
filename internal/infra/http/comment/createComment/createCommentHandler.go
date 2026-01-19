@@ -113,19 +113,21 @@ func (h *Handler) CreateComment(w http.ResponseWriter, r *http.Request) {
 		h.Logger.PrintError(err, nil)
 	}
 
-	notification := &notification.Notification{
-		ActorID:     user.Username,
-		UserID:      topic.UserID,
-		RelatedID:   strconv.Itoa(comment.TopicID),
-		RelatedType: "topic",
-		Type:        notification.NotificationTypeReply,
-		Title:       "New comment",
-		Message:     fmt.Sprintf("%s commented on your Topic %s", user.Username, topic.Title),
-	}
+	if user.ID != topic.UserID {
+		notification := &notification.Notification{
+			ActorID:     user.Username,
+			UserID:      topic.UserID,
+			RelatedID:   strconv.Itoa(comment.TopicID),
+			RelatedType: "topic",
+			Type:        notification.NotificationTypeReply,
+			Title:       "New comment",
+			Message:     fmt.Sprintf("%s commented on your Topic %s", user.Username, topic.Title),
+		}
 
-	err = h.Notification.CreateNotification(ctx, notification)
-	if err != nil {
-		h.Logger.PrintError(err, nil)
+		err = h.Notification.CreateNotification(ctx, notification)
+		if err != nil {
+			h.Logger.PrintError(err, nil)
+		}
 	}
 
 	commentResponse := ResponseModel{
