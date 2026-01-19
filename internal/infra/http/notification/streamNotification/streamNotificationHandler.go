@@ -10,7 +10,7 @@ import (
 	"github.com/arnald/forum/internal/infra/storage/notifications"
 )
 
-const tickerTime = 30
+const tickerTime = 10
 
 type Handler struct {
 	service *notifications.NotificationService
