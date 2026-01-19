@@ -3,6 +3,7 @@ package http
 import (
 	"database/sql"
 	"errors"
+	"log"
 	"net/http"
 	"time"
 
@@ -90,7 +91,6 @@ func NewServer(cfg *config.ServerConfig, db *sql.DB, logger logger.Logger, appSe
 	return httpServer
 }
 
-// FOR MIDDLEWARE CHAINING.
 func middlewareChain(handler http.HandlerFunc, middlewares ...func(http.HandlerFunc) http.HandlerFunc) http.HandlerFunc {
 	for _, m := range middlewares {
 		handler = m(handler)
@@ -324,11 +324,25 @@ func (server *Server) AddHTTPRoutes() {
 }
 
 func (server *Server) ListenAndServe() {
-	corsWrappedRouter := middleware.NewCorsMiddleware(server.router)
+	wrappedRouter := middleware.NewCorsMiddleware(server.router)
+
+	if server.config.RateLimit.Enabled {
+		wrappedRouter = middleware.NewRateLimiterMiddleware(
+			wrappedRouter,
+			server.config.RateLimit.RequestsLimit,
+			server.config.RateLimit.WindowSeconds,
+			server.config.RateLimit.Cleanup,
+		)
+		server.logger.PrintInfo("Rate Limit wrapped", nil)
+		log.Printf("  2. Rate Limit middleware (limit: %d req/%ds cleanup: %s)",
+			server.config.RateLimit.RequestsLimit,
+			server.config.RateLimit.WindowSeconds,
+			server.config.RateLimit.Cleanup.String())
+	}
 
 	srv := &http.Server{
 		Addr:         server.config.Host + ":" + server.config.Port,
-		Handler:      corsWrappedRouter,
+		Handler:      wrappedRouter,
 		ReadTimeout:  server.config.ReadTimeout,
 		WriteTimeout: server.config.WriteTimeout,
 		IdleTimeout:  server.config.IdleTimeout,

@@ -83,10 +83,16 @@ func (cs *ClientServer) RegisterPost(w http.ResponseWriter, r *http.Request) {
 		Password: password,
 	}
 
+	ip := middleware.GetIPFromContext(r)
+	if ip == "" {
+		http.Error(w, "Error no IP found in request", http.StatusInternalServerError)
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(r.Context(), requestTimeout)
 	defer cancel()
 
-	backendResp, backendErr := cs.registerWithBackend(ctx, backendReq)
+	backendResp, backendErr := cs.registerWithBackend(ctx, backendReq, ip)
 	if backendErr != nil {
 		// Backend validation/registration failed
 		data.UsernameError = ""
@@ -117,12 +123,13 @@ func (cs *ClientServer) RegisterPost(w http.ResponseWriter, r *http.Request) {
 // registerWithBackend sends registration request to backend API.
 // The HTTP client includes the cookie jar, so cookies will be automatically.
 // handled for all subsequent requests.
-func (cs *ClientServer) registerWithBackend(ctx context.Context, req BackendRegisterRequest) (*BackendRegisterResponse, error) {
+func (cs *ClientServer) registerWithBackend(ctx context.Context, req BackendRegisterRequest, ip string) (*BackendRegisterResponse, error) {
 	resp, err := cs.newRequest(
 		ctx,
 		http.MethodPost,
 		backendRegisterURL,
 		req,
+		ip,
 	)
 	if err != nil {
 		defer resp.Body.Close()

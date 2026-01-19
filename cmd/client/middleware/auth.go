@@ -17,7 +17,10 @@ const (
 	backendMeURL   string     = "http://localhost:8080/api/v1/me"
 )
 
-var ErrUserNotAuthorized = errors.New("user not authorized")
+var (
+	ErrUserNotAuthorized = errors.New("user not authorized")
+	ErrTooManyRequests   = errors.New("too many requests")
+)
 
 // AuthMiddleware wraps a handler and injects authenticated user data into context.
 func AuthMiddleware(httpClient *http.Client) func(http.HandlerFunc) http.HandlerFunc {
@@ -30,6 +33,10 @@ func AuthMiddleware(httpClient *http.Client) func(http.HandlerFunc) http.Handler
 			if err == nil && user != nil {
 				// User authenticated, add to context.
 				ctx = context.WithValue(ctx, userContextKey, user)
+				// TO DO: CHECK FOR 429 IN EVERY BACKEND RESPONSE (IN EACH HANDLER) e.x LIKE BELOW
+			} else if errors.Is(err, ErrTooManyRequests) {
+				http.Error(w, err.Error(), http.StatusTooManyRequests)
+				return
 			}
 			// If error or no user, continue without user context.
 			// This allows optional auth for certain pages.
@@ -67,7 +74,9 @@ func getCurrentUser(ctx context.Context, httpClient *http.Client, r *http.Reques
 	if resp.StatusCode == http.StatusUnauthorized {
 		return nil, ErrUserNotAuthorized
 	}
-
+	if resp.StatusCode == http.StatusTooManyRequests {
+		return nil, ErrTooManyRequests
+	}
 	if resp.StatusCode != http.StatusOK {
 		log.Printf("Unexpected status from /me: %d", resp.StatusCode)
 		return nil, err

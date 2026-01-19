@@ -51,6 +51,13 @@ func (cs *ClientServer) CategoriesPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ip := middleware.GetIPFromContext(r)
+	if ip == "" {
+		http.Error(w, "Error no IP found in request", http.StatusInternalServerError)
+	}
+
+	helpers.SetIPHeaders(httpReq, ip)
+
 	backendResp, err := cs.HTTPClient.Do(httpReq)
 	if err != nil {
 		http.Error(w, "Error with the response", http.StatusInternalServerError)
