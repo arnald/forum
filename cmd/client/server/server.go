@@ -144,7 +144,9 @@ func (cs *ClientServer) SetupRoutes() {
 
 // ListenAndServe starts the HTTP server.
 func (cs *ClientServer) ListenAndServe() error {
-	handler := middleware.GetClientIPMiddleware(cs.Router)
+	// handler := middleware.GetClientIPMiddleware(cs.Router)
+
+	handler := middleware.AddSecurityHeaders(middleware.GetClientIPMiddleware(cs.Router))
 
 	server := &http.Server{
 		Addr:              ":" + cs.Config.Port,
@@ -156,7 +158,7 @@ func (cs *ClientServer) ListenAndServe() error {
 	}
 
 	log.Printf("Client started on port: %s (%s environment)", cs.Config.Port, cs.Config.Environment)
-	return server.ListenAndServe()
+	return server.ListenAndServeTLS("./certs/localhost+2.pem", "./certs/localhost+2-key.pem")
 }
 
 func applyMiddleware(handler http.HandlerFunc, middlewares ...func(http.HandlerFunc) http.HandlerFunc) http.HandlerFunc {

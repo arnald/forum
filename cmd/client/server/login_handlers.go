@@ -212,7 +212,7 @@ func (cs *ClientServer) setSessionCookies(w http.ResponseWriter, accessToken, re
 		Value:    accessToken,
 		Path:     "/",
 		HttpOnly: true,
-		Secure:   false, // Set to true in production with HTTPS
+		Secure:   true, // Set to true in production with HTTPS
 		SameSite: http.SameSiteLaxMode,
 		MaxAge:   int(float64(accessTokenMaxAge) * time.Minute.Seconds()),
 	}
@@ -222,7 +222,7 @@ func (cs *ClientServer) setSessionCookies(w http.ResponseWriter, accessToken, re
 		Value:    refreshToken,
 		Path:     "/",
 		HttpOnly: true,
-		Secure:   false, // Set to true in production with HTTPS
+		Secure:   true, // Set to true in production with HTTPS
 		SameSite: http.SameSiteLaxMode,
 		MaxAge:   int(float64(refreshTokenMaxAge) * time.Hour.Seconds()),
 	}
