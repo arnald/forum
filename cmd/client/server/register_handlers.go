@@ -101,14 +101,12 @@ func (cs *ClientServer) RegisterPost(w http.ResponseWriter, r *http.Request) {
 
 		errorMsg := backendErr.Error()
 
-		// Try to determine which field the error is about
-		switch {
-		case strings.Contains(errorMsg, "email"):
-			data.EmailError = errorMsg
-		case strings.Contains(errorMsg, "username"):
-			data.UsernameError = errorMsg
-		default:
-			data.Password = errorMsg
+		if strings.Contains(strings.ToLower(errorMsg), "username") ||
+			strings.Contains(strings.ToLower(errorMsg), "email") {
+			data.PasswordError = "This username or email is already taken. Please try another one."
+		} else {
+			// For other errors, show the actual backend error
+			data.PasswordError = errorMsg
 		}
 
 		templates.RenderTemplate(w, "register", data)
