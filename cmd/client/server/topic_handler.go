@@ -72,7 +72,7 @@ func (cs *ClientServer) TopicPage(w http.ResponseWriter, r *http.Request) {
 		TopicID: topicIDStr,
 	}
 
-	topicURL, err := createURLWithParams(backendGetTopicByID, topicReq)
+	topicURL, err := createURLWithParams(backendGetTopicByID(), topicReq)
 	if err != nil {
 		log.Printf("Error creating topic URL: %v", err)
 		http.Error(w, "Error creating URL params", http.StatusInternalServerError)
@@ -125,7 +125,7 @@ func (cs *ClientServer) TopicPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Fetch categories for the edit form
-	categoriesHTTPReq, err := http.NewRequestWithContext(ctx, http.MethodGet, backendGetCategoriesDomain, nil)
+	categoriesHTTPReq, err := http.NewRequestWithContext(ctx, http.MethodGet, backendGetCategoriesDomain(), nil)
 	if err != nil {
 		log.Printf("Error creating categories request: %v", err)
 		http.Error(w, "Error creating categories request", http.StatusInternalServerError)

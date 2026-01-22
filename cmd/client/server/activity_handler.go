@@ -22,7 +22,7 @@ func (cs *ClientServer) ActivityPage(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), requestTimeout)
 	defer cancel()
 
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet, backedGetUserActivity, nil)
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet, backedGetUserActivity(), nil)
 	if err != nil {
 		http.Error(w, "Error creating request", http.StatusInternalServerError)
 		return

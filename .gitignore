@@ -33,3 +33,6 @@ go.work.sum
 
 # Sqlite Database
 *.db
+
+# Certificate files
+*.pem

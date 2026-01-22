@@ -81,7 +81,7 @@ func (cs *ClientServer) CastVote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cs.proxyVoteRequest(w, r, backendCastVote, http.MethodPost)
+	cs.proxyVoteRequest(w, r, backendCastVote(), http.MethodPost)
 }
 
 // DeleteVote proxies the vote deletion request to the backend.
@@ -91,7 +91,7 @@ func (cs *ClientServer) DeleteVote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cs.proxyVoteRequest(w, r, backendDeleteVote, http.MethodDelete)
+	cs.proxyVoteRequest(w, r, backendDeleteVote(), http.MethodDelete)
 }
 
 // GetVoteCounts gets the current vote counts for a topic or comment.
@@ -109,7 +109,7 @@ func (cs *ClientServer) GetVoteCounts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	backendURL := backendGetVoteCounts + "?"
+	backendURL := backendGetVoteCounts() + "?"
 	if topicIDStr != "" {
 		backendURL += "topic_id=" + topicIDStr
 	} else {

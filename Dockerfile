@@ -1,64 +1,85 @@
-#INITIAL PLANNING FOR PDOCKER FILE IN PROJECT
+# Multi-stage Dockerfile for Go Forum Application
+# Builds both backend API server and frontend client server
 
-# Build the Go binary
+# Stage 1: Build both binaries
+FROM golang:1.24-alpine AS builder
 
-FROM golang:1.24.4-alpine AS builder
-
-# Install runtime dependencies (SQLite3 needs these)
-RUN apk --no-cache add ca-certificates libc6-compat
-
-# Install build dependencies and latest stable SQLite3
+# Install build dependencies for SQLite3 (CGO required)
 RUN apk add --no-cache gcc musl-dev sqlite-dev
 
-# Set working directory and copy source files
 WORKDIR /app
-COPY . .
 
-# Download dependencies
+# Copy dependency files first for better layer caching
+COPY go.mod go.sum ./
 RUN go mod download
 
-# Build the backend server binary with CGO enabled for SQLite3 support
-RUN CGO_ENABLED=1 GOOS=linux go build -ldflags="-extldflags=-static" -o /bin/server ./cmd/server/main.go
+# Copy source code
+COPY . .
 
-# Build the client (frontend server) binary
-RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/client ./cmd/client/main.go
+# Build backend server with CGO enabled for SQLite3
+RUN CGO_ENABLED=1 GOOS=linux go build \
+    -ldflags="-extldflags=-static" \
+    -o /bin/server \
+    ./cmd/server/main.go
 
-#Minimal runtime image
-FROM alpine:latest AS runtime
+# Build frontend client (no CGO needed)
+RUN CGO_ENABLED=0 GOOS=linux go build \
+    -ldflags="-w -s" \
+    -o /bin/client \
+    ./cmd/client/main.go
 
-# Install runtime dependencies (e.g., SSL certs)
-RUN apk --no-cache add ca-certificates
+# Stage 2: Runtime image
+FROM alpine:latest
 
-# Copy binaries and assets from builder
+# Install runtime dependencies
+RUN apk add --no-cache ca-certificates tzdata && \
+    addgroup -g 1000 appuser && \
+    adduser -D -u 1000 -G appuser appuser
+
+WORKDIR /app
+
+# Copy binaries from builder
 COPY --from=builder /bin/server /app/server
-COPY --from=builder /app/storage /app/storage 
-COPY --from=builder /app/RUNNING-FORUM/docs /app/docs 
+COPY --from=builder /bin/client /app/client
 
-# Copy environment file template
-COPY --from=builder /app/env.example /app/.env
+# Copy application assets
+COPY --chown=appuser:appuser frontend/ /app/frontend/
+COPY --chown=appuser:appuser db/migrations/ /app/db/migrations/
+COPY --chown=appuser:appuser db/seeds/ /app/db/seeds/
+COPY --chown=appuser:appuser cmd/client/data/ /app/cmd/client/data/
+COPY --chown=appuser:appuser certs/ /app/certs/
+COPY --chown=appuser:appuser go.mod /app/go.mod
 
-# Set environment variables
-ENV GIN_MODE=release \
-    # Server Configuration
-    SERVER_HOST=0.0.0.0 \
+# Create directories for persistent data
+RUN mkdir -p /app/db/data /app/frontend/static/images/uploads && \
+    chown -R appuser:appuser /app/db/data /app/frontend/static/images/uploads
+
+# Copy entrypoint script
+COPY --chmod=755 entrypoint.sh /app/entrypoint.sh
+
+# Switch to non-root user
+USER appuser
+
+# Set default environment variables
+ENV SERVER_HOST=0.0.0.0 \
     SERVER_PORT=8080 \
     SERVER_ENVIRONMENT=production \
     SERVER_API_CONTEXT_V1=/api/v1 \
-    SERVER_READ_TIMEOUT=5 \
-    SERVER_WRITE_TIMEOUT=10 \
-    SERVER_IDLE_TIMEOUT=15 \
-    # Client Configuration
     CLIENT_HOST=0.0.0.0 \
-    CLIENT_PORT=3000 \
+    CLIENT_PORT=3001 \
     CLIENT_ENVIRONMENT=production \
-    # Database Configuration
-    SQLITE_DB_PATH=/app/storage/database.db \
-    # Path Configuration
-    CONFIG_PATH=/app/config
+    BACKEND_URL=http://localhost:8080/api/v1 \
+    DB_DRIVER=sqlite3 \
+    DB_PATH=db/data/forum.db \
+    DB_MIGRATE_ON_START=true \
+    DB_SEED_ON_START=false
 
 # Expose ports
-EXPOSE ${SERVER_PORT}
-EXPOSE ${CLIENT_PORT}
+EXPOSE 8080 3001
 
-# Run both server and client
-CMD ["/app/server"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/api/v1/health || exit 1
+
+# Use entrypoint script to start both services
+ENTRYPOINT ["/app/entrypoint.sh"]

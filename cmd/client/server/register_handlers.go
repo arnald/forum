@@ -127,7 +127,7 @@ func (cs *ClientServer) registerWithBackend(ctx context.Context, req BackendRegi
 	resp, err := cs.newRequest(
 		ctx,
 		http.MethodPost,
-		backendRegisterURL,
+		backendRegisterURL(),
 		req,
 		ip,
 	)

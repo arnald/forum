@@ -14,8 +14,10 @@ type contextKey string
 
 const (
 	userContextKey contextKey = "user"
-	backendMeURL   string     = "http://localhost:8080/api/v1/me"
 )
+
+// BackendMeURL is set by the server package to use the correct backend URL
+var BackendMeURL func() string
 
 var (
 	ErrUserNotAuthorized = errors.New("user not authorized")
@@ -49,7 +51,7 @@ func AuthMiddleware(httpClient *http.Client) func(http.HandlerFunc) http.Handler
 // getCurrentUser fetches the current user from the backend /me endpoint.
 func getCurrentUser(ctx context.Context, httpClient *http.Client, r *http.Request) (*domain.LoggedInUser, error) {
 	// Create a new request to the backend /me endpoint.
-	meReq, err := http.NewRequestWithContext(ctx, http.MethodGet, backendMeURL, nil)
+	meReq, err := http.NewRequestWithContext(ctx, http.MethodGet, BackendMeURL(), nil)
 	if err != nil {
 		log.Printf("Failed to create /me request: %v", err)
 		return nil, err

@@ -60,7 +60,7 @@ func (cs *ClientServer) CreateCommentPost(w http.ResponseWriter, r *http.Request
 	ctx, cancel := context.WithTimeout(r.Context(), requestTimeout)
 	defer cancel()
 
-	resp, err := cs.newRequestWithCookies(ctx, http.MethodPost, backendCreateComment, createRequest, r)
+	resp, err := cs.newRequestWithCookies(ctx, http.MethodPost, backendCreateComment(), createRequest, r)
 	if err != nil {
 		log.Printf("Backend request failed: %v", err)
 		templates.NotFoundHandler(w, r, "Failed to create comment", http.StatusInternalServerError)
@@ -117,7 +117,7 @@ func (cs *ClientServer) UpdateCommentPost(w http.ResponseWriter, r *http.Request
 	ctx, cancel := context.WithTimeout(r.Context(), requestTimeout)
 	defer cancel()
 
-	resp, err := cs.newRequestWithCookies(ctx, http.MethodPut, backendUpdateComment, updateRequest, r)
+	resp, err := cs.newRequestWithCookies(ctx, http.MethodPut, backendUpdateComment(), updateRequest, r)
 	if err != nil {
 		log.Printf("Backend request failed: %v", err)
 		templates.NotFoundHandler(w, r, "Failed to update comment", http.StatusInternalServerError)
@@ -167,7 +167,7 @@ func (cs *ClientServer) DeleteCommentPost(w http.ResponseWriter, r *http.Request
 	ctx, cancel := context.WithTimeout(r.Context(), requestTimeout)
 	defer cancel()
 
-	deleteURL := backendDeleteComment + "?id=" + commentIDStr
+	deleteURL := backendDeleteComment() + "?id=" + commentIDStr
 
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodDelete, deleteURL, nil)
 	if err != nil {

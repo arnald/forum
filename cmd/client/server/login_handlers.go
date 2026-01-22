@@ -154,7 +154,7 @@ func (cs *ClientServer) loginWithBackendEmail(ctx context.Context, email string,
 		Email:    email,
 		Password: password,
 	}
-	return cs.sendLoginRequest(ctx, backendLoginEmailURL, req, ip)
+	return cs.sendLoginRequest(ctx, backendLoginEmailURL(), req, ip)
 }
 
 // loginWithBackendUsername sends login request to backend username endpoint.
@@ -164,7 +164,7 @@ func (cs *ClientServer) loginWithBackendUsername(ctx context.Context, username s
 		Password: password,
 	}
 
-	return cs.sendLoginRequest(ctx, backendLoginUsernameURL, req, ip)
+	return cs.sendLoginRequest(ctx, backendLoginUsernameURL(), req, ip)
 }
 
 // sendLoginRequest sends the login request to the backend API.
@@ -207,12 +207,17 @@ func (cs *ClientServer) sendLoginRequest(ctx context.Context, backendURL string,
 
 // setSessionCookies sets the access and refresh tokens as cookies.
 func (cs *ClientServer) setSessionCookies(w http.ResponseWriter, accessToken, refreshToken string) {
+	// Use secure cookies when in production or when using HTTPS
+	isSecure := cs.Config.Environment == "production" || cs.Config.TLSCertFile != ""
+
+	log.Printf("Setting session cookies - isSecure: %v, TLSCertFile: %v", isSecure, cs.Config.TLSCertFile)
+
 	accessCookie := &http.Cookie{
 		Name:     "access_token",
 		Value:    accessToken,
 		Path:     "/",
 		HttpOnly: true,
-		Secure:   false, // Set to true in production with HTTPS
+		Secure:   isSecure,
 		SameSite: http.SameSiteLaxMode,
 		MaxAge:   int(float64(accessTokenMaxAge) * time.Minute.Seconds()),
 	}
@@ -222,11 +227,13 @@ func (cs *ClientServer) setSessionCookies(w http.ResponseWriter, accessToken, re
 		Value:    refreshToken,
 		Path:     "/",
 		HttpOnly: true,
-		Secure:   false, // Set to true in production with HTTPS
+		Secure:   isSecure,
 		SameSite: http.SameSiteLaxMode,
 		MaxAge:   int(float64(refreshTokenMaxAge) * time.Hour.Seconds()),
 	}
 
 	http.SetCookie(w, accessCookie)
 	http.SetCookie(w, refreshCookie)
+
+	log.Printf("Cookies set successfully - access_token MaxAge: %d, refresh_token MaxAge: %d", accessCookie.MaxAge, refreshCookie.MaxAge)
 }

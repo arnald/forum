@@ -36,7 +36,7 @@ func (cs *ClientServer) CategoriesPage(w http.ResponseWriter, r *http.Request) {
 		PageSize: pageSize,
 	}
 
-	backendURL, err := createURLWithParams(backendGetCategoriesDomain, categoriesRequest)
+	backendURL, err := createURLWithParams(backendGetCategoriesDomain(), categoriesRequest)
 	if err != nil {
 		http.Error(w, "Error creating URL Params", http.StatusInternalServerError)
 		return
