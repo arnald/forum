@@ -49,7 +49,7 @@ func LoadClientConfig() (*Client, error) {
 		Host:        helpers.GetEnv("CLIENT_HOST", envMap, "localhost"),
 		Port:        helpers.GetEnv("CLIENT_PORT", envMap, "3001"),
 		Environment: helpers.GetEnv("CLIENT_ENVIRONMENT", envMap, "development"),
-		BackendURL:  helpers.GetEnv("BACKEND_URL", envMap, "http://localhost:8080/api/v1"),
+		BackendURL:  helpers.GetEnv("BACKEND_URL", envMap, "https://localhost:8080/api/v1"),
 		TLSCertFile: helpers.GetEnv("CLIENT_TLS_CERT_FILE", envMap, ""),
 		TLSKeyFile:  helpers.GetEnv("CLIENT_TLS_KEY_FILE", envMap, ""),
 		HTTPTimeouts: HTTPTimeouts{
