@@ -45,13 +45,27 @@ func LoadClientConfig() (*Client, error) {
 	envFile, _ := os.ReadFile(resolver.GetPath(".env"))
 	envMap := helpers.ParseEnv(string(envFile))
 
+	tlsCertFile := helpers.GetEnv("CLIENT_TLS_CERT_FILE", envMap, "")
+	tlsKeyFile := helpers.GetEnv("CLIENT_TLS_KEY_FILE", envMap, "")
+
+	// Determine default backend URL based on whether certs exist
+	defaultBackendURL := "http://localhost:8080/api/v1"
+	if tlsCertFile != "" && tlsKeyFile != "" {
+		// Check if cert files actually exist
+		if _, err := os.Stat(resolver.GetPath(tlsCertFile)); err == nil {
+			if _, err := os.Stat(resolver.GetPath(tlsKeyFile)); err == nil {
+				defaultBackendURL = "https://localhost:8080/api/v1"
+			}
+		}
+	}
+
 	client := &Client{
 		Host:        helpers.GetEnv("CLIENT_HOST", envMap, "localhost"),
 		Port:        helpers.GetEnv("CLIENT_PORT", envMap, "3001"),
 		Environment: helpers.GetEnv("CLIENT_ENVIRONMENT", envMap, "development"),
-		BackendURL:  helpers.GetEnv("BACKEND_URL", envMap, "https://localhost:8080/api/v1"),
-		TLSCertFile: helpers.GetEnv("CLIENT_TLS_CERT_FILE", envMap, ""),
-		TLSKeyFile:  helpers.GetEnv("CLIENT_TLS_KEY_FILE", envMap, ""),
+		BackendURL:  helpers.GetEnv("BACKEND_URL", envMap, defaultBackendURL),
+		TLSCertFile: tlsCertFile,
+		TLSKeyFile:  tlsKeyFile,
 		HTTPTimeouts: HTTPTimeouts{
 			ReadHeader: helpers.GetEnvDuration("CLIENT_READ_HEADER_TIMEOUT", envMap, readHeaderTimeout),
 			Read:       helpers.GetEnvDuration("CLIENT_READ_TIMEOUT", envMap, readTimeout),
