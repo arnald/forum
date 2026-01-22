@@ -59,8 +59,8 @@ func (cs *ClientServer) TopicPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	topicIDStr := pathParts[1]
-	_, err := strconv.Atoi(topicIDStr)
-	if err != nil {
+	topicID, err := strconv.Atoi(topicIDStr)
+	if err != nil || topicID <= 0 {
 		templates.NotFoundHandler(w, r, "Invalid topic ID format", http.StatusBadRequest)
 		return
 	}
