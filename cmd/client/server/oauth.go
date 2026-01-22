@@ -21,7 +21,7 @@ func (cs *ClientServer) GitHubRegister(w http.ResponseWriter, r *http.Request) {
 
 	helpers.SetIPHeaders(r, ip)
 
-	http.Redirect(w, r, backendGithubRegister(), http.StatusTemporaryRedirect)
+	http.Redirect(w, r, cs.BackendURLs.GithubRegisterURL(), http.StatusTemporaryRedirect)
 }
 
 func (cs *ClientServer) Callback(w http.ResponseWriter, r *http.Request) {
@@ -56,5 +56,5 @@ func (cs *ClientServer) GoogleRegister(w http.ResponseWriter, r *http.Request) {
 
 	helpers.SetIPHeaders(r, ip)
 
-	http.Redirect(w, r, backendGooglebRegister(), http.StatusTemporaryRedirect)
+	http.Redirect(w, r, cs.BackendURLs.GoogleRegisterURL(), http.StatusTemporaryRedirect)
 }

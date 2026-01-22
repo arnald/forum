@@ -7,10 +7,7 @@ const (
 	requestTimeout  = 15 * time.Second
 )
 
-// backendAPIBase is set dynamically from client config.
-var backendAPIBase = "http://localhost:8080/api/v1"
-
-// Endpoint path constants (without base URL)
+// Endpoint path constants (without base URL).
 const (
 	pathRegister             = "/register"
 	pathLoginEmail           = "/login/email"
@@ -39,31 +36,39 @@ const (
 	pathNotificationsAllRead = "/notifications/mark-all-read"
 )
 
-// Dynamic endpoint URLs
-var (
-	backendRegisterURL         = func() string { return backendAPIBase + pathRegister }
-	backendLoginEmailURL       = func() string { return backendAPIBase + pathLoginEmail }
-	backendLoginUsernameURL    = func() string { return backendAPIBase + pathLoginUsername }
-	backendLogoutURL           = func() string { return backendAPIBase + pathLogout }
-	backendMeURL               = func() string { return backendAPIBase + pathMe }
-	backendGithubRegister      = func() string { return backendAPIBase + pathGithubAuth }
-	backendGooglebRegister     = func() string { return backendAPIBase + pathGoogleAuth }
-	backendGetCategoriesDomain = func() string { return backendAPIBase + pathCategoriesAll }
-	backendGetTopicsDomain     = func() string { return backendAPIBase + pathTopicsAll }
-	backendGetTopicByID        = func() string { return backendAPIBase + pathTopic }
-	backendCreateTopic         = func() string { return backendAPIBase + pathTopicsCreate }
-	backendUpdateTopic         = func() string { return backendAPIBase + pathTopicsUpdate }
-	backendDeleteTopic         = func() string { return backendAPIBase + pathTopicsDelete }
-	backendCreateComment       = func() string { return backendAPIBase + pathCommentsCreate }
-	backendUpdateComment       = func() string { return backendAPIBase + pathCommentsUpdate }
-	backendDeleteComment       = func() string { return backendAPIBase + pathCommentsDelete }
-	backendCastVote            = func() string { return backendAPIBase + pathVoteCast }
-	backendDeleteVote          = func() string { return backendAPIBase + pathVoteDelete }
-	backendGetVoteCounts       = func() string { return backendAPIBase + pathVoteCounts }
-	backedGetUserActivity      = func() string { return backendAPIBase + pathUserActivity }
-	backendNotificationsStream = func() string { return backendAPIBase + pathNotificationsStream }
-	backendNotificationsList   = func() string { return backendAPIBase + pathNotificationsList }
-	backendUnreadCount         = func() string { return backendAPIBase + pathNotificationsUnread }
-	backendMarkAsRead          = func() string { return backendAPIBase + pathNotificationsRead }
-	backendMarkAllAsRead       = func() string { return backendAPIBase + pathNotificationsAllRead }
-)
+// BackendURLs holds all backend API endpoint URLs.
+type BackendURLs struct {
+	baseURL string
+}
+
+// NewBackendURLs creates a new BackendURLs instance.
+func NewBackendURLs(baseURL string) *BackendURLs {
+	return &BackendURLs{baseURL: baseURL}
+}
+
+// Methods to get full URLs.
+func (b *BackendURLs) RegisterURL() string            { return b.baseURL + pathRegister }
+func (b *BackendURLs) LoginEmailURL() string          { return b.baseURL + pathLoginEmail }
+func (b *BackendURLs) LoginUsernameURL() string       { return b.baseURL + pathLoginUsername }
+func (b *BackendURLs) LogoutURL() string              { return b.baseURL + pathLogout }
+func (b *BackendURLs) MeURL() string                  { return b.baseURL + pathMe }
+func (b *BackendURLs) GithubRegisterURL() string      { return b.baseURL + pathGithubAuth }
+func (b *BackendURLs) GoogleRegisterURL() string      { return b.baseURL + pathGoogleAuth }
+func (b *BackendURLs) CategoriesAllURL() string       { return b.baseURL + pathCategoriesAll }
+func (b *BackendURLs) TopicsAllURL() string           { return b.baseURL + pathTopicsAll }
+func (b *BackendURLs) TopicURL() string               { return b.baseURL + pathTopic }
+func (b *BackendURLs) CreateTopicURL() string         { return b.baseURL + pathTopicsCreate }
+func (b *BackendURLs) UpdateTopicURL() string         { return b.baseURL + pathTopicsUpdate }
+func (b *BackendURLs) DeleteTopicURL() string         { return b.baseURL + pathTopicsDelete }
+func (b *BackendURLs) CreateCommentURL() string       { return b.baseURL + pathCommentsCreate }
+func (b *BackendURLs) UpdateCommentURL() string       { return b.baseURL + pathCommentsUpdate }
+func (b *BackendURLs) DeleteCommentURL() string       { return b.baseURL + pathCommentsDelete }
+func (b *BackendURLs) CastVoteURL() string            { return b.baseURL + pathVoteCast }
+func (b *BackendURLs) DeleteVoteURL() string          { return b.baseURL + pathVoteDelete }
+func (b *BackendURLs) VoteCountsURL() string          { return b.baseURL + pathVoteCounts }
+func (b *BackendURLs) UserActivityURL() string        { return b.baseURL + pathUserActivity }
+func (b *BackendURLs) NotificationsStreamURL() string { return b.baseURL + pathNotificationsStream }
+func (b *BackendURLs) NotificationsListURL() string   { return b.baseURL + pathNotificationsList }
+func (b *BackendURLs) UnreadCountURL() string         { return b.baseURL + pathNotificationsUnread }
+func (b *BackendURLs) MarkAsReadURL() string          { return b.baseURL + pathNotificationsRead }
+func (b *BackendURLs) MarkAllAsReadURL() string       { return b.baseURL + pathNotificationsAllRead }

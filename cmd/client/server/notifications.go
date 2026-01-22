@@ -22,7 +22,7 @@ func (cs *ClientServer) StreamNotifications(w http.ResponseWriter, r *http.Reque
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
 
-	backendReq, err := http.NewRequestWithContext(r.Context(), http.MethodGet, backendNotificationsStream(), nil)
+	backendReq, err := http.NewRequestWithContext(r.Context(), http.MethodGet, cs.BackendURLs.NotificationsStreamURL(), nil)
 	if err != nil {
 		log.Printf("Failed to create backend request: %v", err)
 		http.Error(w, "Failed to connect to notifications", http.StatusInternalServerError)
@@ -90,7 +90,7 @@ func (cs *ClientServer) StreamNotifications(w http.ResponseWriter, r *http.Reque
 // GetNotifications fetches notification list.
 func (cs *ClientServer) GetNotifications(w http.ResponseWriter, r *http.Request) {
 	limit := r.URL.Query().Get("limit")
-	url := backendNotificationsList()
+	url := cs.BackendURLs.NotificationsListURL()
 	if limit != "" {
 		url = fmt.Sprintf("%s?limit=%s", url, limit)
 	}
@@ -145,7 +145,7 @@ func (cs *ClientServer) GetNotifications(w http.ResponseWriter, r *http.Request)
 
 // GetUnreadCount fetches unread notification count.
 func (cs *ClientServer) GetUnreadCount(w http.ResponseWriter, r *http.Request) {
-	backendReq, err := http.NewRequestWithContext(r.Context(), http.MethodGet, backendUnreadCount(), nil)
+	backendReq, err := http.NewRequestWithContext(r.Context(), http.MethodGet, cs.BackendURLs.UnreadCountURL(), nil)
 	if err != nil {
 		log.Printf("Failed to create request: %v", err)
 		http.Error(w, "Internal error", http.StatusInternalServerError)
@@ -206,7 +206,7 @@ func (cs *ClientServer) MarkNotificationAsRead(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	url := fmt.Sprintf("%s?id=%s", backendMarkAsRead(), notificationID)
+	url := fmt.Sprintf("%s?id=%s", cs.BackendURLs.MarkAsReadURL(), notificationID)
 	backendReq, err := http.NewRequestWithContext(r.Context(), http.MethodPost, url, nil)
 	if err != nil {
 		log.Printf("Failed to create request: %v", err)
@@ -248,7 +248,7 @@ func (cs *ClientServer) MarkAllNotificationsAsRead(w http.ResponseWriter, r *htt
 		return
 	}
 
-	backendReq, err := http.NewRequestWithContext(r.Context(), http.MethodPost, backendMarkAllAsRead(), nil)
+	backendReq, err := http.NewRequestWithContext(r.Context(), http.MethodPost, cs.BackendURLs.MarkAllAsReadURL(), nil)
 	if err != nil {
 		log.Printf("Failed to create request: %v", err)
 		http.Error(w, "Internal error", http.StatusInternalServerError)

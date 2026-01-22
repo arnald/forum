@@ -52,10 +52,10 @@ func LoadClientConfig() (*Client, error) {
 	defaultBackendURL := "http://localhost:8080/api/v1"
 	if tlsCertFile != "" && tlsKeyFile != "" {
 		// Check if cert files actually exist
-		if _, err := os.Stat(resolver.GetPath(tlsCertFile)); err == nil {
-			if _, err := os.Stat(resolver.GetPath(tlsKeyFile)); err == nil {
-				defaultBackendURL = "https://localhost:8080/api/v1"
-			}
+		_, certErr := os.Stat(resolver.GetPath(tlsCertFile))
+		_, keyErr := os.Stat(resolver.GetPath(tlsKeyFile))
+		if certErr == nil && keyErr == nil {
+			defaultBackendURL = "https://localhost:8080/api/v1"
 		}
 	}
 

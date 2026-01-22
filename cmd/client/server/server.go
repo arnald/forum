@@ -17,10 +17,11 @@ import (
 
 // ClientServer represents the frontend client server.
 type ClientServer struct {
-	Config     *config.Client
-	Router     *http.ServeMux
-	HTTPClient *http.Client
-	SseClient  *http.Client
+	Config      *config.Client
+	Router      *http.ServeMux
+	HTTPClient  *http.Client
+	SseClient   *http.Client
+	BackendURLs *BackendURLs
 }
 
 // NewClientServer creates and initializes a new ClientServer.
@@ -34,7 +35,7 @@ func NewClientServer(cfg *config.Client) (*ClientServer, error) {
 	// Create custom transport that skips TLS verification for self-signed certs in development
 	transport := &http.Transport{
 		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: cfg.Environment == "development",
+			InsecureSkipVerify: cfg.Environment == "development", //nolint:gosec
 		},
 		ForceAttemptHTTP2: false, // Disable HTTP/2 to avoid protocol issues
 	}
@@ -51,17 +52,15 @@ func NewClientServer(cfg *config.Client) (*ClientServer, error) {
 		Transport: transport,
 	}
 
-	// Set backend API base URL from config
-	backendAPIBase = cfg.BackendURL
-
-	// Set the backend /me URL for auth middleware
-	middleware.BackendMeURL = backendMeURL
+	// Create backend URLs instance
+	backendURLs := NewBackendURLs(cfg.BackendURL)
 
 	return &ClientServer{
-		Config:     cfg,
-		Router:     http.NewServeMux(),
-		HTTPClient: httpClient,
-		SseClient:  sseClient,
+		Config:      cfg,
+		Router:      http.NewServeMux(),
+		HTTPClient:  httpClient,
+		SseClient:   sseClient,
+		BackendURLs: backendURLs,
 	}, nil
 }
 
@@ -76,7 +75,7 @@ func (cs *ClientServer) SetupRoutes() {
 	)
 
 	// Create auth middleware
-	authMiddleware := middleware.AuthMiddleware(cs.HTTPClient)
+	authMiddleware := middleware.AuthMiddleware(cs.HTTPClient, cs.BackendURLs.MeURL())
 
 	// Public Routes (with optional auth - shows user if logged in).
 	// Homepage

@@ -28,7 +28,7 @@ func (cs *ClientServer) Logout(w http.ResponseWriter, r *http.Request) {
 
 // logoutFromBackend calls the backend logout endpoint to delete the session.
 func (cs *ClientServer) logoutFromBackend(ctx context.Context, r *http.Request) error {
-	logoutReq, err := http.NewRequestWithContext(ctx, http.MethodPost, backendLogoutURL(), nil)
+	logoutReq, err := http.NewRequestWithContext(ctx, http.MethodPost, cs.BackendURLs.LogoutURL(), nil)
 	if err != nil {
 		return err
 	}

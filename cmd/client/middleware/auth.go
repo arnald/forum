@@ -16,22 +16,19 @@ const (
 	userContextKey contextKey = "user"
 )
 
-// BackendMeURL is set by the server package to use the correct backend URL
-var BackendMeURL func() string
-
 var (
 	ErrUserNotAuthorized = errors.New("user not authorized")
 	ErrTooManyRequests   = errors.New("too many requests")
 )
 
 // AuthMiddleware wraps a handler and injects authenticated user data into context.
-func AuthMiddleware(httpClient *http.Client) func(http.HandlerFunc) http.HandlerFunc {
+func AuthMiddleware(httpClient *http.Client, backendMeURL string) func(http.HandlerFunc) http.HandlerFunc {
 	return func(next http.HandlerFunc) http.HandlerFunc {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 
 			// Try to get user from /me endpoint.
-			user, err := getCurrentUser(ctx, httpClient, r)
+			user, err := getCurrentUser(ctx, httpClient, r, backendMeURL)
 			if err == nil && user != nil {
 				// User authenticated, add to context.
 				ctx = context.WithValue(ctx, userContextKey, user)
@@ -49,9 +46,9 @@ func AuthMiddleware(httpClient *http.Client) func(http.HandlerFunc) http.Handler
 }
 
 // getCurrentUser fetches the current user from the backend /me endpoint.
-func getCurrentUser(ctx context.Context, httpClient *http.Client, r *http.Request) (*domain.LoggedInUser, error) {
+func getCurrentUser(ctx context.Context, httpClient *http.Client, r *http.Request, backendMeURL string) (*domain.LoggedInUser, error) {
 	// Create a new request to the backend /me endpoint.
-	meReq, err := http.NewRequestWithContext(ctx, http.MethodGet, BackendMeURL(), nil)
+	meReq, err := http.NewRequestWithContext(ctx, http.MethodGet, backendMeURL, nil)
 	if err != nil {
 		log.Printf("Failed to create /me request: %v", err)
 		return nil, err

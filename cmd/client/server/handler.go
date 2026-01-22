@@ -53,7 +53,7 @@ func (cs *ClientServer) HomePage(w http.ResponseWriter, r *http.Request) {
 		Search:  "",
 	}
 
-	backendURL, err := createURLWithParams(backendGetCategoriesDomain(), defaultCategoriesOptions)
+	backendURL, err := createURLWithParams(cs.BackendURLs.CategoriesAllURL(), defaultCategoriesOptions)
 	if err != nil {
 		http.Error(w, "Error creating URL params", http.StatusInternalServerError)
 		return

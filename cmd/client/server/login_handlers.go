@@ -154,7 +154,7 @@ func (cs *ClientServer) loginWithBackendEmail(ctx context.Context, email string,
 		Email:    email,
 		Password: password,
 	}
-	return cs.sendLoginRequest(ctx, backendLoginEmailURL(), req, ip)
+	return cs.sendLoginRequest(ctx, cs.BackendURLs.LoginEmailURL(), req, ip)
 }
 
 // loginWithBackendUsername sends login request to backend username endpoint.
@@ -164,7 +164,7 @@ func (cs *ClientServer) loginWithBackendUsername(ctx context.Context, username s
 		Password: password,
 	}
 
-	return cs.sendLoginRequest(ctx, backendLoginUsernameURL(), req, ip)
+	return cs.sendLoginRequest(ctx, cs.BackendURLs.LoginUsernameURL(), req, ip)
 }
 
 // sendLoginRequest sends the login request to the backend API.
