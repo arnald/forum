@@ -183,6 +183,14 @@ docker-dev-build:  ## Build and start development environment
 	@echo "==> Building and starting development environment..."
 	docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 
+docker-install-sqlite: ## Install SQLite inside Docker container
+	@echo "==> Installing SQLite inside Docker container..."
+	docker exec -it -u root forum-app apk add --no-cache sqlite
+
+docker-db: ## Access SQLite database inside Docker container
+	@echo "==> Seeing users in the database..."
+	docker exec -it forum-app sqlite3 -line -header db/data/forum.db
+
 # Show help
 help:
 	@echo "\033[1mCI Commands:\033[0m"

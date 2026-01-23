@@ -27,9 +27,9 @@ func (rl *rateLimitMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request)
 
 	allowed, remaining, resetTime := rl.limiter.Allow(ip)
 
-	w.Header().Set("X-RateLimit-Limit", strconv.Itoa(rl.limiter.Limit))
-	w.Header().Set("X-RateLimit-Remaining", strconv.Itoa(remaining))
-	w.Header().Set("X-RateLimit-Reset", strconv.FormatInt(resetTime, 10))
+	w.Header().Set("X-Rateimit-Limit", strconv.Itoa(rl.limiter.Limit))
+	w.Header().Set("X-Rateimit-Remaining", strconv.Itoa(remaining))
+	w.Header().Set("X-Rateimit-Reset", strconv.FormatInt(resetTime, 10))
 
 	if !allowed {
 		retryAfter := resetTime - time.Now().Unix()
