@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -16,10 +17,11 @@ import (
 
 // ClientServer represents the frontend client server.
 type ClientServer struct {
-	Config     *config.Client
-	Router     *http.ServeMux
-	HTTPClient *http.Client
-	SseClient  *http.Client
+	Config      *config.Client
+	Router      *http.ServeMux
+	HTTPClient  *http.Client
+	SseClient   *http.Client
+	BackendURLs *BackendURLs
 }
 
 // NewClientServer creates and initializes a new ClientServer.
@@ -30,21 +32,35 @@ func NewClientServer(cfg *config.Client) (*ClientServer, error) {
 		return nil, err
 	}
 
-	// Create HTTP client with cookie jar
+	// Create custom transport that skips TLS verification for self-signed certs in development
+	transport := &http.Transport{
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: cfg.Environment == "development", //nolint:gosec
+		},
+		ForceAttemptHTTP2: false, // Disable HTTP/2 to avoid protocol issues
+	}
+
+	// Create HTTP client with cookie jar and custom transport
 	httpClient := &http.Client{
-		Jar:     jar,
-		Timeout: cfg.HTTPTimeouts.Read,
+		Jar:       jar,
+		Timeout:   cfg.HTTPTimeouts.Read,
+		Transport: transport,
 	}
 
 	sseClient := &http.Client{
-		Timeout: 0,
+		Timeout:   0,
+		Transport: transport,
 	}
 
+	// Create backend URLs instance
+	backendURLs := NewBackendURLs(cfg.BackendURL)
+
 	return &ClientServer{
-		Config:     cfg,
-		Router:     http.NewServeMux(),
-		HTTPClient: httpClient,
-		SseClient:  sseClient,
+		Config:      cfg,
+		Router:      http.NewServeMux(),
+		HTTPClient:  httpClient,
+		SseClient:   sseClient,
+		BackendURLs: backendURLs,
 	}, nil
 }
 
@@ -59,7 +75,7 @@ func (cs *ClientServer) SetupRoutes() {
 	)
 
 	// Create auth middleware
-	authMiddleware := middleware.AuthMiddleware(cs.HTTPClient)
+	authMiddleware := middleware.AuthMiddleware(cs.HTTPClient, cs.BackendURLs.MeURL())
 
 	// Public Routes (with optional auth - shows user if logged in).
 	// Homepage
@@ -156,6 +172,13 @@ func (cs *ClientServer) ListenAndServe() error {
 	}
 
 	log.Printf("Client started on port: %s (%s environment)", cs.Config.Port, cs.Config.Environment)
+
+	if cs.Config.TLSCertFile != "" && cs.Config.TLSKeyFile != "" {
+		log.Printf("Starting HTTPS client with TLS certificates")
+		return server.ListenAndServeTLS(cs.Config.TLSCertFile, cs.Config.TLSKeyFile)
+	}
+
+	log.Printf("Starting HTTP client (no TLS)")
 	return server.ListenAndServe()
 }
 

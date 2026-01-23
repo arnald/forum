@@ -1,0 +1,45 @@
+version: '3.8'
+
+# Development environment with hot-reload support via volume mounts
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  forum:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # Could add a dev-specific build target if needed
+    
+    environment:
+      # Override to development mode
+      SERVER_ENVIRONMENT: development
+      CLIENT_ENVIRONMENT: development
+      
+      # Enable seed data for development
+      DB_SEED_ON_START: "true"
+      
+      # More verbose logging
+      LOG_LEVEL: debug
+    
+    volumes:
+      # Mount source code for live changes (requires rebuild for Go changes)
+      - ./frontend:/app/frontend:ro
+      - ./db/migrations:/app/db/migrations:ro
+      - ./db/seeds:/app/db/seeds:ro
+      - ./cmd/client/data:/app/cmd/client/data:ro
+      
+      # Persistent data (same as production)
+      - forum-db:/app/db/data
+      - forum-uploads:/app/frontend/static/images/uploads
+      
+      # Optional: Mount local uploads for development
+      - ./frontend/static/images/uploads:/app/frontend/static/images/uploads
+    
+    ports:
+      # Same ports as production for consistency
+      - "3001:3001"
+      - "8080:8080"
+
+volumes:
+  forum-db:
+  forum-uploads:

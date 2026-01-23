@@ -352,7 +352,16 @@ func (server *Server) ListenAndServe() {
 		"port":        server.config.Port,
 		"environment": server.config.Environment,
 	})
-	err := srv.ListenAndServe()
+
+	var err error
+	if server.config.TLSCertFile != "" && server.config.TLSKeyFile != "" {
+		log.Printf("Starting HTTPS server with TLS certificates")
+		err = srv.ListenAndServeTLS(server.config.TLSCertFile, server.config.TLSKeyFile)
+	} else {
+		log.Printf("Starting HTTP server (no TLS)")
+		err = srv.ListenAndServe()
+	}
+
 	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		server.logger.PrintFatal(err, nil)
 	}

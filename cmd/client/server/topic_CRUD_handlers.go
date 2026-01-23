@@ -49,7 +49,7 @@ func (cs *ClientServer) CreateTopicPage(w http.ResponseWriter, r *http.Request) 
 	ctx, cancel := context.WithTimeout(r.Context(), requestTimeout)
 	defer cancel()
 
-	categoriesHTTPReq, err := http.NewRequestWithContext(ctx, http.MethodGet, backendGetCategoriesDomain, nil)
+	categoriesHTTPReq, err := http.NewRequestWithContext(ctx, http.MethodGet, cs.BackendURLs.CategoriesAllURL(), nil)
 	if err != nil {
 		log.Printf("Error creating categories request: %v", err)
 		templates.NotFoundHandler(w, r, "Error creating categories request", http.StatusInternalServerError)
@@ -224,7 +224,7 @@ func (cs *ClientServer) CreateTopicPost(w http.ResponseWriter, r *http.Request) 
 	ctx, cancel := context.WithTimeout(r.Context(), requestTimeout)
 	defer cancel()
 
-	resp, err := cs.newRequestWithCookies(ctx, http.MethodPost, backendCreateTopic, createRequest, r)
+	resp, err := cs.newRequestWithCookies(ctx, http.MethodPost, cs.BackendURLs.CreateTopicURL(), createRequest, r)
 	if err != nil {
 		log.Printf("Backend request failed: %v", err)
 		// If image was uploaded, clean it up since topic creation failed
@@ -389,7 +389,7 @@ func (cs *ClientServer) UpdateTopicPost(w http.ResponseWriter, r *http.Request) 
 	ctx, cancel := context.WithTimeout(r.Context(), requestTimeout)
 	defer cancel()
 
-	resp, err := cs.newRequestWithCookies(ctx, http.MethodPut, backendUpdateTopic, updateRequest, r)
+	resp, err := cs.newRequestWithCookies(ctx, http.MethodPut, cs.BackendURLs.UpdateTopicURL(), updateRequest, r)
 	if err != nil {
 		log.Printf("Backend request failed: %v", err)
 		templates.NotFoundHandler(w, r, "Failed to update topic", http.StatusInternalServerError)
@@ -434,7 +434,7 @@ func (cs *ClientServer) DeleteTopicPost(w http.ResponseWriter, r *http.Request) 
 	defer cancel()
 
 	// Fetch topic to get image path
-	getURL := backendGetTopicByID + "?id=" + topicIDStr
+	getURL := cs.BackendURLs.TopicURL() + "?id=" + topicIDStr
 	getReq, err := http.NewRequestWithContext(ctx, http.MethodGet, getURL, nil)
 	if err != nil {
 		http.Error(w, "Failed to create request", http.StatusInternalServerError)
@@ -475,7 +475,7 @@ func (cs *ClientServer) DeleteTopicPost(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Delete topic in backend
-	deleteURL := backendDeleteTopic + "?id=" + topicIDStr
+	deleteURL := cs.BackendURLs.DeleteTopicURL() + "?id=" + topicIDStr
 	delReq, err := http.NewRequestWithContext(ctx, http.MethodDelete, deleteURL, nil)
 	if err != nil {
 		http.Error(w, "Failed to create delete request", http.StatusInternalServerError)

@@ -54,7 +54,7 @@ func (cs *ClientServer) TopicsPage(w http.ResponseWriter, r *http.Request) {
 		PageSize: pageSize,
 	}
 
-	backendURL, err := createURLWithParams(backendGetTopicsDomain, topicsReq)
+	backendURL, err := createURLWithParams(cs.BackendURLs.TopicsAllURL(), topicsReq)
 	if err != nil {
 		http.Error(w, "Error creating URL params", http.StatusInternalServerError)
 		return

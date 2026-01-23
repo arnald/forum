@@ -148,6 +148,41 @@ db-clean:
 	@echo "==> Cleaning database..."
 	rm -rf db/data
 
+# Docker commands
+docker-build:  ## Build Docker image
+	@echo "==> Building Docker image..."
+	docker-compose build
+
+docker-up:  ## Start services in detached mode
+	@echo "==> Starting services..."
+	docker-compose up -d
+
+docker-down:  ## Stop and remove containers
+	@echo "==> Stopping services..."
+	docker-compose down
+
+docker-logs:  ## Show service logs
+	docker-compose logs -f
+
+docker-restart:  ## Restart services
+	@echo "==> Restarting services..."
+	docker-compose restart
+
+docker-ps:  ## Show running containers
+	docker-compose ps
+
+docker-clean:  ## Remove containers, volumes, and images
+	@echo "==> Cleaning Docker resources..."
+	docker-compose down -v --rmi local
+
+docker-dev:  ## Start development environment
+	@echo "==> Starting development environment..."
+	docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+docker-dev-build:  ## Build and start development environment
+	@echo "==> Building and starting development environment..."
+	docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+
 # Show help
 help:
 	@echo "\033[1mCI Commands:\033[0m"
@@ -164,6 +199,17 @@ help:
 	@echo "  \033[36mclean\033[0m           Clean artifacts"
 	@echo "  \033[36mdb-clean\033[0m        Remove database"
 	
+	@echo "\n\033[1mDocker Commands:\033[0m"
+	@echo "  \033[36mdocker-build\033[0m      Build Docker image"
+	@echo "  \033[36mdocker-up\033[0m         Start services"
+	@echo "  \033[36mdocker-down\033[0m       Stop services"
+	@echo "  \033[36mdocker-logs\033[0m       Show logs"
+	@echo "  \033[36mdocker-restart\033[0m    Restart services"
+	@echo "  \033[36mdocker-ps\033[0m         Show running containers"
+	@echo "  \033[36mdocker-clean\033[0m      Remove all Docker resources"
+	@echo "  \033[36mdocker-dev\033[0m        Start development environment"
+	@echo "  \033[36mdocker-dev-build\033[0m  Build and start dev environment"
+	
 	@echo "\n\033[1mBenchmarking & Profiling (Local):\033[0m"
 	@echo "  \033[36mbench-tools\033[0m     Install benchmark tools (benchstat)"
 	@echo "  \033[36mci-bench\033[0m           Run benchmarks"
@@ -174,4 +220,5 @@ help:
 	@echo "\n\033[3mNote: Benchmark commands require 'make bench-tools' and Graphviz for flame graphs\033[0m"
 
 .PHONY: env tools bench-tools ci-mod format check-format staticcheck golangci-lint lint test test-short ci-bench ci clean \
-        bench-compare bench-profile bench-flame bench-clean db-clean help
+        bench-compare bench-profile bench-flame bench-clean db-clean help \
+        docker-build docker-up docker-down docker-logs docker-restart docker-ps docker-clean docker-dev docker-dev-build
