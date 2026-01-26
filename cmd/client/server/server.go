@@ -24,6 +24,47 @@ type ClientServer struct {
 	BackendURLs *BackendURLs
 }
 
+// getSecureTLSConfig returns a TLS configuration with explicit cipher suites.
+func getSecureTLSConfig(isDevelopment bool) *tls.Config {
+	return &tls.Config{
+		// Only skip verification in development
+		InsecureSkipVerify: isDevelopment, //nolint:gosec
+
+		// Minimum TLS version - TLS 1.2 is widely supported and secure
+		MinVersion: tls.VersionTLS12,
+
+		// Prefer server cipher suites for better security
+		PreferServerCipherSuites: true,
+
+		// Explicit cipher suites - prioritize modern AEAD ciphers
+		CipherSuites: []uint16{
+			// TLS 1.3 cipher suites (automatically used when TLS 1.3 is negotiated)
+			// Note: TLS 1.3 suites are not configurable via CipherSuites in Go
+
+			// TLS 1.2 AEAD cipher suites (recommended)
+			tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+			tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+			tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+			tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+			tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
+			tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,
+
+			// Fallback cipher suites (still secure but less preferred)
+			tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,
+			tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+			tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
+			tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
+		},
+
+		// Curve preferences for ECDHE
+		CurvePreferences: []tls.CurveID{
+			tls.X25519,
+			tls.CurveP256,
+			tls.CurveP384,
+		},
+	}
+}
+
 // NewClientServer creates and initializes a new ClientServer.
 func NewClientServer(cfg *config.Client) (*ClientServer, error) {
 	// Create a cookie jar to persist cookies between requests
@@ -32,12 +73,20 @@ func NewClientServer(cfg *config.Client) (*ClientServer, error) {
 		return nil, err
 	}
 
+	// Get TLS configuration with explicit cipher suites
+	tlsConfig := getSecureTLSConfig(cfg.Environment == "development")
+
 	// Create custom transport that skips TLS verification for self-signed certs in development
 	transport := &http.Transport{
-		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: cfg.Environment == "development", //nolint:gosec
-		},
+		TLSClientConfig:   tlsConfig,
 		ForceAttemptHTTP2: false, // Disable HTTP/2 to avoid protocol issues
+	}
+
+	// Log TLS configuration
+	if cfg.Environment == "development" {
+		log.Printf("TLS Config: MinVersion=TLS1.2, InsecureSkipVerify=true (development mode)")
+	} else {
+		log.Printf("TLS Config: MinVersion=TLS1.2, InsecureSkipVerify=false, CipherSuites=%d configured", len(tlsConfig.CipherSuites))
 	}
 
 	// Create HTTP client with cookie jar and custom transport
@@ -162,6 +211,12 @@ func (cs *ClientServer) SetupRoutes() {
 func (cs *ClientServer) ListenAndServe() error {
 	handler := middleware.GetClientIPMiddleware(cs.Router)
 
+	// Get TLS configuration for the server
+	var tlsConfig *tls.Config
+	if cs.Config.TLSCertFile != "" && cs.Config.TLSKeyFile != "" {
+		tlsConfig = getSecureTLSConfig(false) // Server should never skip verification
+	}
+
 	server := &http.Server{
 		Addr:              ":" + cs.Config.Port,
 		Handler:           handler,
@@ -169,12 +224,14 @@ func (cs *ClientServer) ListenAndServe() error {
 		ReadTimeout:       cs.Config.HTTPTimeouts.Read,
 		WriteTimeout:      cs.Config.HTTPTimeouts.Write,
 		IdleTimeout:       cs.Config.HTTPTimeouts.Idle,
+		TLSConfig:         tlsConfig,
 	}
 
 	log.Printf("Client started on port: %s (%s environment)", cs.Config.Port, cs.Config.Environment)
 
 	if cs.Config.TLSCertFile != "" && cs.Config.TLSKeyFile != "" {
 		log.Printf("Starting HTTPS client with TLS certificates")
+		log.Printf("TLS: MinVersion=TLS1.2, %d cipher suites configured", len(tlsConfig.CipherSuites))
 		return server.ListenAndServeTLS(cs.Config.TLSCertFile, cs.Config.TLSKeyFile)
 	}
 
